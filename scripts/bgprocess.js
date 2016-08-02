@@ -25,22 +25,11 @@ require.config({
 	},
 
 	shim: {
-		jquery: {
-			exports: '$'
-		},
-		backbone: {
-			deps: ['underscore', 'jquery'],
-			exports: 'Backbone'
-		},
-		backboneDB: {
-			deps: ['backbone']
-		},
-		underscore: {
-			exports: '_'
-		},
-		md5: {
-			exports: 'CryptoJS'
-		}
+		jquery: { exports: '$' },
+		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },
+		backboneDB: { deps: ['backbone'] },
+		underscore: { exports: '_' },
+		md5: { exports: 'CryptoJS' }
 	}
 });
 
@@ -62,7 +51,6 @@ chrome.runtime.onConnect.addListener(function(port) {
  		sources.trigger('clear-events', port.sender.tab.id);
  	});
 });
-
 
 requirejs(['bg'], function(bg) {	
 	// bg started

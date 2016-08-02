@@ -14,7 +14,7 @@ define(['backbone'], function (BB) {
 		defaults: {
 			title: '<no title>',
 			author: '<no author>',
-			url: 'opera:blank',
+			url: 'about:blank',
 			date: 0,
 			content: 'No content loaded.',
 			sourceID: -1,

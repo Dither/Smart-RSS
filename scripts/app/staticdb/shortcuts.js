@@ -5,7 +5,8 @@ define({
 		'shift+3': 'content:focus',
 		'shift+4': 'content:focusSandbox',
 		'esc': 'global:hideOverlays',
-		'shift+insert': 'global:runTests'
+		'shift+insert': 'global:runTests',
+		'ctrl+f': 'articles:focusSearch',
 	},
 	feeds: {
 		'up': 'feeds:selectPrevious',
@@ -53,8 +54,9 @@ define({
 		'ctrl+a': 'articles:selectAll',
 		'p': 'articles:pin',
 		'n': 'articles:undelete',
-		'space': 'articles:spaceThrough',
 		'r': 'articles:update',
+		'space': 'articles:selectNext',
+		'backspace': 'articles:spaceThrough',
 
 		'pgup': 'articles:pageUp',
 		'pgdown': 'articles:pageDown',

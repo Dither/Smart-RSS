@@ -295,7 +295,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 			var start = -1;
 			var count = 0;
 			for (var i=0,j=this.viewsToRender.length; i<j; i++) {
-				if ((start >= 0 && count % 10 != 0) || isScrolledIntoView(this.viewsToRender[i].el)) {
+				if (1||(start >= 0 && count % 10 != 0) || isScrolledIntoView(this.viewsToRender[i].el)) {
 					this.viewsToRender[i].render();
 					count++;
 					if (start == -1) start = i;
@@ -324,9 +324,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 				bg.items.off('render-screen', this.handleRenderScreen, this);
 				bg.settings.off('change:lines', this.handleChangeLines, this);
 				bg.settings.off('change:layout', this.handleChangeLayout, this);
-
 				bg.sources.off('destroy', this.handleSourcesDestroy, this);
-				
 				bg.sources.off('clear-events', this.handleClearEvents, this);
 			}
 		},
@@ -351,7 +349,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 		 */
 		handleSort: function() {
 			$('#input-search').val('');
-			
 			this.handleNewSelected(this.currentData);
 			
 		},
@@ -439,8 +436,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 			if (noManualSort !== true && !this.inCurrentData(item)) {
 				return false;
 			}
-
-		
 
 			var after = null;
 			if (noManualSort !== true) {
@@ -530,9 +525,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 		 * @param items {Backbone.Collection} bg.Items
 		 */
 		addItems: function(items) {
-
 			groups.reset();
-			
 
 			/**
 			 * Select removal
@@ -547,9 +540,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 			//var st = Date.now();
 
 			this.setItemHeight();
-
 			this.reuseIndex = 0;
-
 			
 
 			items.forEach(function(item) {

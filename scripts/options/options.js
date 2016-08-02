@@ -52,7 +52,6 @@ chrome.runtime.getBackgroundPage(function(bg) {
 
 		$('#version').html(bg.version || 'dev build');
 
-
 		$('select[id], input[type=number], input[type=range], input[type=range]').each(function(i, item) {
 			$(item).val(bg.settings.get(item.id));
 			if (item.type == 'number') {
@@ -100,8 +99,8 @@ chrome.runtime.getBackgroundPage(function(bg) {
 			return;
 		}
 
-		if (file.size > 500000) {
-			alert('Please use file smaller than 500kB!');
+		if (file.size > 1024000) {
+			alert('Please use file smaller than 1Mb!');
 			return;
 		}
 
@@ -219,8 +218,6 @@ chrome.runtime.getBackgroundPage(function(bg) {
 
 		$('#smart-imported').html('Loading & parsing file');
 
-		
-
 		var reader = new FileReader();
 		reader.onload = function(e) {
 			var data = JSON.safeParse(this.result);
@@ -316,7 +313,6 @@ chrome.runtime.getBackgroundPage(function(bg) {
 					}, { wait: true });
 				}
 			}
-
 
 			$('#opml-imported').html('Import completed!');
 

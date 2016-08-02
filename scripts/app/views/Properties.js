@@ -26,18 +26,35 @@ function(BB, $, _, tplProperties, Locale) {
 				return;
 			}
 
-			var updateEvery, autoremove;
+			var updateEvery, autoremove, fulltextEnable;
+            function saveValue(prop, arr) {
+                var val = parseFloat($('#prop-'+param.toHyphenFormat()).val());
+                if (val && val >= 0) {
+                    arr.forEach(function(source) {
+                        var obj = {};
+                        obj[prop] = val;
+                        source.save(obj);
+                    });
+                }
+                return val;
+            }
 
 			if (this.current instanceof bg.Source) {
 				/* encrypt the password */
-				this.current.setPass($('#prop-password').val());
+				this.current.setPass();
 
-				this.current.save({
+                var ft_pos = app.validatePosition($('#prop-fulltext-position').val().trim()),
+                    ft_pos_mode = parseInt($('#prop-fulltext-enable').val(), 10),
+                    url = $('#prop-url').val().trim();
+
+				if (url) this.current.save({
 					title: $('#prop-title').val(),
-					url: app.fixURL($('#prop-url').val()),
+					url: app.fixURL(url),
 					username: $('#prop-username').val(),
 					updateEvery: parseFloat($('#prop-update-every').val()),
 					autoremove: parseFloat($('#prop-autoremove').val(), 10),
+                    fulltextEnable: (((ft_pos_mode === 1) && ft_pos) || (ft_pos_mode === 2)) ? ft_pos_mode : 0,
+                    fulltextPosition: ft_pos
 				});
 			} else if (this.current instanceof bg.Folder) {
 				this.current.save({
@@ -45,34 +62,13 @@ function(BB, $, _, tplProperties, Locale) {
 				});
 
 				var sourcesInFolder = bg.sources.where({ folderID: this.current.id });
-
-				updateEvery = parseFloat($('#prop-update-every').val());
-				if (updateEvery >= 0) {
-					sourcesInFolder.forEach(function(source) {
-						source.save({ updateEvery: updateEvery });
-					});
-				}
-
-				autoremove = parseFloat($('#prop-autoremove').val());
-				if (autoremove >= 0) {
-					sourcesInFolder.forEach(function(source) {
-						source.save({ autoremove: autoremove });
-					});
-				}
+                updateEvery = saveValue('updateEvery', sourcesInFolder);
+                autoremove = saveValue('autoremove', sourcesInFolder);
+                fulltextEnable = saveValue('fulltextEnable', sourcesInFolder);
 			} else if (Array.isArray(this.current)) {
-				updateEvery = parseFloat($('#prop-update-every').val());
-				if (updateEvery >= 0) {
-					this.current.forEach(function(source) {
-						source.save({ updateEvery: updateEvery });
-					});
-				}
-
-				autoremove = parseFloat($('#prop-autoremove').val());
-				if (autoremove >= 0) {
-					this.current.forEach(function(source) {
-						source.save({ autoremove: autoremove });
-					});
-				}
+                updateEvery = saveValue('updateEvery', this.current);
+                autoremove = saveValue('autoremove', this.current);
+                fulltextEnable = saveValue('fulltextEnable', this.current);
 			}
 
 			this.hide();
@@ -88,56 +84,68 @@ function(BB, $, _, tplProperties, Locale) {
 
 			if (this.current instanceof bg.Source) {
 				/* decrypt password */
-				var attrs = this.current.toJSON();
+				var thisrender = this, 
+                    attrs = this.current.toJSON();
 				attrs.password = this.current.getPass();
 
 				this.$el.html(this.template(attrs));
 
-				if (this.current.get('updateEvery')) {
-					$('#prop-update-every').val(this.current.get('updateEvery'));
-				}
+                function setValue(param) {
+                    var v = this.current.get(param),
+                        el = $('#prop-' + param.toHyphenFormat())
+                    if (el) el.val(v);
+                }
 
-				if (this.current.get('autoremove')) {
-					$('#prop-autoremove').val(this.current.get('autoremove'));
-				}
+                setValue.apply(this, ['updateEvery']);
+                setValue.apply(this, ['autoremove']);
+                setValue.apply(this, ['fulltextEnable']);
+                setValue.apply(this, ['fulltextPosition']);
 			} else {
 				var isFolder = this.current instanceof bg.Folder;
 				var listOfSources = isFolder ? bg.sources.where({ folderID: this.current.id }) : this.current;
-
-				var params = { updateEveryDiffers: 0, autoremoveDiffers: 0, firstUpdate: 0, firstAutoremove: 0 };
+				var params = {};
 
 				/**
-				 * Test if all selected feeds has the same properteies or if tehy are mixed
+				 * Test if all selected feeds has the same properteies or if they are mixed
 				 */
 
-				if (listOfSources.length) {
-					params.firstUpdate = listOfSources[0].get('updateEvery');
-					params.updateEveryDiffers = listOfSources.some(function(c) {
-						if (params.firstUpdate != c.get('updateEvery')) return true;
-					});
+                function setDiffers(param) {
+                    params['first_' + param] = listOfSources[0].get(param) || null;
+                    params['differs_' + param] = listOfSources.some(function(c) {
+                        if (params['first_' + param] != c.get(param)) return true;
+                    });
+                }
 
-					params.firstAutoremove = listOfSources[0].get('autoremove');
-					params.autoremoveDiffers = listOfSources.some(function(c) {
-						if (params.firstAutoremove != c.get('autoremove')) return true;
-					});
+				if (listOfSources.length) {
+                    setDiffers('updateEvery');
+                    setDiffers('autoremove');
+                    setDiffers('fulltextEnable');
+                    setDiffers('fulltextPosition');
 				}
 
 				/**
 				 * Create HTML
 				 */
 
-				if (isFolder) {
-					this.$el.html(this.template( _.extend(params, this.current.attributes)  ));
-				} else {
-					this.$el.html(this.template( params ));
-				}
+				this.$el.html(this.template( isFolder ? _.extend(params, this.current.attributes) : params ));
 
 				/**
 				 * Set <select>s's values
 				 */
 
-				if (!params.updateEveryDiffers) $('#prop-update-every').val(params.firstUpdate);
-				if (!params.autoremoveDiffers) $('#prop-autoremove').val(params.firstAutoremove);
+                function setDiffValue(param) {
+                    var v = params['differs_'+param],
+                        el = $('#prop-'+param.toHyphenFormat());
+                    
+                    if (!v && el) {
+                        el.val(params['first_'+param]);
+                    }
+                }
+
+                setDiffValue('updateEvery');
+                setDiffValue('autoremove');
+                setDiffValue('fulltextEnable');
+                setDiffValue('fulltextAuto');
 			}
 
 			return this;

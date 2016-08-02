@@ -97,28 +97,20 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	window.fetchAll = fetchAll;
 	window.fetchOne = fetchOne;
 
-
-
-
-
 	/**
 	 * Init
 	 */
-
-
 	$(function() {
 	fetchAll().always(function() {
 
 		/**
 		 * Load counters for specials
 		 */
-
 		info.autoSetData();
 
 		/**
 		 * Set events
 		 */
-
 		sources.on('add', function(source) {
 			if (source.get('updateEvery') > 0) {
 				chrome.alarms.create('source-' + source.get('id'), {
@@ -177,19 +169,15 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 
 		info.setEvents(sources);
 
-
 		/**
 		 * Init
 		 */
-
-
 		setTimeout(loader.downloadAll, 30000);
 		appStarted.resolve();
 
 		/**
 		 * Set icon
 		 */
-
 		animation.stop();
 
 
@@ -206,7 +194,6 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	/**
 	 * Messages
 	 */
-
 	chrome.runtime.onMessageExternal.addListener(function(message) {
 		// if.sender.id != blahblah -> return;
 		if (!message.hasOwnProperty('action')) {

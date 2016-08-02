@@ -2,22 +2,15 @@
  * @module BgProcess
  * @submodule models/Loader
  */
-define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSSParser, animation) {
+define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation'], function (BB, RSSParser, ContentExtractor, animation) {
 
-	function autoremoveItems(source) {
-		/*
-		var sourcesWithAutoRemove = sources.filter(function(source) {
-			return source.get('autoremove') > 0;
-		});
-		sourcesWithAutoRemove.forEach(function(source) {
-		*/
-
-		if (!parseFloat(source.get('autoremove'))) return;
-
+	function markAutoRemovals(source) {
+		var removalInMs = (parseInt(source.get('autoremove'), 10) || 0) * 24 * 60 * 60 * 1000;
+		if (!removalInMs) return;
+		var now = Date.now();
 		items.where({ sourceID: source.get('id'), deleted: false, pinned: false }).forEach(function(item) {
 			var date = item.get('dateCreated') || item.get('date');
-			var removalInMs = source.get('autoremove') * 24 * 60 * 60 * 1000;
-			if (date + removalInMs < Date.now() ) {
+			if (date + removalInMs < now) {
 				item.markAsDeleted();
 			}
 		});
@@ -33,7 +26,7 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 	}
 
 	function downloadOne(model) {
-		if (loader.sourceLoading == model || loader.sourcesToLoad.indexOf(model) >= 0) {
+		if (loader.sourceLoading === model || loader.sourcesToLoad.indexOf(model) >= 0) {
 			return false;
 		}
 
@@ -42,7 +35,7 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 			return true;
 		} else if (model instanceof Source) {
 			loader.addSources(model);
-			if (loader.get('loading') == false) downloadURL();
+			if (loader.get('loading') === false) downloadURL();
 			return true;
 		}
 
@@ -50,14 +43,12 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 	}
 
 	function downloadAll(force) {
-
-		if (loader.get('loading') == true) return;
-
+		if (loader.get('loading') === true) return;
 		var sourcesArr = sources.toArray();
 
 		if (!force) {
 			sourcesArr = sourcesArr.filter(function(source) {
-				if (source.get('updateEvery') == 0) return false;
+				if (source.get('updateEvery') === 0) return false;
 				/****
 					why !source.get('lastUpdate') ? .. I think I wanted !source.get('lastUpdate') => true not the other way around 
 				****/
@@ -77,11 +68,10 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 	}
 
 	function playNotificationSound() {
-
 		var audio;
-		if (!settings.get('useSound') || settings.get('useSound') == ':user') {
+		if (!settings.get('useSound') || settings.get('useSound') === ':user') {
 			audio = new Audio(settings.get('defaultSound'));
-		} else if (settings.get('useSound') == ':none') {
+		} else if (settings.get('useSound') === ':none') {
 			audio = false;
 		} else {
 			audio = new Audio('/sounds/' + settings.get('useSound') + '.ogg');
@@ -90,7 +80,6 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 			audio.volume = parseFloat(settings.get('soundVolume'));
 			audio.play();
 		}
-		
 	}
 
 	function downloadStopped() {
@@ -113,19 +102,15 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 			var sourceIDs = sources.pluck('id');
 			var foundSome = false;
 			items.toArray().forEach(function(item) {
-				if (sourceIDs.indexOf(item.get('sourceID')) == -1) {
-					console.log('DELETING ITEM BECAUSE OF MISSING SOURCE');
+				if (sourceIDs.indexOf(item.get('sourceID')) === -1) {
+					log('DELETING ITEM BECAUSE OF MISSING SOURCE');
 					item.destroy();
 					foundSome = true;
 				}
 			});
 
-			if (foundSome) {
-				info.autoSetData();
-			}
-
+			if (foundSome) info.autoSetData();
 			downloadStopped();
-			
 
 			return;
 		}
@@ -134,88 +119,25 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 		loader.set('loading', true);
 		var sourceToLoad = loader.sourceLoading = loader.sourcesToLoad.pop();
 
-		autoremoveItems(sourceToLoad);
+		markAutoRemovals(sourceToLoad);
+
+		function onFeedCompleted() {
+			loader.set('loaded', loader.get('loaded') + 1);
+			// reset alarm to make sure next call isn't too soon + to make sure alarm acutaly exists (it doesn't after import)
+			sourceToLoad.trigger('reset-alarm', sourceToLoad);
+			sourceToLoad.set('isLoading', false);
+			downloadURL();
+		}
+
+		var isFullText = sourceToLoad.get('fulltextEnable');
 
 		var options = {
 			url: sourceToLoad.get('url'),
-			timeout: 20000,
+			timeout: settings.get('rssTimeout') || 20000,
 			dataType: 'xml',
-			success: function(r) {
-
-				// parsedData step needed for debugging
-				var parsedData = RSSParser.parse(r, sourceToLoad.get('id'));
-
-				var hasNew = false;
-				var createdNo = 0;
-				parsedData.forEach(function(item) {
-					var existingItem = items.get(item.id) || items.get(item.oldId);
-					if (!existingItem) {
-						hasNew = true;
-						items.create(item, { sort: false });
-						createdNo++;
-					} else if (existingItem.get('deleted') == false && existingItem.get('content') != item.content) {
-						existingItem.save({
-							content: item.content
-						});
-					}
-				});
-
-				items.sort({ silent: true });
-				if (hasNew) {
-					items.trigger('render-screen');
-					loader.itemsDownloaded = true;
-				}
-
-				// remove old deleted content
-				var fetchedIDs = _.pluck(parsedData, 'id');
-				var fetchedOldIDs = _.pluck(parsedData, 'oldId');
-				items.where({
-					sourceID: sourceToLoad.get('id'),
-					deleted: true
-				}).forEach(function(item) {
-					if (fetchedIDs.indexOf(item.id) == -1 && fetchedOldIDs.indexOf(item.id) == -1) {
-						item.destroy();
-					}
-				});
-
-				// tip to optimize: var count = items.where.call(countAll, {unread: true }).length
-				var countAll = items.where({ sourceID: sourceToLoad.get('id'), trashed: false }).length;
-				var count = items.where({ sourceID: sourceToLoad.get('id'),	unread: true, trashed: false }).length;
-
-				sourceToLoad.save({
-					'count': count,
-					'countAll': countAll,
-					'lastUpdate': Date.now(),
-					'hasNew': hasNew || sourceToLoad.get('hasNew')
-				});
-
-				info.set({
-					allCountUnvisited: info.get('allCountUnvisited') + createdNo
-				});
-
-				sourceToLoad.trigger('update', { ok: true });
-				
-			},
-			error: function() {
-				console.log('Failed load RSS: ' + sourceToLoad.get('url'));
-
-				sourceToLoad.trigger('update', { ok: false });
-			},
-			complete: function() {
-				loader.set('loaded', loader.get('loaded') + 1);
-
-				// reset alarm to make sure next call isn't too soon + to make sure alarm acutaly exists (it doesn't after import)
-				sourceToLoad.trigger('reset-alarm', sourceToLoad);
-				sourceToLoad.set('isLoading', false);
-
-				downloadURL();
-			},
 			beforeSend: function(xhr) {
 				xhr.setRequestHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
 				xhr.setRequestHeader('Pragma', 'no-cache');
-				
-				// Removed because "http://www.f5haber.com/rss/teknoloji_haber.xml" doesn't like it
-				// xhr.setRequestHeader('If-Modified-Since', 'Tue, 1 Jan 1991 00:00:00 GMT');
 				xhr.setRequestHeader('X-Time-Stamp', Date.now());
 			}
 		};
@@ -225,12 +147,94 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 			options.password = sourceToLoad.getPass() || '';
 		}
 
-		if (settings.get('showSpinner')) {
-			sourceToLoad.set('isLoading', true);
-		}
-		loader.currentRequest = $.ajax(options);
-	}
+		if (settings.get('showSpinner')) sourceToLoad.set('isLoading', true);
+		loader.currentRequest = $.ajax(options).done(function(r) {
+				var donethis = this,
+					parsedData = [],
+					hasNew = false,
+					createdNo = 0,
+					sID = sourceToLoad.get('id');
 
+				parsedData = RSSParser.parse(r, sID);
+				parsedData.forEach(function(item) {
+					var existingItem = items.get(item.id) || items.get(item.oldId);
+
+					if (!existingItem) {
+						hasNew = true;
+						items.create(item, { sort: false });
+						createdNo++;
+					} else if (existingItem.get('deleted') === false && existingItem.get('content') !== item.content) {
+						existingItem.save({ content: item.content });
+					}
+				});
+
+				var onDataLoaded = function onDataLoaded() {
+					items.sort({ silent: true });
+					if (hasNew) {
+						loader.itemsDownloaded = true;
+						items.trigger('render-screen');
+					}
+
+					// remove old deleted content
+					var fetchedIDs = _.pluck(parsedData, 'id');
+					var fetchedOldIDs = _.pluck(parsedData, 'oldId');
+					items.where({
+						sourceID: sourceToLoad.get('id'),
+						deleted: true
+					}).forEach(function(item) {
+						if (fetchedIDs.indexOf(item.id) === -1 && fetchedOldIDs.indexOf(item.id) === -1) {
+							item.destroy();
+						}
+					});
+
+					var countAll = items.where({ sourceID: sourceToLoad.get('id'), trashed: false }).length;
+					var count = items.where({ sourceID: sourceToLoad.get('id'),	unread: true, trashed: false }).length;
+
+					sourceToLoad.save({
+						'count': count,
+						'countAll': countAll,
+						'lastUpdate': Date.now(),
+						'hasNew': hasNew || sourceToLoad.get('hasNew')
+					});
+
+					info.set({
+						allCountUnvisited: info.get('allCountUnvisited') + createdNo
+					});
+
+					sourceToLoad.trigger('update', { ok: true });
+					if (isFullText) onFeedCompleted();
+				};
+
+				if (isFullText) {
+					var incompleteItems = parsedData.length,
+						timeout = settings.get('htmlTimeout') || 50000;
+					parsedData.forEach(function(item) {
+						var existingItem = items.get(item.id) || items.get(item.oldId);
+						$.ajax({
+				            url: item.url,
+				            timeout: timeout,
+				            dataType: 'html'
+				        }).done(function(htm) {
+			        		var content = ContentExtractor.parse(htm, sID)
+			        		if (content.length) existingItem.save({ content: content});
+				        }).fail(function() {
+				            //console.log('Failed load URL: ' + item.url);
+				        }).always(function() {
+				            if (--incompleteItems <= 0) {
+				            	onDataLoaded();//;(onDataLoaded.bind(donethis))();
+				            }
+				        });
+					});
+				} else {
+					onDataLoaded();
+				}				
+			}).fail(function() {
+				log('Failed load RSS: ' + sourceToLoad.get('url'));
+				sourceToLoad.trigger('update', { ok: false });
+			}).always(function() {
+				if (!isFullText) onFeedCompleted(); 
+			});
+	}
 
 	/**
 	 * Updates feeds and keeps info about progress
@@ -258,7 +262,8 @@ define(['backbone', 'modules/RSSParser', 'modules/Animation'], function (BB, RSS
 			}
 		},
 		abortDownloading: function() {
-			loader.currentRequest.abort();
+			if (loader.currentRequest)
+				loader.currentRequest.abort();
 			this.sourcesToLoad = [];
 			downloadStopped();
 		},

@@ -7,6 +7,35 @@
 define([], function() {
 
 	/**
+	 * Convert string to camel case
+	 * @method toCamelCase
+	 * @extends String
+	 * @param str {String} String to convert
+	 * @return {Any} Converted string
+	 */
+	String.prototype.toCamelCase = function(str) {
+	    return (str || this)
+	        .replace(/[\s_-](.)/g, function($1) { return $1.toUpperCase(); })
+	        .replace(/[\s_-]/g, '')
+	        .replace(/^(.)/, function($1) { return $1.toLowerCase(); });
+	};
+
+
+	/**
+	 * Convert string to to hyphen format
+	 * @method toHyphenFormat
+	 * @extends String
+	 * @param str {String} String to convert
+	 * @return {Any} Converted string
+	 */
+	String.prototype.toHyphenFormat = function(str) {
+	    function upperToHyphenLower(match) {
+	        return '-' + match.toLowerCase();
+	    }
+	    return (str || this).replace(/[A-Z]/g, upperToHyphenLower);
+	};
+
+	/**
 	 * Set or get last array item
 	 * @method last
 	 * @extends Array

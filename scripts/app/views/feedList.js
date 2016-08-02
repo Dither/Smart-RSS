@@ -111,7 +111,6 @@ function (BB, $, _, SourceView, FolderView, SpecialView, Special, contextMenus, 
 			this.addSpecial(specials.allFeeds);
 			this.addSpecial(specials.pinned);
 			this.addSpecial(specials.trash);
-
 			this.addSources(bg.sources);
 
 			return this;

@@ -13,21 +13,15 @@ define(['md5'], function (CryptoJS) {
 	function parseRSS(xml, sourceID) {
 		var items = [];
 
-		if (!xml || !(xml instanceof XMLDocument)) {
-			return items;
-		}
-
+		if (!xml || !(xml instanceof XMLDocument)) return items;
 
 		var nodes = xml.querySelectorAll('item');
-		if (!nodes.length) {
-			nodes = xml.querySelectorAll('entry');
-		}
+		if (!nodes.length) nodes = xml.querySelectorAll('entry');
+		if (!nodes.length) return items;
 
 		var title = getFeedTitle(xml);
-		var source = sources.findWhere({
-			id: sourceID
-		});
-		if (title && (source.get('title') == source.get('url') || !source.get('title'))) {
+		var source = sources.findWhere({ id: sourceID });
+		if (title && (source.get('title') === source.get('url') || !source.get('title'))) {
 			source.save('title', title);
 		}
 
@@ -55,9 +49,7 @@ define(['md5'], function (CryptoJS) {
 		var mainEl = xml.querySelector('rss, rdf, feed');
 		if (mainEl) {
 			var baseStr = mainEl.getAttribute('xml:base') || mainEl.getAttribute('xmlns:base') || mainEl.getAttribute('base');
-			if (baseStr) {
-				source.save({ base: baseStr });
-			}
+			if (baseStr) source.save({ base: baseStr });
 		}
 
 		[].forEach.call(nodes, function(node) {
@@ -67,7 +59,7 @@ define(['md5'], function (CryptoJS) {
 				url: rssGetLink(node),
 				date: rssGetDate(node),
 				author: rssGetAuthor(node, title),
-				content: rssGetContent(node),
+				content: rssGetContent(node, true),
 				sourceID: sourceID,
 				unread: true,
 				deleted: false,
@@ -85,13 +77,12 @@ define(['md5'], function (CryptoJS) {
 				last.id = CryptoJS.MD5(last.sourceID + last.id).toString();
 			}
 			
-
 			if (last.date == 0) last.date = Date.now();
 		});
 
-
 		return items;
 	}
+
 
 	function rssGetGuid(node) {
 		if (!node) return false;
@@ -106,31 +97,19 @@ define(['md5'], function (CryptoJS) {
 		var link = node.querySelector('link[rel="alternate"]');
 
 		if (!link) {
-
-			
 			if (!link) link = node.querySelector('link[type="text/html"]');
-
-			// prefer non atom links over atom links because of http://logbuch-netzpolitik.de/
-			if (!link || link.prefix == 'atom') link = node.querySelector('link');
-
+			if (!link || link.prefix == 'atom') link = node.querySelector('link'); // prefer non atom links over atom links
 			if (!link) link = node.querySelector('link[type="text/html"]');
 			if (!link) link = node.querySelector('link');
-
 		}
 
 		if (!link) {
-			var guid = node.querySelector('guid');
-			var tmp;
-			if (guid && (tmp = guid.textContent.match(/:\/\//)) && tmp.length) {
-				link = guid;
-			}
+			var tmp, guid = node.querySelector('guid');
+			if (guid && (tmp = guid.textContent.match(/:\/\//)) && tmp.length) link = guid;
 		}
 
-		if (link) {
-			return link.textContent || link.getAttribute('href');
-		}
-
-		return false;
+		if (link) return link.textContent || link.getAttribute('href');
+		return null;
 	}
 
 	function getFeedTitle(xml) {
@@ -211,23 +190,97 @@ define(['md5'], function (CryptoJS) {
 	}
 
 	function rssGetTitle(node) {
-		return node.querySelector('title') ? node.querySelector('title').textContent : '&lt;no title&gt;';
+		return node.querySelector('title') ? node.querySelector('title').textContent : '&lt;'+'no title'+'&gt;';
 	}
 
-	function rssGetContent(node) {
-		var desc = node.querySelector('encoded');
-		if (desc) return desc.textContent;
+    function nodesToText(doc, filter) {
+        var whitelist = ['src', 'alt', 'href', 'height', 'width', 'name', 'value', 'type', 'data', 'frameborder', 'colspan'],
+        	nodes = doc.querySelectorAll('*');
 
-		desc = node.querySelector('description');
-		if (desc) return desc.textContent;
+        if (filter) for (var i = 0, l = nodes.length; i < l; i++) {
+            var attributes = nodes[i].attributes,
+                j = attributes.length;
+            while (j--) {
+                var attr = attributes[j];
+                if (whitelist.indexOf(attr.name) === -1)
+                    nodes[i].removeAttributeNode(attr);
+            }
+            
+        };
+        return doc.innerHTML.replace(/\s{2,}/g,'').replace(/(<\/?)xhtml:/g,'$1').trim();
+    }
 
-		// content over summary because of "http://neregate.com/blog/feed/atom/"
-		desc = node.querySelector('content');
-		if (desc) return desc.textContent;
+    /**
+     * Filters undesired elements from a DOM tree using either XPath or CSS selectors.
+     * @param {documentElement} doc Base DOM element to remove nodes from.
+     * @param {String} names Selectors of nodes to remove.
+     * */
+    function removeNodes(doc, names, replaces) {
+        if (typeof doc === 'undefined') return;
 
-		desc = node.querySelector('summary');
-		if (desc) return desc.textContent;
+        var r = doc.querySelectorAll(names),
+        	l = r.length;
+        for (var i = 0; i < l; i++) {
+            if (r[i].parentNode) {
+                r[i].parentNode.removeChild(r[i]);
+            }
+        }
+        var r = doc.querySelectorAll(replaces),
+        	l = r.length;
+        for (var i = 0; i < l; i++) {
+            r[i].outerHTML='<a href="'+(r[i].src || r[i].data)+'">' + '[embedded video]' + '</a>';
+        }
+    }
 
+    /**
+     * Creates HTML document object from a string.
+     * @param {String} source String with HTML-formatted text.
+     * @param {String} url String with URL of original page.
+     * @return {HTMLDocument} DOM-document.
+     * */
+    function createHTML(source) {
+        // Chrome 4, Opera 10, Firefox 4, Internet Explorer 9, Safari 4 have createHTMLDocument
+        var doc = document.implementation.createHTMLDocument('HTMLParser');
+        doc.documentElement.innerHTML = source;
+        return doc;
+    }
+
+    /**
+     * Creates HTML document object from a string.
+     * @param {String} source String with HTML-formatted text.
+     * @param {String} url String with URL of original page.
+     * @return {HTMLDocument} DOM-document.
+     * */
+    function createXML(source) {
+        return (new window.DOMParser()).parseFromString(source, "application/xml");
+    }
+
+	function rssGetContent(node, filter) {
+		var content = '', 
+			desc = node.querySelector('encoded'),
+			to_remove = 'script,style,noscript,link,param',
+			to_replace = 'object';
+
+		if (desc) content = desc.textContent;
+		if (!content && (desc = node.querySelector('description'))) content = desc.textContent;
+        if (!content && (desc = node.querySelector('content')) && ~desc.innerHTML.indexOf('<')) content = desc.innerHTML; 
+		if (!content && (desc = node.querySelector('content'))) content = desc.textContent; // prefer content over summary
+		if (!content && (desc = node.querySelector('summary'))) content = desc.textContent;
+
+		if (!filter && content) return content;
+		else if (content) {
+			// filter unused nodes
+			var xmldoc = createXML(content);
+			if (xmldoc.querySelector('parsererror')) {
+				xmldoc = createHTML(content);
+			}
+			
+			var rnode = xmldoc.querySelector('body');
+            if (!rnode) rnode = xmldoc.childNodes[0];
+			if (rnode) removeNodes(rnode, to_remove, to_replace);
+	        if (rnode && (content = nodesToText(rnode, filter).trim())) return content;
+	        else return '&nbsp;';
+	    }
 		return '&nbsp;';
 	}
 

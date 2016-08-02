@@ -5,7 +5,7 @@ function(BB, Special, contextMenus, Locale) {
 	
 	var specials = {
 		trash: new Special({
-			title: Locale.c.TRASH,
+			title: Locale.translate('TRASH'),
 			icon: 'trashsource.png',
 			filter: { trashed: true, deleted: false },
 			position: 'bottom',
@@ -30,7 +30,7 @@ function(BB, Special, contextMenus, Locale) {
 			}
 		}),
 		allFeeds: new Special({
-			title: Locale.c.ALL_FEEDS,
+			title: Locale.translate('ALL_FEEDS'),
 			icon: 'icon16_v2.png',
 			filter: { trashed: false },
 			position: 'top',
@@ -40,7 +40,7 @@ function(BB, Special, contextMenus, Locale) {
 			}
 		}),
 		pinned: new Special({
-			title: Locale.c.PINNED,
+			title: Locale.translate('PINNED'),
 			icon: 'pinsource.png',
 			filter: { trashed: false, pinned: true },
 			position: 'bottom',

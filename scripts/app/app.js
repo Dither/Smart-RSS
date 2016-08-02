@@ -1,6 +1,7 @@
 /**
  * @module App
  */
+
 define([
 	'controllers/comm',
 	'layouts/Layout', 'jquery', 'domReady!', 'collections/Actions', 'layouts/FeedsLayout', 'layouts/ArticlesLayout',
@@ -28,6 +29,20 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 				url = 'http://' + url;
 			}
 			return url;
+		},
+		validatePosition: function(path) {
+	        var path_val = '';
+	        try { 
+	        	document.querySelector(path); path_val = path;
+	        } catch (e) { 	       
+	        	try {
+	        		document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+	        		path_val = path;
+	        	} catch (e) { 
+	        		path_val = ''; 
+	        	}
+	        }
+	        return path_val;
 		},
 		events: {
 			'mousedown': 'handleMouseDown',
@@ -119,7 +134,6 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 			this.attach('articles', new ArticlesLayout);
 			this.attach('content', new ContentLayout);
 
-
 			this.handleToggleChange();
 
 			this.trigger('start');
@@ -178,9 +192,7 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 		}
 	});
 
-
 	document.addEventListener('keydown', app.handleKeyDown);
-
 
 	return app;
 });

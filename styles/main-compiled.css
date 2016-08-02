@@ -11,8 +11,8 @@ body.loading * {
 html,
 body {
   height: 100%;
-  max-height: 100%;
   width: 100%;
+  max-height: 100%;
   max-width: 100%;
 }
 body {
@@ -488,7 +488,13 @@ body > .regions {
   border-bottom: 1px solid #a6a6a6;
   display: none;
 }
-#properties input,
+#properties input[type="checkbox"] {
+  padding-left: 0;
+  margin-left: 0;
+  vertical-align: middle;
+  float: right;
+}
+#properties input:not([type="checkbox"]),
 #properties select {
   width: 100%;
   padding: 2px 5px;
@@ -858,4 +864,7 @@ footer #button-hide-log {
   font-family: sans-serif;
   color: #000;
   border-top: 1px solid #a6a6a6;
+}
+#smart-rss-content img {
+  display: block;
 }

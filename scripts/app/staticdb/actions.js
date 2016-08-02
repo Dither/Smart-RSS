@@ -1,34 +1,36 @@
 define(['jquery', 'underscore', 'helpers/stripTags', 'modules/Locale', 'controllers/comm'], function($, _, stripTags, Locale, comm) {
 
+var _T = function(text) { return Locale.translate(text); }
+
 return {
 	global: {
 		default: {
-			title: 'Unknown',
+			title: _T('Unknown'),
 			fn: function() {
 				alert('no action');
 			}
 		},
 		hideOverlays: {
-			title: 'Hide Overlays',
+			title: _T('Hide Overlays'),
 			fn: function() {
 				comm.trigger('hide-overlays');
 			}
 		},
 		runTests: {
-			title: 'Run tests (dev dependencies needed)',
+			title: _T('Run tests (dev dependencies needed)'),
 			fn: function() {
 				require(['../runtests']);
 			}
 		},
 		openOptions: {
-			title: 'Options',
+			title: _T('Options'),
 			icon: 'options.png',
 			fn: function() {
 				window.open('options.html');
 			}
 		},
 		report: {
-			title: 'Report a problem',
+			title: _T('Report a problem'),
 			icon: 'report.png',
 			fn: function() {
 				app.report();
@@ -38,14 +40,14 @@ return {
 	feeds: {
 		updateAll: {
 			icon: 'reload.png',
-			title: Locale.c.UPDATE_ALL,
+			title: _T('UPDATE_ALL'),
 			fn: function() {
 				bg.loader.downloadAll(true);
 			}
 		},
 		update: {
 			icon: 'reload.png',
-			title: Locale.c.UPDATE,
+			title: _T('UPDATE'),
 			fn: function() {
 				var s = require('views/feedList').selectedItems;
 				if (s.length) {
@@ -55,14 +57,14 @@ return {
 		},
 		stopUpdate: {
 			icon: 'stop.png',
-			title: 'Stop updating feeds',
+			title: _T('Stop updating feeds'),
 			fn: function() {
 				bg.loader.abortDownloading();
 			}
 		},
 		mark: {
 			icon: 'read.png',
-			title: Locale.c.MARK_ALL_AS_READ,
+			title: _T('MARK_ALL_AS_READ'),
 			fn: function() {
 				var s = require('views/feedList').getSelectedFeeds();
 				if (!s.length) return;
@@ -85,7 +87,7 @@ return {
 			}
 		},
 		refetch: {
-			title: 'Refetch', /****localization needed****/
+			title: _T('Refetch'), /****localization needed****/
 			fn: function() {
 				var s = require('views/feedList').getSelectedFeeds();
 				if (!s.length) return;
@@ -102,9 +104,9 @@ return {
 		},
 		delete: {
 			icon: 'delete.png',
-			title: Locale.c.DELETE,
+			title: _T('DELETE'),
 			fn: function() {
-				if (!confirm(Locale.c.REALLY_DELETE)) return;
+				if (!confirm(_T('REALLY_DELETE'))) return;
 
 				var feeds = require('views/feedList').getSelectedFeeds();
 				var folders = require('views/feedList').getSelectedFolders();
@@ -120,7 +122,7 @@ return {
 		},
 		showProperties: {
 			icon: 'properties.png',
-			title: Locale.c.PROPERTIES,
+			title: _T('PROPERTIES'),
 			fn: function() {
 				var properties = app.feeds.properties;
 
@@ -141,9 +143,9 @@ return {
 		},
 		addSource: {
 			icon: 'add.png',
-			title: Locale.c.ADD_RSS_SOURCE,
+			title: _T('ADD_RSS_SOURCE'),
 			fn: function() {
-				var url = (prompt(Locale.c.RSS_FEED_URL) || '').trim();
+				var url = (prompt(_T('RSS_FEED_URL')) || '').trim();
 				if (!url)  return;
 
 				var folderID = 0;
@@ -164,6 +166,7 @@ return {
 						title: url,
 						url: url,
 						updateEvery: 180,
+						fulltextEnable: 0,
 						folderID: folderID
 					}, { wait: true });
 					app.trigger('focus-feed', newFeed.get('id'));
@@ -174,9 +177,9 @@ return {
 		},
 		addFolder: {
 			icon: 'add_folder.png',
-			title: Locale.c.NEW_FOLDER,
+			title: _T('NEW_FOLDER'),
 			fn: function() {
-				var title = (prompt(Locale.c.FOLDER_NAME + ': ') || '').trim();
+				var title = (prompt(_T('FOLDER_NAME') + ': ') || '').trim();
 				if (!title) return;
 
 				bg.folders.create({
@@ -185,25 +188,25 @@ return {
 			}
 		},
 		focus: {
-			title: 'Focus feeds',
+			title: _T('Focus feeds'),
 			fn: function() {
 				app.setFocus('feeds');
 			}
 		},
 		selectNext: {
-			title: 'Select next',
+			title: _T('Select next'),
 			fn: function(e) {
 				require('views/feedList').selectNext(e);
 			}
 		},
 		selectPrevious: {
-			title: 'Select previous',
+			title: _T('Select previous'),
 			fn: function(e) {
 				require('views/feedList').selectPrev(e);
 			}
 		},
 		closeFolders: {
-			title: 'Close folders',
+			title: _T('Close folders'),
 			fn: function(e) {
 				var folders = $('.folder.opened');
 				if (!folders.length) return;
@@ -215,7 +218,7 @@ return {
 			}
 		},
 		openFolders: {
-			title: 'Open folders',
+			title: _T('Open folders'),
 			fn: function(e) {
 				var folders = $('.folder:not(.opened)');
 				if (!folders.length) return;
@@ -227,7 +230,7 @@ return {
 			}
 		},
 		toggleFolder: {
-			title: 'Toggle folder',
+			title: _T('Toggle folder'),
 			fn: function(e) {
 				e = e || {};
 				var cs = require('views/feedList').selectedItems;
@@ -237,7 +240,7 @@ return {
 			}
 		},
 		showArticles: {
-			title: 'Show articles',
+			title: _T('Show articles'),
 			fn: function(e) {
 				e = e || {};
 				var t = e.target || {};
@@ -274,7 +277,7 @@ return {
 			}
 		},
 		showAndFocusArticles: {
-			title: 'Show and focus articles',
+			title: _T('Show and focus articles'),
 			fn: function(e) {
 				e = e || {};
 				var cs = require('views/feedList').selectedItems;
@@ -288,14 +291,14 @@ return {
 	articles: {
 		mark: {
 			icon: 'read.png',
-			title: Locale.c.MARK_AS_READ,
+			title: _T('MARK_AS_READ'),
 			fn: function() {
 				require('views/articleList').changeUnreadState();
 			}
 		},
 		update: {
 			icon: 'reload.png',
-			title: Locale.c.UPDATE,
+			title: _T('UPDATE'),
 			fn: function() {
 				var list = require('views/articleList');
 				if (list.currentData.feeds.length) {
@@ -309,7 +312,7 @@ return {
 		},
 		delete: {
 			icon: 'delete.png',
-			title: Locale.c.DELETE,
+			title: _T('DELETE'),
 			fn: function(e) {
 				var list = require('views/articleList');
 				if (list.currentData.name == 'trash' || e.shiftKey) {
@@ -321,7 +324,7 @@ return {
 		},
 		undelete: {
 			icon: 'undelete.png',
-			title: Locale.c.UNDELETE,
+			title: _T('UNDELETE'),
 			fn: function() {
 				var articleList = require('views/articleList');
 				if (!articleList.selectedItems || !articleList.selectedItems.length || articleList.currentData.name != 'trash') return;
@@ -339,7 +342,7 @@ return {
 			}
 		},
 		search: {
-			title: Locale.c.SEARCH_TIP,
+			title: _T('SEARCH_TIP'),
 			fn: function(e) {
 				e = e || { currentTarget: $('input[type=search]').get(0) };
 				var str = e.currentTarget.value || '';
@@ -383,7 +386,7 @@ return {
 			}
 		},
 		fullArticle: {
-			title: Locale.c.FULL_ARTICLE,
+			title: _T('FULL_ARTICLE'),
 			icon: 'full_article.png',
 			fn: function(e) {
 				var articleList = app.articles.articleList;
@@ -399,7 +402,7 @@ return {
 			}
 		},
 		oneFullArticle: {
-			title: 'One full article',
+			title: _T('One full article'),
 			fn: function(e) {
 				e = e || {};
 				var articleList = app.articles.articleList;
@@ -416,7 +419,7 @@ return {
 			}
 		},
 		markAndNextUnread: {
-			title: Locale.c.MARK_AND_NEXT_UNREAD,
+			title: _T('MARK_AND_NEXT_UNREAD'),
 			icon: 'find_next.png',
 			fn: function() {
 				require('views/articleList').changeUnreadState({ onlyToRead: true });
@@ -424,7 +427,7 @@ return {
 			}
 		},
 		markAndPrevUnread: {
-			title: Locale.c.MARK_AND_PREV_UNREAD,
+			title: _T('MARK_AND_PREV_UNREAD'),
 			icon: 'find_previous.png',
 			fn: function() {
 				require('views/articleList').changeUnreadState({ onlyToRead: true });
@@ -432,21 +435,21 @@ return {
 			}
 		},
 		nextUnread: {
-			title: Locale.c.NEXT_UNREAD,
+			title: _T('NEXT_UNREAD'),
 			icon: 'forward.png',
 			fn: function() {
 				require('views/articleList').selectNext({ selectUnread: true });
 			}
 		},
 		prevUnread: {
-			title: Locale.c.PREV_UNREAD,
+			title: _T('PREV_UNREAD'),
 			icon: 'back.png',
 			fn: function() {
 				require('views/articleList').selectPrev({ selectUnread: true });
 			}
 		},
 		markAllAsRead: {
-			title: Locale.c.MARK_ALL_AS_READ,
+			title: _T('MARK_ALL_AS_READ'),
 			icon: 'read.png',
 			fn: function() {
 				var articleList = require('views/articleList');
@@ -459,7 +462,7 @@ return {
 						}
 					});
 				} else if (articleList.currentData.name == 'all-feeds') {
-					if (confirm(Locale.c.MARK_ALL_QUESTION)) {
+					if (confirm(_T('MARK_ALL_QUESTION'))) {
 						bg.items.forEach(function(item) {
 							if (item.get('unread') == true) {
 								item.save({ unread: false, visited: true });
@@ -474,7 +477,7 @@ return {
 			}
 		},
 		selectAll: {
-			title: 'Select All',
+			title: _T('Select All'),
 			fn: function() {
 				var articleList = require('views/articleList');
 				articleList.$el.find('.selected').removeClass('selected');
@@ -490,7 +493,7 @@ return {
 			}
 		},
 		pin: {
-			title: Locale.c.PIN,
+			title: _T('PIN'),
 			icon: 'pinsource_context.png',
 			fn: function() {
 				var articleList = require('views/articleList');
@@ -502,7 +505,7 @@ return {
 			}
 		},
 		spaceThrough: {
-			title: 'Space Through',
+			title: _T('Space Through'),
 			fn: function() {
 				var articleList = require('views/articleList');
 				if (!articleList.selectedItems || !articleList.selectedItems.length) return;
@@ -510,35 +513,35 @@ return {
 			}
 		},
 		pageUp: {
-			title: 'Page up',
+			title: _T('Page up'),
 			fn: function() {
 				var el = require('views/articleList').el;
 				el.scrollByPages(-1);
 			}
 		},
 		pageDown: {
-			title: 'Page down',
+			title: _T('Page down'),
 			fn: function() {
 				var el = require('views/articleList').el;
 				el.scrollByPages(1);
 			}
 		},
 		scrollToBottom: {
-			title: 'Scroll to bottom',
+			title: _T('Scroll to bottom'),
 			fn: function() {
 				var el = require('views/articleList').el;
 				el.scrollTop = el.scrollHeight;
 			}
 		},
 		scrollToTop: {
-			title: 'Scroll to top',
+			title: _T('Scroll to top'),
 			fn: function() {
 				var el = require('views/articleList').el;
 				el.scrollTop = 0;
 			}
 		},
 		download: {
-			title: Locale.c.DOWNLOAD,
+			title: _T('DOWNLOAD'),
 			icon: 'save.png',
 			fn: function() {
 				var contentView = require('views/contentView');
@@ -572,7 +575,7 @@ return {
 	},
 	content: {
 		download: {
-			title: Locale.c.DOWNLOAD,
+			title: _T('DOWNLOAD'),
 			icon: 'save.png',
 			fn: function() {
 				var contentView = require('views/contentView');
@@ -595,7 +598,7 @@ return {
 			}
 		},
 		print: {
-			title: Locale.c.PRINT,
+			title: _T('PRINT'),
 			icon: 'print.png',
 			fn: function() {
 				var contentView = require('views/contentView');
@@ -604,7 +607,7 @@ return {
 			}
 		},
 		mark: {
-			title: Locale.c.MARK_AS_READ,
+			title: _T('MARK_AS_READ'),
 			icon: 'read.png',
 			fn: function() {
 				var contentView = require('views/contentView');
@@ -616,7 +619,7 @@ return {
 			}
 		},
 		delete: {
-			title: Locale.c.DELETE,
+			title: _T('DELETE'),
 			icon: 'delete.png',
 			fn: function(e) {
 				var contentView = require('views/contentView');
@@ -625,19 +628,13 @@ return {
 				askRmPinned = bg.settings.get('askRmPinned')
 				if (e.shiftKey) {
 					if (contentView.model.get('pinned') && askRmPinned && askRmPinned != 'none') {
-						var conf = confirm(Locale.c.PIN_QUESTION_A + contentView.model.escape('title') + Locale.c.PIN_QUESTION_B);
-						if (!conf) {
-							return;
-						}
+						if (!confirm(_T('PIN_QUESTION_A') + contentView.model.escape('title') + _T('PIN_QUESTION_B'))) return;
 					}
 					
 					contentView.model.markAsDeleted();
 				} else {
 					if (contentView.model.get('pinned') && askRmPinned == 'all') {
-						var conf = confirm(Locale.c.PIN_QUESTION_A + contentView.model.escape('title') + Locale.c.PIN_QUESTION_B);
-						if (!conf) {
-							return;
-						}
+						if (!confirm(_T('PIN_QUESTION_A') + contentView.model.escape('title') + _T('PIN_QUESTION_B'))) return;
 					}
 
 					contentView.model.save({
@@ -648,46 +645,46 @@ return {
 			}
 		},
 		showConfig: {
-			title: Locale.c.SETTINGS,
+			title: _T('SETTINGS'),
 			icon: 'config.png',
 			fn: function() {
 				app.content.overlay.show();
 			}
 		},
 		focus: {
-			title: 'Focus Article',
+			title: _T('Focus Article'),
 			fn: function() {
 				app.setFocus('content');
 			}
 		},
 		focusSandbox: {
-			title: 'Focus Article',
+			title: _T('Focus Article'),
 			fn: function() {
 				app.content.sandbox.el.focus();
 			}
 		},
 		scrollDown: {
-			title: 'Scroll down',
+			title: _T('Scroll down'),
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				cw.scrollBy(0, 40);
 			}
 		},
 		scrollUp: {
-			title: 'Scroll up',
+			title: _T('Scroll up'),
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				cw.scrollBy(0, -40);
 			}
 		},
 		spaceThrough: {
-			title: 'Space trough',
+			title: _T('Space trough'),
 			fn: function() {
 				require('views/contentView').handleSpace();
 			}
 		},
 		pageUp: {
-			title: 'Page up',
+			title: _T('Page up'),
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				var d = $('iframe').get(0).contentWindow.document;
@@ -695,7 +692,7 @@ return {
 			}
 		},
 		pageDown: {
-			title: 'Page down',
+			title: _T('Page down'),
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				var d = $('iframe').get(0).contentWindow.document;
@@ -703,7 +700,7 @@ return {
 			}
 		},
 		scrollToBottom: {
-			title: 'Scroll to bottom',
+			title: _T('Scroll to bottom'),
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				var d = $('iframe').get(0).contentWindow.document;
@@ -711,7 +708,7 @@ return {
 			}
 		},
 		scrollToTop: {
-			title: 'Scroll to top',
+			title: _T('Scroll to top'),
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				cw.scrollTo(0, 0);
