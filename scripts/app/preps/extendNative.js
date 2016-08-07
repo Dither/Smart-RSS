@@ -14,10 +14,10 @@ define([], function() {
 	 * @return {Any} Converted string
 	 */
 	String.prototype.toCamelCase = function(str) {
-	    return (str || this)
-	        .replace(/[\s_-](.)/g, function($1) { return $1.toUpperCase(); })
-	        .replace(/[\s_-]/g, '')
-	        .replace(/^(.)/, function($1) { return $1.toLowerCase(); });
+		return (str || this)
+			.replace(/[\s_-](.)/g, function($1) { return $1.toUpperCase(); })
+			.replace(/[\s_-]/g, '')
+			.replace(/^(.)/, function($1) { return $1.toLowerCase(); });
 	};
 
 
@@ -29,10 +29,10 @@ define([], function() {
 	 * @return {Any} Converted string
 	 */
 	String.prototype.toHyphenFormat = function(str) {
-	    function upperToHyphenLower(match) {
-	        return '-' + match.toLowerCase();
-	    }
-	    return (str || this).replace(/[A-Z]/g, upperToHyphenLower);
+		function upperToHyphenLower(match) {
+			return '-' + match.toLowerCase();
+		}
+		return (str || this).replace(/[A-Z]/g, upperToHyphenLower);
 	};
 
 	/**

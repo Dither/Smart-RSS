@@ -1,6 +1,8 @@
-* {
-  -webkit-box-sizing: border-box;
+html {
   box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 body.loading {
   background: url("/images/tabloading.gif") no-repeat center center;
@@ -361,7 +363,7 @@ body > .regions {
   background: #94c6f8;
 }
 /*.list-item:active {
-	background: rgb(51, 153, 255);	
+	background: rgb(51, 153, 255);
 }*/
 .list-item:hover .source-title {
   color: #285078;
@@ -544,6 +546,7 @@ body > .regions {
   -webkit-user-select: none;
   user-select: none;
   overflow-x: hidden;
+  height: 600px;
   overflow-y: auto;
   font-family: sans-serif;
 }
@@ -864,7 +867,4 @@ footer #button-hide-log {
   font-family: sans-serif;
   color: #000;
   border-top: 1px solid #a6a6a6;
-}
-#smart-rss-content img {
-  display: block;
 }

@@ -8,8 +8,8 @@ require.config({
 		underscore: '../libs/underscore.min',
 		backbone: '../libs/backbone.min',
 		text: '../text',
-		domReady: '../domReady',
-		/*mocha: 'https://cdnjs.cloudflare.com/ajax/libs/mocha/1.12.1/mocha.min',
+		domReady: '../domReady'/*,
+		mocha: 'https://cdnjs.cloudflare.com/ajax/libs/mocha/1.12.1/mocha.min',
 		mochacss: 'https://cdnjs.cloudflare.com/ajax/libs/mocha/1.12.1/mocha.min.css?nojs',
 		chai: 'https://raw.github.com/chaijs/chai/master/chai'*/
 	},
@@ -17,8 +17,8 @@ require.config({
 	shim: {
 		jquery: { exports: '$' },
 		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },
-		underscore: { exports: '_' },
-		/*mocha: { exports: 'mocha' }*/
+		underscore: { exports: '_' }/*,
+		mocha: { exports: 'mocha' }*/
 	}
 });
 
@@ -32,11 +32,11 @@ chrome.runtime.getBackgroundPage(function(bg) {
 
 	chrome.extension.sendMessage({ action: 'get-tab-id'}, function(response) {
 		if (response.action == 'response-tab-id') {
-			tabID = response.value;	
+			tabID = response.value;
 		}
 	});
 	chrome.runtime.connect();
-	
+
 	checkState();
 });
 

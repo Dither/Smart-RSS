@@ -10,6 +10,11 @@
 	"background": {
 		"page": "index.html"
 	},
+    "applications": {
+        "gecko": {
+            "id": "smart-rss@mozilla.firefox"
+        }
+    },
 	"web_accessible_resources": ["libs/jquery.min.js", "libs/underscore.min.js", "libs/backbone.min.js", "libs/backbone.indexDB.js", "images/icon16_v2.png"],
 	"permissions": ["https://*/*", "http://*/*", "storage", "unlimitedStorage", "alarms", "tabs", "contextMenus"],
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'unsafe-eval';",
@@ -25,7 +30,7 @@
         "48": "images/48-inverted-round.png",
         "64": "images/64-inverted-round.png",
         "96": "images/96-inverted-round.png",
-        "128": "images/128-inverted-round.png" 
+        "128": "images/128-inverted-round.png"
     },
     "commands": {
 	    "_execute_browser_action": {

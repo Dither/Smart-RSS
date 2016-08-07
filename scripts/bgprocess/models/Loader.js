@@ -2,7 +2,8 @@
  * @module BgProcess
  * @submodule models/Loader
  */
-define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation'], function (BB, RSSParser, ContentExtractor, animation) {
+define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation'],
+function (BB, RSSParser, ContentExtractor, animation) {
 
 	function markAutoRemovals(source) {
 		var removalInMs = (parseInt(source.get('autoremove'), 10) || 0) * 24 * 60 * 60 * 1000;
@@ -18,9 +19,7 @@ define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Ani
 
 	function download(sourcesToDownload) {
 		if (!sourcesToDownload) return;
-		if (!Array.isArray(sourcesToDownload)) {
-			sourcesToDownload = [sourcesToDownload];
-		}
+		if (!Array.isArray(sourcesToDownload)) sourcesToDownload = [sourcesToDownload];
 
 		sourcesToDownload.forEach(downloadOne);
 	}
@@ -49,11 +48,8 @@ define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Ani
 		if (!force) {
 			sourcesArr = sourcesArr.filter(function(source) {
 				if (source.get('updateEvery') === 0) return false;
-				/****
-					why !source.get('lastUpdate') ? .. I think I wanted !source.get('lastUpdate') => true not the other way around 
-				****/
 				if (!source.get('lastUpdate')) return true;
-				if (/*!source.get('lastUpdate') ||*/ source.get('lastUpdate') > Date.now() - source.get('updateEvery') * 60 * 1000) {
+				if (source.get('lastUpdate') > Date.now() - source.get('updateEvery') * 60 * 1000) {
 					return false;
 				}
 				return true;
@@ -64,7 +60,6 @@ define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Ani
 			loader.addSources(sourcesArr);
 			downloadURL();
 		}
-
 	}
 
 	function playNotificationSound() {
@@ -129,7 +124,7 @@ define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Ani
 			downloadURL();
 		}
 
-		var isFullText = sourceToLoad.get('fulltextEnable');
+		var fullText = sourceToLoad.get('fulltextEnable');
 
 		var options = {
 			url: sourceToLoad.get('url'),
@@ -155,20 +150,56 @@ define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Ani
 					createdNo = 0,
 					sID = sourceToLoad.get('id');
 
-				parsedData = RSSParser.parse(r, sID);
-				parsedData.forEach(function(item) {
-					var existingItem = items.get(item.id) || items.get(item.oldId);
+				var onRSSLoaded = function(parsedData){
+					parsedData.forEach(function(item) {
+						var existingItem = items.get(item.id) || items.get(item.oldId);
 
-					if (!existingItem) {
-						hasNew = true;
-						items.create(item, { sort: false });
-						createdNo++;
-					} else if (existingItem.get('deleted') === false && existingItem.get('content') !== item.content) {
-						existingItem.save({ content: item.content });
+						if (!existingItem) {
+							hasNew = true;
+							items.create(item, { sort: false });
+							createdNo++;
+						} else if (existingItem.get('deleted') === false &&
+						           //existingItem.get('content') === '&nbsp;' &&
+						           existingItem.get('content') !== item.content)
+						{
+							existingItem.save({ content: item.content });
+						}
+
+					});
+
+					if (fullText) {
+						var incompleteItems = parsedData.length,
+							timeout = settings.get('htmlTimeout') || 50000;
+
+						parsedData.forEach(function(item) {
+							var existingItem = items.get(item.id) || items.get(item.oldId);
+							if (!item.url) return;
+							$.ajax({
+								url: item.url,
+								timeout: timeout,
+								dataType: 'html'
+							}).done(function(htm) {
+								new ContentExtractor.parse(htm, sID, item.url, function(content){
+									if (content && content.length) {
+										/* TODO: do we need a lock here? */
+										existingItem.save({ content: content });
+									}
+								});
+								;
+							}).fail(function() {
+								//console.log('Failed to load URL: ' + item.url);
+							}).always(function() {
+								if (--incompleteItems <= 0) {
+									onDataReady();
+								}
+							});
+						});
+					} else {
+						onDataReady();
 					}
-				});
+				};
 
-				var onDataLoaded = function onDataLoaded() {
+				var onDataReady = function () {
 					items.sort({ silent: true });
 					if (hasNew) {
 						loader.itemsDownloaded = true;
@@ -202,37 +233,16 @@ define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Ani
 					});
 
 					sourceToLoad.trigger('update', { ok: true });
-					if (isFullText) onFeedCompleted();
+					if (fullText) onFeedCompleted();
 				};
 
-				if (isFullText) {
-					var incompleteItems = parsedData.length,
-						timeout = settings.get('htmlTimeout') || 50000;
-					parsedData.forEach(function(item) {
-						var existingItem = items.get(item.id) || items.get(item.oldId);
-						$.ajax({
-				            url: item.url,
-				            timeout: timeout,
-				            dataType: 'html'
-				        }).done(function(htm) {
-			        		var content = ContentExtractor.parse(htm, sID)
-			        		if (content.length) existingItem.save({ content: content});
-				        }).fail(function() {
-				            //console.log('Failed load URL: ' + item.url);
-				        }).always(function() {
-				            if (--incompleteItems <= 0) {
-				            	onDataLoaded();//;(onDataLoaded.bind(donethis))();
-				            }
-				        });
-					});
-				} else {
-					onDataLoaded();
-				}				
+				new RSSParser.parse(r, sID, onRSSLoaded);
+
 			}).fail(function() {
-				log('Failed load RSS: ' + sourceToLoad.get('url'));
+				//log('Failed load RSS: ' + sourceToLoad.get('url'));
 				sourceToLoad.trigger('update', { ok: false });
 			}).always(function() {
-				if (!isFullText) onFeedCompleted(); 
+				if (!fullText) onFeedCompleted();
 			});
 	}
 

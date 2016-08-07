@@ -83,12 +83,12 @@ return {
 						source.save({ hasNew: false });
 					}
 				});
-				
 			}
 		},
 		refetch: {
 			title: _T('Refetch'), /****localization needed****/
 			fn: function() {
+				if (!window.confirm(_T('This will delete all elements from selected feed(s). Continue?'))) return;
 				var s = require('views/feedList').getSelectedFeeds();
 				if (!s.length) return;
 
@@ -99,7 +99,7 @@ return {
 				});
 
 				app.actions.execute('feeds:update');
-				
+
 			}
 		},
 		delete: {
@@ -138,7 +138,7 @@ return {
 				} else if (feeds.length > 0) {
 					properties.show(feeds);
 				}
-				
+
 			}
 		},
 		addSource: {
@@ -258,7 +258,7 @@ return {
 					name: special ? special.get('name') : null,
 					unreadOnly: !!e.altKey || t.className == 'source-counter'
 				});
-				
+
 
 				if (special && special.get('name') == 'all-feeds') {
 					bg.sources.forEach(function(source) {
@@ -266,7 +266,7 @@ return {
 							source.save({ hasNew: false });
 						}
 					});
-					
+
 				} else if (ids.length) {
 					bg.sources.forEach(function(source) {
 						if (source.get('hasNew') && ids.indexOf(source.id) >= 0) {
@@ -482,7 +482,7 @@ return {
 				var articleList = require('views/articleList');
 				articleList.$el.find('.selected').removeClass('selected');
 				articleList.selectedItems = [];
-				
+
 				articleList.$el.find('.item:not(.invisible)').each(function(i, item) {
 					item.view.$el.addClass('selected');
 					articleList.selectedItems.push(item.view);
@@ -551,7 +551,7 @@ return {
 					return;
 				}
 				var tpl = contentView.downloadTemplate;
-				
+
 				var list = {};
 				list.articles = articleList.selectedItems.map(function(itemView) {
 					var attrs = Object.create(itemView.model.attributes);
@@ -630,7 +630,7 @@ return {
 					if (contentView.model.get('pinned') && askRmPinned && askRmPinned != 'none') {
 						if (!confirm(_T('PIN_QUESTION_A') + contentView.model.escape('title') + _T('PIN_QUESTION_B'))) return;
 					}
-					
+
 					contentView.model.markAsDeleted();
 				} else {
 					if (contentView.model.get('pinned') && askRmPinned == 'all') {

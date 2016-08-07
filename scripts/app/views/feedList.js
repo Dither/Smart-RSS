@@ -2,11 +2,10 @@
  * @module App
  * @submodule views/feedList
  */
-define([
-	'backbone', 'jquery', 'underscore', 'views/SourceView', 'views/FolderView', 'views/SpecialView', 'models/Special',
-	'instances/contextMenus', 'mixins/selectable', 'instances/specials'
-],
-function (BB, $, _, SourceView, FolderView, SpecialView, Special, contextMenus, selectable, specials) {
+define(['backbone', 'jquery', 'underscore', 'views/SourceView', 'views/FolderView', 'views/SpecialView', 'models/Special',
+       'instances/contextMenus', 'mixins/selectable', 'instances/specials'],
+       function (BB, $, _, SourceView, FolderView, SpecialView, Special,
+                 contextMenus, selectable, specials) {
 
 	/**
 	 * List of feeds (in left column)
@@ -69,7 +68,7 @@ function (BB, $, _, SourceView, FolderView, SpecialView, Special, contextMenus, 
 			bg.sources.on('clear-events', this.handleClearEvents, this);
 
 			this.on('pick', this.handlePick);
-			
+
 		},
 
 		/**
@@ -280,7 +279,7 @@ function (BB, $, _, SourceView, FolderView, SpecialView, Special, contextMenus, 
 			} else {
 				this.$el.append(view.render().el);
 			}
-			
+
 		},
 
 		/**
@@ -341,9 +340,9 @@ function (BB, $, _, SourceView, FolderView, SpecialView, Special, contextMenus, 
 				folder = $('.folder[data-id=' + source.get('folderID') + ']');
 				if (!folder.length) folder = null;
 			}
-			
+
 			var sourceViews;
-				
+
 			if (folder) {
 				sourceViews = $('.source[data-in-folder=' + source.get('folderID') + ']').toArray();
 				if (sourceViews.length && noManualSort) {

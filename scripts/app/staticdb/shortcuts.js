@@ -13,7 +13,7 @@ define({
 		'down': 'feeds:selectNext',
 		'u': 'feeds:selectPrevious',
 		'j': 'feeds:selectNext',
-		
+
 		'ctrl+left': 'feeds:closeFolders',
 		'ctrl+right': 'feeds:openFolders',
 		'left': 'feeds:toggleFolder',

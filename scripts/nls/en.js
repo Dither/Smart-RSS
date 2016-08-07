@@ -30,7 +30,7 @@ define({
 	ONE_LINE: 'One-Line',
 	TWO_LINES: 'Two-Lines',
 	AUTO: 'Auto',
-	FULL_ARTICLE: 'Full article',
+	FULL_ARTICLE: 'Original article',
 	REALLY_DELETE: 'Do you really want to delete this feed?',
 	ALL_FEEDS: 'All feeds',
 	PINNED: 'Pinned',

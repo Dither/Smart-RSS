@@ -18,8 +18,9 @@ require.config({
 		underscore: '../libs/underscore.min',
 		backbone: '../libs/backbone.min',
 		backboneDB: '../libs/backbone.indexDB',
-		locale: '../local/local',
+		locale: '../app/modules/Locale',
 		md5: '../libs/md5',
+		readability: '../libs/readability',
 		text: '../text',
 		domReady: '../domReady'
 	},
@@ -29,7 +30,8 @@ require.config({
 		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },
 		backboneDB: { deps: ['backbone'] },
 		underscore: { exports: '_' },
-		md5: { exports: 'CryptoJS' }
+		md5: { exports: 'CryptoJS' },
+		readability: { exports: 'Readability' }
 	}
 });
 
@@ -52,6 +54,6 @@ chrome.runtime.onConnect.addListener(function(port) {
  	});
 });
 
-requirejs(['bg'], function(bg) {	
+requirejs(['bg'], function(bg) {
 	// bg started
 });

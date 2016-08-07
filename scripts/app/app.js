@@ -31,18 +31,18 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 			return url;
 		},
 		validatePosition: function(path) {
-	        var path_val = '';
-	        try { 
-	        	document.querySelector(path); path_val = path;
-	        } catch (e) { 	       
-	        	try {
-	        		document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-	        		path_val = path;
-	        	} catch (e) { 
-	        		path_val = ''; 
-	        	}
-	        }
-	        return path_val;
+			var path_val = '';
+			try {
+				document.querySelector(path); path_val = path;
+			} catch (e) {
+				try {
+					document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+					path_val = path;
+				} catch (e) {
+					path_val = '';
+				}
+			}
+			return path_val;
 		},
 		events: {
 			'mousedown': 'handleMouseDown',
@@ -143,7 +143,7 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 				$('body').removeClass('loading');
 				that.setFocus('articles');
 				that.handleLayoutChange();
-				
+
 			}, 0, this);
 		},
 		report: function() {

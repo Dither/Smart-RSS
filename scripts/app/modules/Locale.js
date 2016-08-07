@@ -2,8 +2,18 @@
  * @module App
  * @submodule modules/Locale
  */
-var nl = bg.settings.get('lang') || 'en';
-define(['../../nls/' + nl, '../../nls/en'], function (lang, en) {
+var nl, loc;
+if (typeof bg !== 'undefined'){
+	nl = bg.settings.get('lang') || 'en';
+	loc = '../../nls/' + nl
+	loc_en = '../../nls/en';
+}
+else{
+	nl = 'en';
+	loc = '../nls/' + nl
+	loc_en = '../nls/en';
+}
+define([loc, loc_en], function (lang, en) {
 
 	/**
 	 * String localization

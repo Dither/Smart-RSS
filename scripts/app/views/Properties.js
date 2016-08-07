@@ -27,34 +27,34 @@ function(BB, $, _, tplProperties, Locale) {
 			}
 
 			var updateEvery, autoremove, fulltextEnable;
-            function saveValue(prop, arr) {
-                var val = parseFloat($('#prop-'+param.toHyphenFormat()).val());
-                if (val && val >= 0) {
-                    arr.forEach(function(source) {
-                        var obj = {};
-                        obj[prop] = val;
-                        source.save(obj);
-                    });
-                }
-                return val;
-            }
+			function saveValue(prop, arr) {
+				var val = parseFloat($('#prop-'+param.toHyphenFormat()).val());
+				if (val && val >= 0) {
+					arr.forEach(function(source) {
+						var obj = {};
+						obj[prop] = val;
+						source.save(obj);
+					});
+				}
+				return val;
+			}
 
 			if (this.current instanceof bg.Source) {
 				/* encrypt the password */
 				this.current.setPass();
 
-                var ft_pos = app.validatePosition($('#prop-fulltext-position').val().trim()),
-                    ft_pos_mode = parseInt($('#prop-fulltext-enable').val(), 10),
-                    url = $('#prop-url').val().trim();
+				var ft_pos = app.validatePosition($('#prop-fulltext-position').val().trim()),
+					ft_pos_mode = parseInt($('#prop-fulltext-enable').val(), 10),
+					url = $('#prop-url').val().trim();
 
 				if (url) this.current.save({
 					title: $('#prop-title').val(),
 					url: app.fixURL(url),
 					username: $('#prop-username').val(),
-					updateEvery: parseFloat($('#prop-update-every').val()),
-					autoremove: parseFloat($('#prop-autoremove').val(), 10),
-                    fulltextEnable: (((ft_pos_mode === 1) && ft_pos) || (ft_pos_mode === 2)) ? ft_pos_mode : 0,
-                    fulltextPosition: ft_pos
+					updateEvery: parseInt($('#prop-update-every').val(), 10),
+					autoremove: parseInt($('#prop-autoremove').val(), 10),
+					fulltextEnable: ft_pos_mode, /*(((ft_pos_mode === 1) && ft_pos) || (ft_pos_mode === 2)) ? ft_pos_mode : 0,*/
+					fulltextPosition: ft_pos
 				});
 			} else if (this.current instanceof bg.Folder) {
 				this.current.save({
@@ -62,13 +62,13 @@ function(BB, $, _, tplProperties, Locale) {
 				});
 
 				var sourcesInFolder = bg.sources.where({ folderID: this.current.id });
-                updateEvery = saveValue('updateEvery', sourcesInFolder);
-                autoremove = saveValue('autoremove', sourcesInFolder);
-                fulltextEnable = saveValue('fulltextEnable', sourcesInFolder);
+				updateEvery = saveValue('updateEvery', sourcesInFolder);
+				autoremove = saveValue('autoremove', sourcesInFolder);
+				fulltextEnable = saveValue('fulltextEnable', sourcesInFolder);
 			} else if (Array.isArray(this.current)) {
-                updateEvery = saveValue('updateEvery', this.current);
-                autoremove = saveValue('autoremove', this.current);
-                fulltextEnable = saveValue('fulltextEnable', this.current);
+				updateEvery = saveValue('updateEvery', this.current);
+				autoremove = saveValue('autoremove', this.current);
+				fulltextEnable = saveValue('fulltextEnable', this.current);
 			}
 
 			this.hide();
@@ -84,22 +84,22 @@ function(BB, $, _, tplProperties, Locale) {
 
 			if (this.current instanceof bg.Source) {
 				/* decrypt password */
-				var thisrender = this, 
-                    attrs = this.current.toJSON();
+				var thisrender = this,
+					attrs = this.current.toJSON();
 				attrs.password = this.current.getPass();
 
 				this.$el.html(this.template(attrs));
 
-                function setValue(param) {
-                    var v = this.current.get(param),
-                        el = $('#prop-' + param.toHyphenFormat())
-                    if (el) el.val(v);
-                }
+				function setValue(param) {
+					var v = this.current.get(param),
+						el = $('#prop-' + param.toHyphenFormat())
+					if (el) el.val(v);
+				}
 
-                setValue.apply(this, ['updateEvery']);
-                setValue.apply(this, ['autoremove']);
-                setValue.apply(this, ['fulltextEnable']);
-                setValue.apply(this, ['fulltextPosition']);
+				setValue.apply(this, ['updateEvery']);
+				setValue.apply(this, ['autoremove']);
+				setValue.apply(this, ['fulltextEnable']);
+				setValue.apply(this, ['fulltextPosition']);
 			} else {
 				var isFolder = this.current instanceof bg.Folder;
 				var listOfSources = isFolder ? bg.sources.where({ folderID: this.current.id }) : this.current;
@@ -109,18 +109,18 @@ function(BB, $, _, tplProperties, Locale) {
 				 * Test if all selected feeds has the same properteies or if they are mixed
 				 */
 
-                function setDiffers(param) {
-                    params['first_' + param] = listOfSources[0].get(param) || null;
-                    params['differs_' + param] = listOfSources.some(function(c) {
-                        if (params['first_' + param] != c.get(param)) return true;
-                    });
-                }
+				function setDiffers(param) {
+					params['first_' + param] = listOfSources[0].get(param) || null;
+					params['differs_' + param] = listOfSources.some(function(c) {
+						if (params['first_' + param] != c.get(param)) return true;
+					});
+				}
 
 				if (listOfSources.length) {
-                    setDiffers('updateEvery');
-                    setDiffers('autoremove');
-                    setDiffers('fulltextEnable');
-                    setDiffers('fulltextPosition');
+					setDiffers('updateEvery');
+					setDiffers('autoremove');
+					setDiffers('fulltextEnable');
+					setDiffers('fulltextPosition');
 				}
 
 				/**
@@ -133,19 +133,19 @@ function(BB, $, _, tplProperties, Locale) {
 				 * Set <select>s's values
 				 */
 
-                function setDiffValue(param) {
-                    var v = params['differs_'+param],
-                        el = $('#prop-'+param.toHyphenFormat());
-                    
-                    if (!v && el) {
-                        el.val(params['first_'+param]);
-                    }
-                }
+				function setDiffValue(param) {
+					var v = params['differs_'+param],
+						el = $('#prop-'+param.toHyphenFormat());
 
-                setDiffValue('updateEvery');
-                setDiffValue('autoremove');
-                setDiffValue('fulltextEnable');
-                setDiffValue('fulltextAuto');
+					if (!v && el) {
+						el.val(params['first_'+param]);
+					}
+				}
+
+				setDiffValue('updateEvery');
+				setDiffValue('autoremove');
+				setDiffValue('fulltextEnable');
+				setDiffValue('fulltextAuto');
 			}
 
 			return this;
@@ -153,7 +153,7 @@ function(BB, $, _, tplProperties, Locale) {
 		show: function(source) {
 			this.current = source;
 			this.render();
-			
+
 			this.$el.css('display', 'block');
 		},
 		hide: function() {

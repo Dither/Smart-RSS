@@ -2,7 +2,7 @@ define([
 	'backbone', 'models/Special', 'instances/contextMenus', 'modules/Locale', 'views/feedList'
 ],
 function(BB, Special, contextMenus, Locale) {
-	
+
 	var specials = {
 		trash: new Special({
 			title: Locale.translate('TRASH'),

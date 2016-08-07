@@ -5,9 +5,9 @@ define([
 	'jquery',
 	'modules/Animation', 'models/Settings', 'models/Info', 'models/Source',
 	'collections/Sources', 'collections/Items', 'collections/Folders', 'models/Loader', 'collections/Logs',
-	'models/Folder', 'models/Item', 'collections/Toolbars'
+	'models/Folder', 'models/Item', 'collections/Toolbars', 'locale'
 ],
-function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader, Logs, Folder, Item, Toolbars) {
+function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader, Logs, Folder, Item, Toolbars, Locale) {
 
 	/**
 	 * Update animations
@@ -89,7 +89,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		settingsDef.always(function() {
 			settingsLoaded.resolve();
 		});
-		
+
 
 		return allDef.promise();
 	}
