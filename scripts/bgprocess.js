@@ -7,9 +7,9 @@
  * Do not upload any modified version of this extension to addons.opera.com!
  */
 
+if (typeof browser === 'undefined') browser = chrome;
 
 require.config({
-
 	baseUrl: 'scripts/bgprocess',
 	waitSeconds: 0,
 
@@ -39,7 +39,7 @@ require.config({
  * Events handlers that has to be set right on start
  */
 
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
  	if (message.action == 'get-tab-id') {
  		sendResponse({
  			action: 'response-tab-id',
@@ -48,7 +48,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
  	}
 });
 
-chrome.runtime.onConnect.addListener(function(port) {
+browser.runtime.onConnect.addListener(function(port) {
  	port.onDisconnect.addListener(function(port) {
  		sources.trigger('clear-events', port.sender.tab.id);
  	});

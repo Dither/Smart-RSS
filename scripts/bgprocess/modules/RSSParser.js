@@ -15,7 +15,8 @@ define(['md5', 'locale'], function (CryptoJS, Locale) {
 	function parseRSS(xml, sourceID, callback) {
 		var items = [];
 
-		if (!xml || !callback || !(xml instanceof XMLDocument)) return;
+		if (!callback ) throw Error('No parseRSS callback specified');
+		if (!xml || !(xml instanceof XMLDocument)) return callback(items);
 
 		var nodes = xml.querySelectorAll('item');
 		if (!nodes.length) nodes = xml.querySelectorAll('entry');
@@ -169,12 +170,12 @@ define(['md5', 'locale'], function (CryptoJS, Locale) {
 	}
 
 	function rssGetTitle(node) {
-		return node.querySelector('title') ? node.querySelector('title').textContent : '&lt;'+'no title'+'&gt;';
+		return node.querySelector('title') ? node.querySelector('title').textContent : '&lt;'+_T('no title')+'&gt;';
 	}
 
 	function nodesToText(doc, filter) {
 		var whitelist = [
-				/*'class', 'id',*/ 'src', 'href', 'type', 'alt', 'cite', 'title', 'data', 'height', 'width',
+				/*'class', 'id',*/ 'src', 'href', 'alt', 'cite', 'title', 'data', 'height', 'width',
 				'name', 'value', 'type', 'border', 'frameborder', 'colspan', 'rowspan', 'span'
 			],
 			nodes = doc.querySelectorAll('*');
@@ -239,8 +240,9 @@ define(['md5', 'locale'], function (CryptoJS, Locale) {
 	function rssGetContent(node, filter) {
 		var content = '',
 			desc = node.querySelector('encoded'),
-			to_remove = 'script, style, noscript, link, param',
-			to_replace = 'object, iframe';
+			to_remove = 'script, style, noscript, link, param, meta',
+			to_replace = 'object, iframe',
+			r_default = '&nbsp;';
 
 		if (desc) content = desc.textContent;
 		if (!content && (desc = node.querySelector('description'))) content = desc.textContent;
@@ -248,21 +250,25 @@ define(['md5', 'locale'], function (CryptoJS, Locale) {
 		if (!content && (desc = node.querySelector('content'))) content = desc.textContent; // prefer content over summary
 		if (!content && (desc = node.querySelector('summary'))) content = desc.textContent;
 
-		if (!filter && content) return content;
-		else if (content) {
-			// filter unused nodes
-			content = content.replace(/<!\s*\[\s*CDATA\s*\[\s*(.+)\s*\]\s*\]\s*>/ig, '$1');
-
+		if (!content) return r_default;
+		if (!filter) return content;
+		else {
+			// filter content data
 			var xmldoc = createXML(content);
-			if (xmldoc.querySelector('parsererror')) xmldoc = createHTML(content);
+			if (!xmldoc || xmldoc.querySelector('parsererror')) {
+				content = content.replace(/<!\s*\[\s*CDATA\s*\[\s*(.+)\s*\]\s*\]\s*>/ig, '$1');
+				xmldoc = createHTML(content);
+			}
+			if (!xmldoc) return r_default;
 
 			var rnode = xmldoc.querySelector('body') || xmldoc.childNodes[0];
 			if (rnode) removeNodes(rnode, to_remove, to_replace);
 			if (rnode && (content = nodesToText(rnode, filter))) return content;
-			return '&nbsp;';
+
+			return r_default;
 		}
 
-		return '&nbsp;';
+		return r_default;
 	}
 
 	return {

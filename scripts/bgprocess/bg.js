@@ -59,7 +59,6 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	 */
 	$.support.cors = true;
 
-
 	/**
 	 * Fetch all
 	 */
@@ -113,7 +112,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		 */
 		sources.on('add', function(source) {
 			if (source.get('updateEvery') > 0) {
-				chrome.alarms.create('source-' + source.get('id'), {
+				browser.alarms.create('source-' + source.get('id'), {
 					delayInMinutes: source.get('updateEvery'),
 					periodInMinutes: source.get('updateEvery')
 				});
@@ -123,16 +122,16 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 
 		sources.on('change:updateEvery reset-alarm', function(source) {
 			if (source.get('updateEvery') > 0) {
-				chrome.alarms.create('source-' + source.get('id'), {
+				browser.alarms.create('source-' + source.get('id'), {
 					delayInMinutes: source.get('updateEvery'),
 					periodInMinutes: source.get('updateEvery')
 				});
 			} else {
-				chrome.alarms.clear('source-' + source.get('id'));
+				browser.alarms.clear('source-' + source.get('id'));
 			}
 		});
 
-		chrome.alarms.onAlarm.addListener(function(alarm) {
+		browser.alarms.onAlarm.addListener(function(alarm) {
 			var sourceID = alarm.name.replace('source-', '');
 			if (sourceID) {
 				var source = sources.findWhere({
@@ -144,7 +143,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 					}
 				} else {
 					console.log('No source with ID: ' + sourceID);
-					chrome.alarms.clear(alarm.name);
+					browser.alarms.clear(alarm.name);
 				}
 
 			}
@@ -184,7 +183,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		/**
 		 * onclick:button -> open RSS
 		 */
-		chrome.browserAction.onClicked.addListener(function() {
+		browser.browserAction.onClicked.addListener(function() {
 			openRSS(true);
 		});
 
@@ -194,7 +193,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	/**
 	 * Messages
 	 */
-	chrome.runtime.onMessageExternal.addListener(function(message) {
+	browser.runtime.onMessageExternal.addListener(function(message) {
 		// if.sender.id != blahblah -> return;
 		if (!message.hasOwnProperty('action')) {
 			return;
@@ -220,15 +219,15 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	});
 
 	function openRSS(closeIfActive, focusSource) {
-		var url = chrome.extension.getURL('rss.html');
-		chrome.tabs.query({
+		var url = browser.runtime.getURL('rss.html');
+		browser.tabs.query({
 			url: url
 		}, function(tabs) {
 			if (tabs[0]) {
 				if (tabs[0].active && closeIfActive) {
-					chrome.tabs.remove(tabs[0].id);
+					browser.tabs.remove(tabs[0].id);
 				} else {
-					chrome.tabs.update(tabs[0].id, {
+					browser.tabs.update(tabs[0].id, {
 						active: true
 					});
 					if (focusSource) {
@@ -237,7 +236,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 				}
 			} else {
 				window.sourceToFocus = focusSource;
-				chrome.tabs.create({
+				browser.tabs.create({
 					'url': url
 				}, function() {});
 			}

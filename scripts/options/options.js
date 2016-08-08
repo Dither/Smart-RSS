@@ -40,14 +40,13 @@ function decodeHTML(str) {
 
 JSON.safeParse = function(str) {
 	try {
-		return JSON.parse(str);	
+		return JSON.parse(str);
 	} catch(e) {
 		return null;
 	}
 }
 
-chrome.runtime.getBackgroundPage(function(bg) {
-
+browser.runtime.getBackgroundPage(function(bg) {
 	$(function() {
 
 		$('#version').html(bg.version || 'dev build');
@@ -110,7 +109,7 @@ chrome.runtime.getBackgroundPage(function(bg) {
 		}
 
 		reader.readAsDataURL(file);
-		
+
 	}
 
 	function handleExportSmart() {
@@ -188,9 +187,9 @@ chrome.runtime.getBackgroundPage(function(bg) {
 					} else {
 						addLine(doc, body);
 						body.appendChild( addSource(doc, source.get('title'), source.get('url')) );
-						
+
 					}
-					
+
 				} else {
 					addLine(doc, body);
 					body.appendChild( addSource(doc, source.get('title'), source.get('url')) );
@@ -226,7 +225,7 @@ chrome.runtime.getBackgroundPage(function(bg) {
 				$('#smart-imported').html('Wrong file');
 				return;
 			}
-			
+
 			$('#smart-imported').html('Importing, please wait!');
 
 			var worker = new Worker('scripts/options/worker.js');
@@ -250,11 +249,11 @@ chrome.runtime.getBackgroundPage(function(bg) {
 			}
 		}
 
-		var url = chrome.extension.getURL('rss.html');
-		chrome.tabs.query({ url: url }, function(tabs) {
+		var url = browser.runtime.getURL('rss.html');
+		browser.tabs.query({ url: url }, function(tabs) {
 			for (var i=0; i < tabs.length; i++) {
-				chrome.tabs.remove(tabs[i].id);
-			} 
+				browser.tabs.remove(tabs[i].id);
+			}
 
 			// wait for clear events to happen
 			setTimeout(function() {
@@ -331,7 +330,7 @@ chrome.runtime.getBackgroundPage(function(bg) {
 
 		bg.indexedDB.deleteDatabase('backbone-indexeddb');
 		localStorage.clear();
-		chrome.alarms.clearAll()
-		chrome.runtime.reload();
+		browser.alarms.clearAll()
+		browser.runtime.reload();
 	}
 });

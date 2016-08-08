@@ -397,7 +397,7 @@ return {
 					}
 				}
 				articleList.selectedItems.forEach(function(item) {
-					chrome.tabs.create({ url: stripTags(item.model.get('url')), active: !e.shiftKey });
+					browser.tabs.create({ url: stripTags(item.model.get('url')), active: !e.shiftKey });
 				});
 			}
 		},
@@ -414,7 +414,7 @@ return {
 					view = articleList.selectedItems[0];
 				}
 				if (view.model) {
-					chrome.tabs.create({ url: stripTags(view.model.get('url')), active: !e.shiftKey });
+					browser.tabs.create({ url: stripTags(view.model.get('url')), active: !e.shiftKey });
 				}
 			}
 		},

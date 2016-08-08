@@ -6,7 +6,7 @@ define(['backbone', 'modules/Animation'], function (BB, animation) {
 
 	var handleAllCountChange = function(model) {
 		if (settings.get('badgeMode') == 'disabled') {
-			if (model == settings) chrome.browserAction.setBadgeText({ text: '' });
+			if (model == settings) browser.browserAction.setBadgeText({ text: '' });
 			return;
 		}
 
@@ -28,16 +28,14 @@ define(['backbone', 'modules/Animation'], function (BB, animation) {
 			} else {
 				val = info.get('allCountUnvisited') > 99 ? '+' : info.get('allCountUnvisited');
 			}
-			
+
 			val = val <= 0 ? '' : String(val);
-			chrome.browserAction.setBadgeText({ text: val });
-			chrome.browserAction.setBadgeBackgroundColor({ color: '#777' });
+			browser.browserAction.setBadgeText({ text: val });
+			browser.browserAction.setBadgeBackgroundColor({ color: '#777' });
 			info.badgeTimeout = null;
 		});
 	};
 
-
-	
 
 	/**
 	 * This model stores info about count of read/unread/unvisited/total of all feeds and in trash
@@ -105,12 +103,10 @@ define(['backbone', 'modules/Animation'], function (BB, animation) {
 				});
 
 				/****
-				 * probably not neccesary because I  save all the removed items to batch and then 
+				 * probably not neccesary because I  save all the removed items to batch and then
 				 * in next frame I remove them at once and all handleScroll anyway
 				 ****/
 				//items.trigger('render-screen');
-				
-				
 
 				info.set({
 					allCountUnread: info.get('allCountUnread') - source.get('count'),
@@ -136,7 +132,7 @@ define(['backbone', 'modules/Animation'], function (BB, animation) {
 				}
 
 				try {
-					chrome.alarms.clear('source-' + source.get('id'));
+					browser.alarms.clear('source-' + source.get('id'));
 				} catch (e) {
 					console.log('Alarm error: ' + e);
 				}
@@ -204,7 +200,7 @@ define(['backbone', 'modules/Animation'], function (BB, animation) {
 					}
 				}
 			});
-			
+
 
 			items.on('change:deleted', function(model) {
 				if (model.previous('trashed') == true) {

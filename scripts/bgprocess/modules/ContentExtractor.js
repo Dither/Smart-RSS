@@ -3,6 +3,7 @@
  * @submodule modules/ContentExtractor
  */
 define(['readability', 'locale'], function (Readability, Locale) {
+
 	/**
 	 * HTML Main Content Extractor
 	 * @class ContentExtractor
@@ -15,31 +16,33 @@ define(['readability', 'locale'], function (Readability, Locale) {
 			to_replace = 'object,applet',
 			r_default = '&nbsp';
 
-		if (!html || !sourceID || !callback) return;
+		if (!callback) throw Error('No ContentExtractor callback specified');
+		if (!sourceID) return;
+		if (!html) return callback(r_default);
 
 		var source = sources.findWhere({ id: sourceID });
 
+		if (!/<html/i.test(html))
+			return callback('<a href="' + url + '" target="_blank" download>' + Locale.translate('[file download]') + '</a>');
 		html = createHTML(html);
+		//if (html.documentElement) html.documentElement.normalize();
 
 		if (!source || !html) return callback(r_default);
 
 		var ft_pos_mode = source.get('fulltextEnable') || 0,
 			ft_pos = source.get('fulltextPosition') || 'body>*:not(footer):not(nav):not(script):not(style):not(header):not(form)';
 
-		if (ft_pos_mode === 0) return callback('&nbsp');
+		if (ft_pos_mode === 0) return callback(r_default);
 
 		removeNodes(html, to_remove, to_replace);
 
 		if (ft_pos_mode === 2) {
-			/*new Readability({debug:true}).init(url, html).parse(function(result) {
-				callback(result.content || r_default); // It's already cleaned by Readability
-			});*/
 			var readable = new Readability({
 				pageURL: url,
 				resolvePaths: true
 			});
-			saxParser(html.childNodes[html.childNodes.length-1], readable);
-			return callback(readable.getHTML() || r_default); // It's already cleaned by Readability
+			readable.parseDOM(html.childNodes[html.childNodes.length-1]);
+			return callback(readable.getHTML().replace(/[\r\n]+/g, '') || r_default); // It's already cleaned by Readability
 		} else {
 			try {
 				nodes = Array.prototype.slice.call(html.querySelectorAll(ft_pos), 0);
@@ -48,58 +51,25 @@ define(['readability', 'locale'], function (Readability, Locale) {
 					var evnodes = html.evaluate(ft_pos, html, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
 					while (node = evnodes.iterateNext()) nodes.push(node);
 				} catch (e) {
-					return callback('&nbsp');
+					return callback(r_default);
 				}
 			}
 		}
 		return callback(nodesToText(nodes, true) || r_default);
 	}
 
-	function saxParser(elem, callbacks){
-		if(typeof callbacks !== 'object')
-			throw 'please provide callbacks!';
-
-		//todo: support further events, options for trim & space normalisation
-
-		function parse(node){
-			var name = node.tagName.toLowerCase(),
-			    attributeNodes = node.attributes;
-
-			callbacks.onopentagname(name);
-
-			for(var i = 0, j = attributeNodes.length; i < j; i++){
-				callbacks.onattribute(attributeNodes[i].name+'', attributeNodes[i].value);
-			}
-
-			var childs = node.childNodes,
-			    num = childs.length, nodeType;
-
-			for(var i = 0; i < num; i++){
-				nodeType = childs[i].nodeType;
-				if(nodeType === 3 /*text*/)
-					callbacks.ontext(childs[i].textContent);
-				else if(nodeType === 1 /*element*/) parse(childs[i]);
-				/*else if(nodeType === 8) //comment
-					if(callbacks.oncomment) callbacks.oncomment(childs[i].toString());
-				[...]
-				*/
-			}
-			callbacks.onclosetag(name);
-		}
-
-		parse(elem);
-	}
-
 	function nodesToText(nodes, filter) {
 		if (!nodes.length) return '';
 
+		var inner_nodes, attr, i, l = nodes.length;
+
 		if (filter) {
 			var whitelist = [
-				/*'class', 'id',*/ 'style', 'src', 'href', 'type', 'alt', 'title', 'data', 'height', 'width',
+				/*'class', 'id',*/ 'style', 'src', 'href', 'alt', 'title', 'data', 'height', 'width',
 				'name', 'value', 'type', 'border', 'frameborder', 'colspan', 'rowspan', 'span', 'cite'
 			];
 
-			for (var inner_nodes, attr, i = 0, l = nodes.length; i < l; i++) {
+			for (i = 0; i < l; i++) {
 				inner_nodes = Array.prototype.slice.call(nodes[i].querySelectorAll('*')) || [];
 				inner_nodes.push(nodes[i]);
 				for (var attributes, k, j = 0, inl = inner_nodes.length; j < inl; j++) {
@@ -115,7 +85,7 @@ define(['readability', 'locale'], function (Readability, Locale) {
 		}
 
 		var text = '';
-		for (var i = 0, l = nodes.length; i < l; i++) {
+		for (i = 0; i < l; i++) {
 			text += nodes[i].outerHTML.trim().replace(/\s{2,}/g, ' ');
 		}
 
@@ -143,14 +113,16 @@ define(['readability', 'locale'], function (Readability, Locale) {
 	function removeNodes(doc, names, replaces) {
 		if (typeof doc === 'undefined' || typeof names !== 'string' || names.length < 2 || typeof replaces !== 'string' || replaces.length < 2) return;
 
-		for (var i = 0, r = doc.querySelectorAll(names), l = r.length; i < l; i++) {
+		var  i,r,l;
+
+		for (i = 0, r = doc.querySelectorAll(names), l = r.length; i < l; i++) {
 			if (r[i].parentNode) {
 				r[i].parentNode.removeChild(r[i]);
 			}
 		}
 
-		for (var i = 0, r = doc.querySelectorAll(replaces), l = r.length; i < l; i++) {
-			if (r[i].src) r[i].outerHTML = '<a href="'+r[i].src+'">' + _T('[embedded media]') + '</a>';
+		for (i = 0, r = doc.querySelectorAll(replaces), l = r.length; i < l; i++) {
+			if (r[i].src) r[i].outerHTML = '<a href="'+r[i].src+'">' + Locale.translate('[embedded media]') + '</a>';
 			else if (r[i].parentNode) {
 				r[i].parentNode.removeChild(r[i]);
 			}

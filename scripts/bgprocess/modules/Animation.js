@@ -13,7 +13,7 @@ define([], function () {
 		i: 2,
 		interval: null,
 		update: function() {
-			chrome.browserAction.setIcon({ path: '/images/reload_anim_' + this.i + '.png' });
+			browser.browserAction.setIcon({ path: '/images/reload_anim_' + this.i + '.png' });
 			this.i++;
 		if (this.i > 4) this.i = 1;
 		},
@@ -34,11 +34,11 @@ define([], function () {
 		handleIconChange: function() {
 			if (this.interval) return;
 			if ( sources.findWhere({ hasNew: true }) ) {
-				chrome.browserAction.setIcon({
+				browser.browserAction.setIcon({
 					path: '/images/icon19-' + settings.get('icon') + '.png'
 				});
 			} else {
-				chrome.browserAction.setIcon({
+				browser.browserAction.setIcon({
 					path: '/images/icon19.png'
 				});
 			}

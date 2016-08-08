@@ -1,3 +1,5 @@
+if (typeof browser === 'undefined') browser = chrome;
+
 require.config({
 
 	baseUrl: 'scripts/app',
@@ -24,18 +26,18 @@ require.config({
 
 var tabID = -1;
 
-chrome.runtime.getBackgroundPage(function(bg) {
+browser.runtime.getBackgroundPage(function(bg) {
 	/**
 	 * Setup work, that has to be done before any dependencies get executed
 	 */
 	window.bg = bg;
 
-	chrome.extension.sendMessage({ action: 'get-tab-id'}, function(response) {
+	browser.runtime.sendMessage({ action: 'get-tab-id'}, function(response) {
 		if (response.action == 'response-tab-id') {
 			tabID = response.value;
 		}
 	});
-	chrome.runtime.connect();
+	browser.runtime.connect();
 
 	checkState();
 });

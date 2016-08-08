@@ -128,7 +128,7 @@ function (BB, RSSParser, ContentExtractor, animation) {
 
 		var options = {
 			url: sourceToLoad.get('url'),
-			timeout: settings.get('rssTimeout') || 20000,
+			timeout: settings.get('rssTimeout') || 12000,
 			dataType: 'xml',
 			beforeSend: function(xhr) {
 				xhr.setRequestHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
@@ -151,52 +151,62 @@ function (BB, RSSParser, ContentExtractor, animation) {
 					sID = sourceToLoad.get('id');
 
 				var onRSSLoaded = function(parsedData){
+					var incompleteItems = parsedData.length,
+						timeout = settings.get('htmlTimeout') || 24000;
+
 					parsedData.forEach(function(item) {
 						var existingItem = items.get(item.id) || items.get(item.oldId);
 
-						if (!existingItem) {
-							hasNew = true;
-							items.create(item, { sort: false });
-							createdNo++;
-						} else if (existingItem.get('deleted') === false &&
-						           //existingItem.get('content') === '&nbsp;' &&
-						           existingItem.get('content') !== item.content)
-						{
-							existingItem.save({ content: item.content });
-						}
-
-					});
-
-					if (fullText) {
-						var incompleteItems = parsedData.length,
-							timeout = settings.get('htmlTimeout') || 50000;
-
-						parsedData.forEach(function(item) {
-							var existingItem = items.get(item.id) || items.get(item.oldId);
-							if (!item.url) return;
-							$.ajax({
+						if (fullText) {
+							if (!item.url) {
+								if (--incompleteItems <= 0)
+									onDataReady();
+								return;
+							}
+							/* Don't reload complete pages even if they do change */
+							if (!existingItem || existingItem.get('content') === '&nbsp;') $.ajax({
 								url: item.url,
 								timeout: timeout,
 								dataType: 'html'
 							}).done(function(htm) {
 								new ContentExtractor.parse(htm, sID, item.url, function(content){
+									/* TODO: do we need a lock here? */
 									if (content && content.length) {
-										/* TODO: do we need a lock here? */
-										existingItem.save({ content: content });
+										item.content = content;
 									}
+									if (!existingItem) {
+										hasNew = true;
+										items.create(item, { sort: false });
+										createdNo++;
+									} else if (existingItem.get('deleted') === false &&
+											   existingItem.get('content') !== item.content)
+									{
+										existingItem.save({ content: item.content });
+									}
+									if (--incompleteItems <= 0)
+										onDataReady();
 								});
 								;
 							}).fail(function() {
 								//console.log('Failed to load URL: ' + item.url);
-							}).always(function() {
-								if (--incompleteItems <= 0) {
+								if (--incompleteItems <= 0)
 									onDataReady();
-								}
 							});
-						});
-					} else {
+						} else {
+							if (!existingItem) {
+								hasNew = true;
+								items.create(item, { sort: false });
+								createdNo++;
+							} else if (existingItem.get('deleted') === false &&
+									   existingItem.get('content') !== item.content)
+							{
+								existingItem.save({ content: item.content });
+							}
+						}
+					});
+
+					if (!fullText)
 						onDataReady();
-					}
 				};
 
 				var onDataReady = function () {
