@@ -13,6 +13,7 @@ define(['backbone'], function (BB) {
 	var Source = BB.Model.extend({
 		defaults: {
 			title: '',
+			favicon: '',
 			url: 'about:blank',
 			base: '',
 			updateEvery: 180, // in minutes

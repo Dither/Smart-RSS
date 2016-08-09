@@ -238,6 +238,7 @@ var tagsToRemove = { __proto__: null, aside: true, time: true, applet: true, foo
 	re_onAttribute = /^on/i,
 	re_jsAttribute = /javascript\s*:/i,
 	re_dataAttribute = /^data-/,
+	re_dateExtra = /\s[^\s]+$/g,
 
 	re_closing = /\/?(?:#.*)?$/,
 	re_imgUrl = /\.(?:gif|jpe?g|a?png|webp|svg)/i,
@@ -517,10 +518,14 @@ Readability.prototype.onattribute = function(name, value){
 
 	var elem = this._currentElement;
 
+	if (name === 'id' && !re_whitespace.test(value)) {
+		elem.attributes[name] = value
+	}
+
 	if (re_dataAttribute.test(name)) {
 		// Replace lazyload images
 		if ((value.match(re_protocol) || []).length === 1 && re_imgUrl.test(value))
-			elem.attributes['src'] = value;
+			elem.attributes['src'] = value.replace(re_dateExtra, '');
 	}
 	else if(name === 'href' || name === 'src'){
 		// fix links
@@ -543,7 +548,7 @@ Readability.prototype.onattribute = function(name, value){
 
 		elem.elementData += ' ' + value;
 	}
-	else if(elem.name === 'img' || elem.name === 'svg'){
+	else if(elem.name === 'img'){
 		// powerup proper images
 		if(name === 'width' || name === 'height') {
 			value = parseInt(value, 10);
@@ -553,6 +558,9 @@ Readability.prototype.onattribute = function(name, value){
 			else if(name === 'width' ? value >= 200 : value >= 150) elem.parent.attributeScore += 5;
 		}
 		else if(name === 'alt') elem.parent.attributeScore += 10;
+	}
+	else if(elem.name === 'svg' || (elem.parent && elem.parent.name === 'svg')) {
+		elem.attributes[name] = value;
 	}
 	else if(this._settings.cleanAttributes){
 		// filter attributes
@@ -695,6 +703,7 @@ Readability.prototype.onclosetag = function(tagName){
 		}
 		elem.name = 'p';
 	}
+	else if(tagName === 'li' && elem.attributes.src) { elem.name = 'img'; }
 	else return;
 
 	if((elem.info.textLength + elem.info.linkLength) > MIN_PARAGRAPH_LENGTH && elem.parent && elem.parent.parent){

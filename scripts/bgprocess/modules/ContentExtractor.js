@@ -22,8 +22,8 @@ define(['readability', 'locale'], function (Readability, Locale) {
 
 		var source = sources.findWhere({ id: sourceID });
 
-		if (!/<html/i.test(html))
-			return callback('<a href="' + url + '" target="_blank" download>' + Locale.translate('[file download]') + '</a>');
+		if (!/<body/i.test(html))
+			return callback('<a href="' + url + '" download>' + Locale.translate('[file download]') + '</a>');
 		html = createHTML(html);
 		//if (html.documentElement) html.documentElement.normalize();
 
@@ -37,12 +37,21 @@ define(['readability', 'locale'], function (Readability, Locale) {
 		removeNodes(html, to_remove, to_replace);
 
 		if (ft_pos_mode === 2) {
-			var readable = new Readability({
-				pageURL: url,
-				resolvePaths: true
-			});
-			readable.parseDOM(html.childNodes[html.childNodes.length-1]);
-			return callback(readable.getHTML().replace(/[\r\n]+/g, '') || r_default); // It's already cleaned by Readability
+			var html_result = '',
+				readable = new Readability({
+					pageURL: url,
+					resolvePaths: true
+				});
+
+			for (var i = 0; i < 4; i++) {
+				readable.setSkipLevel(i);
+				readable.parseDOM(html.childNodes[html.childNodes.length-1]);
+				html_result = readable.getHTML().replace(/[\r\n]+/g, '');
+				if (html_result.length > 100) break;
+				//console.log('<ContentExtractor> retry URL:'+url+';attempt='+i+';length='+html_result.length)
+			}
+
+			return callback(html_result || r_default); // It's already cleaned by Readability
 		} else {
 			try {
 				nodes = Array.prototype.slice.call(html.querySelectorAll(ft_pos), 0);

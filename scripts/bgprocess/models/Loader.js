@@ -2,8 +2,8 @@
  * @module BgProcess
  * @submodule models/Loader
  */
-define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation'],
-function (BB, RSSParser, ContentExtractor, animation) {
+define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation', 'modules/toDataURI'],
+function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 
 	function markAutoRemovals(source) {
 		var removalInMs = (parseInt(source.get('autoremove'), 10) || 0) * 24 * 60 * 60 * 1000;
@@ -21,10 +21,10 @@ function (BB, RSSParser, ContentExtractor, animation) {
 		if (!sourcesToDownload) return;
 		if (!Array.isArray(sourcesToDownload)) sourcesToDownload = [sourcesToDownload];
 
-		sourcesToDownload.forEach(downloadOne);
+		sourcesToDownload.forEach(downloadSingleFeed);
 	}
 
-	function downloadOne(model) {
+	function downloadSingleFeed(model) {
 		if (loader.sourceLoading === model || loader.sourcesToLoad.indexOf(model) >= 0) {
 			return false;
 		}
@@ -34,14 +34,18 @@ function (BB, RSSParser, ContentExtractor, animation) {
 			return true;
 		} else if (model instanceof Source) {
 			loader.addSources(model);
-			if (loader.get('loading') === false) downloadURL();
+			if (!model.get('favicon'))
+				new toDataURI.favicon(model.get('url'), function(url) {
+					model.set('favicon', url);
+				});
+			if (loader.get('loading') === false) downloadFeedByURL();
 			return true;
 		}
 
 		return false;
 	}
 
-	function downloadAll(force) {
+	function downloadAllFeeds(force) {
 		if (loader.get('loading') === true) return;
 		var sourcesArr = sources.toArray();
 
@@ -58,7 +62,7 @@ function (BB, RSSParser, ContentExtractor, animation) {
 
 		if (sourcesArr.length) {
 			loader.addSources(sourcesArr);
-			downloadURL();
+			downloadFeedByURL();
 		}
 	}
 
@@ -91,7 +95,7 @@ function (BB, RSSParser, ContentExtractor, animation) {
 		animation.stop();
 	}
 
-	function downloadURL() {
+	function downloadFeedByURL() {
 		if (!loader.sourcesToLoad.length) {
 			// IF DOWNLOADING FINISHED, DELETED ITEMS WITH DELETED SOURCE (should not really happen)
 			var sourceIDs = sources.pluck('id');
@@ -121,7 +125,7 @@ function (BB, RSSParser, ContentExtractor, animation) {
 			// reset alarm to make sure next call isn't too soon + to make sure alarm acutaly exists (it doesn't after import)
 			sourceToLoad.trigger('reset-alarm', sourceToLoad);
 			sourceToLoad.set('isLoading', false);
-			downloadURL();
+			downloadFeedByURL();
 		}
 
 		var fullText = sourceToLoad.get('fulltextEnable');
@@ -143,7 +147,8 @@ function (BB, RSSParser, ContentExtractor, animation) {
 		}
 
 		if (settings.get('showSpinner')) sourceToLoad.set('isLoading', true);
-		loader.currentRequest = $.ajax(options).done(function(r) {
+		loader.currentRequest = $.ajax(options)
+			.done(function(r) {
 				var donethis = this,
 					parsedData = [],
 					hasNew = false,
@@ -163,30 +168,29 @@ function (BB, RSSParser, ContentExtractor, animation) {
 									onDataReady();
 								return;
 							}
-							/* Don't reload complete pages even if they do change */
-							if (!existingItem || existingItem.get('content') === '&nbsp;') $.ajax({
+							/* Don't reload complete pages even if they do change
+							if (!existingItem || existingItem.get('content') === '&nbsp;') */
+							$.ajax({
 								url: item.url,
 								timeout: timeout,
 								dataType: 'html'
 							}).done(function(htm) {
 								new ContentExtractor.parse(htm, sID, item.url, function(content){
 									/* TODO: do we need a lock here? */
-									if (content && content.length) {
+									if (content && content.length)
 										item.content = content;
-									}
+
 									if (!existingItem) {
 										hasNew = true;
 										items.create(item, { sort: false });
 										createdNo++;
-									} else if (existingItem.get('deleted') === false &&
-											   existingItem.get('content') !== item.content)
+									} else if (existingItem.get('deleted') === false)
 									{
 										existingItem.save({ content: item.content });
 									}
 									if (--incompleteItems <= 0)
 										onDataReady();
 								});
-								;
 							}).fail(function() {
 								//console.log('Failed to load URL: ' + item.url);
 								if (--incompleteItems <= 0)
@@ -288,9 +292,9 @@ function (BB, RSSParser, ContentExtractor, animation) {
 			downloadStopped();
 		},
 		download: download,
-		downloadURL: downloadURL,
-		downloadOne: downloadOne,
-		downloadAll: downloadAll,
+		downloadFeedByURL: downloadFeedByURL,
+		downloadSingleFeed: downloadSingleFeed,
+		downloadAllFeeds: downloadAllFeeds,
 		playNotificationSound: playNotificationSound
 	});
 

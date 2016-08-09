@@ -42,7 +42,7 @@ return {
 			icon: 'reload.png',
 			title: _T('UPDATE_ALL'),
 			fn: function() {
-				bg.loader.downloadAll(true);
+				bg.loader.downloadAllFeeds(true);
 			}
 		},
 		update: {
@@ -89,7 +89,9 @@ return {
 			title: _T('Refetch'), /****localization needed****/
 			fn: function() {
 				if (!window.confirm(_T('This will delete all elements from selected feed(s). Continue?'))) return;
+
 				var s = require('views/feedList').getSelectedFeeds();
+
 				if (!s.length) return;
 
 				s.forEach(function(source) {
@@ -303,10 +305,10 @@ return {
 				var list = require('views/articleList');
 				if (list.currentData.feeds.length) {
 					list.currentData.feeds.forEach(function(id) {
-						bg.loader.downloadOne(bg.sources.get(id));
+						bg.loader.downloadSingleFeed(bg.sources.get(id));
 					});
 				} else {
-					bg.loader.downloadAll(true); // true = force
+					bg.loader.downloadAllFeeds(true); // true = force
 				}
 			}
 		},

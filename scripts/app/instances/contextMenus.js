@@ -8,7 +8,7 @@ function(BB, ContextMenu, Locale) {
 			icon: 'reload.png',
 			action: function() {
 				app.actions.execute('feeds:update');
-				//bg.downloadOne(sourceContextMenu.currentSource);
+				//bg.downloadSingleFeed(sourceContextMenu.currentSource);
 			}
 		},
 		{

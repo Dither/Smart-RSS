@@ -117,7 +117,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 					periodInMinutes: source.get('updateEvery')
 				});
 			}
-			loader.downloadOne(source);
+			loader.downloadSingleFeed(source);
 		});
 
 		sources.on('change:updateEvery reset-alarm', function(source) {
@@ -138,8 +138,8 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 					id: sourceID
 				});
 				if (source) {
-					if (!loader.downloadOne(source)) {
-						setTimeout(loader.downloadOne, 30000, source);
+					if (!loader.downloadSingleFeed(source)) {
+						setTimeout(loader.downloadSingleFeed, 30000, source);
 					}
 				} else {
 					console.log('No source with ID: ' + sourceID);
@@ -151,13 +151,13 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		});
 
 		sources.on('change:url', function(source) {
-			loader.downloadOne(source);
+			loader.downloadSingleFeed(source);
 		});
 
 		sources.on('change:title', function(source) {
 			// if url was changed as well change:url listener will download the source
 			if (!source.get('title')) {
-				loader.downloadOne(source);
+				loader.downloadSingleFeed(source);
 			}
 
 			sources.sort();
@@ -171,7 +171,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		/**
 		 * Init
 		 */
-		setTimeout(loader.downloadAll, 30000);
+		setTimeout(loader.downloadAllFeeds, 30000);
 		appStarted.resolve();
 
 		/**

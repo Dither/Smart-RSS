@@ -236,7 +236,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 					bg.fetchAll().always(function() {
 						bg.info.autoSetData();
 						$('#smart-imported').html('Import fully completed!');
-						bg.loader.downloadAll(true);
+						bg.loader.downloadAllFeeds(true);
 					});
 				} else if (e.data.action == 'message'){
 					$('#smart-imported').html(e.data.value);
@@ -316,7 +316,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 			$('#opml-imported').html('Import completed!');
 
 			setTimeout(function() {
-				bg.loader.downloadAll();
+				bg.loader.downloadAllFeeds();
 			}, 10);
 		}
 

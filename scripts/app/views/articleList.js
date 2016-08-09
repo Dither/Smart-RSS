@@ -295,7 +295,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 			var start = -1;
 			var count = 0;
 			for (var i=0,j=this.viewsToRender.length; i<j; i++) {
-				if (1||(start >= 0 && count % 10 != 0) || isScrolledIntoView(this.viewsToRender[i].el)) {
+				if ((start >= 0 && count % 10 != 0) || isScrolledIntoView(this.viewsToRender[i].el)) {
 					this.viewsToRender[i].render();
 					count++;
 					if (start == -1) start = i;
@@ -387,7 +387,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 		 * @param view {views/ItemView}
 		 */
 		selectAfterDelete: function(view) {
-			if (view == this.selectedItems[0]) {
+			if (view && view == this.selectedItems[0]) {
 				var last = this.$el.find('.item:not(.invisible):last').get(0);
 				if (last && view == last.view) {
 					this.selectPrev({ currentIsRemoved: true });
