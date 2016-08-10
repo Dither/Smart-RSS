@@ -181,6 +181,7 @@ input[type=search]:not(:focus):not(:valid) {
   display: flex;
   -webkit-flex: 1 1 auto;
   flex: 1 1 auto;
+  overflow: hidden;
 }
 body > .regions {
   min-height: 100%;
@@ -200,6 +201,7 @@ body > .regions {
   flex-flow: column;
   -webkit-align-items: stretch;
   align-items: stretch;
+  max-height:100%;
 }
 .vertical .region {
   border-right: none;

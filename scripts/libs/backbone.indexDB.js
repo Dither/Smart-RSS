@@ -253,7 +253,7 @@
 	}
 
 	function callbackHandler(options, resp, errorMessage) {
-		
+
 		var syncDfd = options.syncDfd;
 		if (resp) {
 			if (options && options.success) {

@@ -92,7 +92,7 @@ return {
 			this.selectPivot = view;
 			this.$el.find('.selected').removeClass('selected');
 
-			
+
 			if (!window || !window.frames) {
 				bg.logs.add({ message: 'Event duplication bug! Clearing events now...' });
 				bg.console.log('Event duplication bug! Clearing events now...');
@@ -103,7 +103,7 @@ return {
 			setTimeout(function() {
 				this.trigger('pick', view, e);
 			}.bind(this), 0);
-			
+
 		} else if (e.shiftKey && this.selectPivot) {
 			this.$el.find('.selected').removeClass('selected');
 			this.selectedItems = [this.selectPivot];

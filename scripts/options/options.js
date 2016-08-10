@@ -1,3 +1,5 @@
+if (typeof browser === 'undefined') browser = chrome;
+
 function utf8_to_b64( str ) {
 	return btoa(unescape(encodeURIComponent( str )));
 }
@@ -47,8 +49,8 @@ JSON.safeParse = function(str) {
 }
 
 browser.runtime.getBackgroundPage(function(bg) {
-	$(function() {
-
+	$(function call() {
+		if (!bg.settings) return setTimeout(call, 300);
 		$('#version').html(bg.version || 'dev build');
 
 		$('select[id], input[type=number], input[type=range], input[type=range]').each(function(i, item) {

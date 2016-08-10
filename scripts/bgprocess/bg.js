@@ -52,6 +52,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	 */
 	window.loader = new Loader();
 	window.logs = new Logs();
+
 	logs.startLogging();
 
 	/**
@@ -88,7 +89,6 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		settingsDef.always(function() {
 			settingsLoaded.resolve();
 		});
-
 
 		return allDef.promise();
 	}
@@ -179,7 +179,6 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		 */
 		animation.stop();
 
-
 		/**
 		 * onclick:button -> open RSS
 		 */
@@ -190,55 +189,89 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	});
 	});
 
+	function onExternalLink(url) {
+		url = url.replace(/^feed:/i, 'http:');
+
+		var duplicate = sources.findWhere({ url: url });
+		if (!duplicate) {
+			var s = sources.create({ title: url, url: url, updateEvery: 180 }, { wait: true });
+			openRSS(false, s.get('id'));
+		} else {
+			//duplicate.trigger('change');
+			openRSS(false, duplicate.get('id'));
+		}
+	}
+
 	/**
 	 * Messages
 	 */
-	browser.runtime.onMessageExternal.addListener(function(message) {
-		// if.sender.id != blahblah -> return;
-		if (!message.hasOwnProperty('action')) {
-			return;
-		}
-
-		if (message.action == 'new-rss' && message.value) {
-			message.value = message.value.replace(/^feed:/i, 'http:');
-
-			var duplicate = sources.findWhere({ url: message.value });
-			if (!duplicate) {
-				var s = sources.create({
-					title: message.value,
-					url: message.value,
-					updateEvery: 180
-				}, { wait: true });
-				openRSS(false, s.get('id'));
-			} else {
-				duplicate.trigger('change');
-				openRSS(false, duplicate.get('id'));
-			}
-
-		}
+	if (browser.runtime.onMessageExternal)
+        browser.runtime.onMessageExternal.addListener(function(message) {
+		if (!message.hasOwnProperty('action')) return;
+		if (message.action == 'new-rss' && message.value) onExternalLink(message.value);
 	});
+
+
+	var rssMimes = ['application/rss', 'application/rss+xml', 'application/atom+xml', 'application/atom', 'text/atom', 'text/atom+xml'],
+		xmlMimes = ['text/xml', 'application/xml'],
+		urlParts = /(new|feed|rss)/i;
+
+	// Capturing all raw rss feeds added by default; FF;
+	// 	needs "webRequest", "webRequestBlocking",  "<all_urls>" permissions
+	(typeof InstallTrigger !== 'undefined') && browser.webRequest.onHeadersReceived.addListener(
+	    handleHeaders,
+		{
+			urls: ['https://*/*', 'http://*/*'],
+			types: ['main_frame']
+		},
+		['responseHeaders', 'blocking']
+	);
+
+	function getContentType(arr) {
+		for (var i=0; i < arr.length; i++) {
+			if (arr[i].name.toLowerCase() == 'content-type') {
+				arr = arr[i].value.split(';');
+				return arr[0];
+			}
+		}
+		return '';
+	}
+
+	function handleHeaders(details) {
+		var contentType = getContentType(details.responseHeaders);
+		if (~rssMimes.indexOf(contentType) || (~xmlMimes.indexOf(contentType) && urlParts.test(details.url))) {
+			browser.tabs.remove(details.tabId);
+			return onExternalLink(details.url.replace(/[^-A-Za-z0-9+&@#/%?=~_|!:,.;\(\)]/, ''));
+		}
+		return false;
+	}
 
 	function openRSS(closeIfActive, focusSource) {
 		var url = browser.runtime.getURL('rss.html');
 		browser.tabs.query({
-			url: url
+			/*url: url*/
 		}, function(tabs) {
-			if (tabs[0]) {
-				if (tabs[0].active && closeIfActive) {
-					browser.tabs.remove(tabs[0].id);
+	        var matchedTab = null; //tabs[0]
+
+	        // FF hack because moz-extension:// url query won't work
+	        if (tabs && tabs.length) {
+	            for (var i = tabs.length; i--; ) {
+	                if (tabs[i].url === url) {
+	                    matchedTab = tabs[i];
+	                    break;
+	                }
+	            }
+	        }
+			if (matchedTab) {
+				if (matchedTab.active && closeIfActive) {
+					browser.tabs.remove(matchedTab.id);
 				} else {
-					browser.tabs.update(tabs[0].id, {
-						active: true
-					});
-					if (focusSource) {
-						window.sourceToFocus = focusSource;
-					}
+					if (focusSource) window.sourceToFocus = focusSource;
+					browser.tabs.update(matchedTab.id, { active: true });
 				}
 			} else {
 				window.sourceToFocus = focusSource;
-				browser.tabs.create({
-					'url': url
-				}, function() {});
+				browser.tabs.create({ 'url': url }, function() {});
 			}
 		});
 	}

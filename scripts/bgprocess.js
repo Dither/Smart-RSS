@@ -50,7 +50,7 @@ browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 
 browser.runtime.onConnect.addListener(function(port) {
  	port.onDisconnect.addListener(function(port) {
- 		sources.trigger('clear-events', port.sender.tab.id);
+ 		if (port) sources.trigger('clear-events', port.sender.tab.id);
  	});
 });
 
