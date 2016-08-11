@@ -11,7 +11,7 @@ function(BB, _, $, tplOverlay, Locale) {
 			'change select': 'handleSelectChange',
 		},
 		initialize: function() {
-			
+
 			window.addEventListener('blur', this.hide.bind(this));
 			window.addEventListener('resize', this.hide.bind(this));
 		},

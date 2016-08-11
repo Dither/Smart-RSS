@@ -1,4 +1,8 @@
-if (typeof browser === 'undefined') browser = chrome;
+if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = chrome;
+
+var _T = function () {
+	return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
+}
 
 require.config({
 

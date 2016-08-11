@@ -5,7 +5,7 @@ html {
 	box-sizing: inherit;
 }
 body.loading {
-	background: url("/images/tabloading.gif") no-repeat center center;
+	background: url("/images/tabloading.svg") no-repeat center center;
 }
 body.loading * {
 	visibility: hidden;

@@ -1,6 +1,6 @@
 @import nib
 
-vendor-prefixes = webkit moz official
+vendor-prefixes = official
 flex-version = flex
 support-for-ie = false
 
@@ -30,15 +30,11 @@ support-for-ie = false
 }
 
 .selected {
-	background: rgb(148, 198, 248);
+	background: #94c6f8;
 }
 
-/*.list-item:active {
-	background: rgb(51, 153, 255);
-}*/
-
 .list-item:hover .source-title {
-	color: rgb(40, 80, 120);
+	color: #285078;
 	text-decoration: underline;
 }
 
@@ -76,7 +72,7 @@ support-for-ie = false
 }
 
 .selected .source-counter {
-	color: black !important;
+	color: #000 !important;
 }
 
 .folder {
@@ -164,8 +160,14 @@ support-for-ie = false
 	display: none;
 }
 
+#properties input[type="checkbox"] {
+	padding-left: 0;
+	margin-left: 0;
+	vertical-align: middle;
+	float: right;
+}
 
-#properties input, #properties select {
+#properties input:not([type="checkbox"]), #properties select {
 	width: 100%;
 	padding: 2px 5px;
 }
@@ -173,7 +175,7 @@ support-for-ie = false
 #properties button {
 	width: 49%;
 	margin-top: 5px;
-	background: white;
+	background: #fff;
 	border: 1px solid #a6a6a6;
 	border-radius: 4px;
 	padding: 3px 0;

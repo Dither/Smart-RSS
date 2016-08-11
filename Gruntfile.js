@@ -22,7 +22,7 @@ module.exports = function(grunt) {
 				noempty:  true,  // true: no empty blocks
 				unused:   true,  // true: warn about unused vars
 				trailing: true,  // true: no trailing whitespaces
-				supernew: true,  // true: enable 'new Constructor' instead of 'new Constructor()' 
+				supernew: true,  // true: enable 'new Constructor' instead of 'new Constructor()'
 				onevar:   false, // true: only one var per fn
 				funcscope: false,   // false: no 'var' in blocks
 				maxdepth: 5,        // max nesting depth
@@ -76,7 +76,7 @@ module.exports = function(grunt) {
 						}
 					},
 					excludeShallow: ['modules/Locale', 'jquery', 'underscore', 'backbone'],
-					out: 'scripts/main-compiled.js'
+					out: 'scripts/main_compiled.js'
 				}
 			},
 			bg: {
@@ -116,7 +116,7 @@ module.exports = function(grunt) {
 						}
 					},
 					excludeShallow: ['jquery', 'underscore', 'backbone', 'backboneDB'],
-					out: 'scripts/bgprocess-compiled.js'
+					out: 'scripts/bgprocess_compiled.js'
 				}
 			}
 		},
@@ -129,8 +129,8 @@ module.exports = function(grunt) {
 				},
 				files: {
 					//'styles/options-compiled.css': 'options.styl', // 1:1 compile
-					'styles/main-compiled.css': [
-						'styles/global.styl', 
+					'styles/main_compiled.css': [
+						'styles/global.styl',
 						'styles/feeds.styl',
 						'styles/articles.styl',
 						'styles/content.styl'

@@ -1,10 +1,8 @@
-define([
-	'backbone', 'views/ContextMenu', 'modules/Locale', 'views/feedList'
-],
-function(BB, ContextMenu, Locale) {
+define([ 'backbone', 'views/ContextMenu', 'views/feedList' ],
+function(BB, ContextMenu) {
 	var sourceContextMenu = new ContextMenu([
 		{
-			title: Locale.c.UPDATE,
+			title: _T('UPDATE'),
 			icon: 'reload.png',
 			action: function() {
 				app.actions.execute('feeds:update');
@@ -12,28 +10,28 @@ function(BB, ContextMenu, Locale) {
 			}
 		},
 		{
-			title: Locale.c.MARK_ALL_AS_READ,
+			title: _T('MARK_ALL_AS_READ'),
 			icon: 'read.png',
 			action: function() {
 				app.actions.execute('feeds:mark');
 			}
 		},
 		{
-			title: Locale.c.DELETE,
+			title: _T('DELETE'),
 			icon: 'delete.png',
 			action: function() {
 				app.actions.execute('feeds:delete');
 			}
 		},
 		{
-			title: 'Refetch', /**** Localization needed****/
+			title: _T('REFETCH'),
 			icon: 'save.png',
 			action: function() {
 				app.actions.execute('feeds:refetch');
 			}
 		},
 		{
-			title: Locale.c.PROPERTIES,
+			title: _T('PROPERTIES'),
 			icon: 'properties.png',
 			action: function() {
 				app.actions.execute('feeds:showProperties');
@@ -43,11 +41,11 @@ function(BB, ContextMenu, Locale) {
 
 	var trashContextMenu = new ContextMenu([
 		{
-			title: Locale.c.MARK_ALL_AS_READ,
+			title: _T('MARK_ALL_AS_READ'),
 			icon: 'read.png',
 			action: function() {
 				bg.items.where({ trashed: true, deleted: false }).forEach(function(item) {
-					if (item.get('unread') == true) {
+					if (item.get('unread') === true) {
 						item.save({
 							unread: false,
 							visited: true
@@ -57,10 +55,10 @@ function(BB, ContextMenu, Locale) {
 			}
 		},
 		{
-			title: Locale.c.EMPTY_TRASH,
+			title: _T('EMPTY_TRASH'),
 			icon: 'delete.png',
 			action: function() {
-				if (confirm(Locale.c.REALLY_EMPTY_TRASH)) {
+				if (confirm(_T('REALLY_EMPTY_TRASH'))) {
 					bg.items.where({ trashed: true, deleted: false }).forEach(function(item) {
 						item.markAsDeleted();
 					});
@@ -71,17 +69,17 @@ function(BB, ContextMenu, Locale) {
 
 	var allFeedsContextMenu = new ContextMenu([
 		{
-			title: Locale.c.UPDATE_ALL,
+			title: _T('UPDATE_ALL'),
 			icon: 'reload.png',
 			action: function() {
 				app.actions.execute('feeds:updateAll');
 			}
 		},
 		{
-			title: Locale.c.MARK_ALL_AS_READ,
+			title: _T('MARK_ALL_AS_READ'),
 			icon: 'read.png',
 			action: function() {
-				if (confirm(Locale.c.MARK_ALL_QUESTION)) {
+				if (confirm(_T('MARK_ALL_QUESTION'))) {
 					bg.items.forEach(function(item) {
 						item.save({ unread: false, visited: true });
 					});
@@ -89,12 +87,12 @@ function(BB, ContextMenu, Locale) {
 			}
 		},
 		{
-			title: Locale.c.DELETE_ALL_ARTICLES,
+			title: _T('DELETE_ALL_ARTICLES'),
 			icon: 'delete.png',
 			action: function() {
-				if (confirm(Locale.c.DELETE_ALL_Q)) {
+				if (confirm(_T('DELETE_ALL_Q'))) {
 					bg.items.forEach(function(item) {
-						if (item.get('deleted') == true) return;
+						if (item.get('deleted') === true) return;
 						item.markAsDeleted();
 					});
 				}
@@ -104,38 +102,38 @@ function(BB, ContextMenu, Locale) {
 
 	var folderContextMenu = new ContextMenu([
 		{
-			title: Locale.c.UPDATE,
+			title: _T('UPDATE'),
 			icon: 'reload.png',
 			action: function() {
 				app.actions.execute('feeds:update');
 			}
 		},
 		{
-			title: Locale.c.MARK_ALL_AS_READ,
+			title: _T('MARK_ALL_AS_READ'),
 			icon: 'read.png',
 			action: function() {
 				app.actions.execute('feeds:mark');
 			}
 		},
 		{
-			title: Locale.c.DELETE,
+			title: _T('DELETE'),
 			icon: 'delete.png',
 			action: function() {
 				app.actions.execute('feeds:delete');
 			}
 		},
 		{
-			title: Locale.c.PROPERTIES,
+			title: _T('PROPERTIES'),
 			icon: 'properties.png',
 			action: function() {
 				app.actions.execute('feeds:showProperties');
 			}
 		}
 		/*{
-			title: Locale.c.RENAME,
+			title: _T('RENAME'),
 			action: function() {
 				var feedList = require('views/feedList');
-				var newTitle = prompt(Locale.c.FOLDER_NAME + ': ', feedList.selectedItems[0].model.get('title'));
+				var newTitle = prompt(_T('FOLDER_NAME') + ': ', feedList.selectedItems[0].model.get('title'));
 				if (!newTitle) return;
 
 				feedList.selectedItems[0].model.save({ title: newTitle });
@@ -145,63 +143,63 @@ function(BB, ContextMenu, Locale) {
 
 	var itemsContextMenu = new ContextMenu([
 		{
-			title: Locale.c.NEXT_UNREAD + ' (H)',
+			title: _T('NEXT_UNREAD') + ' (H)',
 			icon: 'forward.png',
 			action: function() {
 				app.actions.execute('articles:nextUnread');
 			}
 		},
 		{
-			title: Locale.c.PREV_UNREAD + ' (Y)',
+			title: _T('PREV_UNREAD') + ' (Y)',
 			icon: 'back.png',
 			action: function() {
 				app.actions.execute('articles:prevUnread');
 			}
 		},
 		{
-			title: Locale.c.MARK_AS_READ + ' (K)',
+			title: _T('MARK_AS_READ') + ' (K)',
 			icon: 'read.png',
 			action: function() {
 				app.actions.execute('articles:mark');
 			}
 		},
 		{
-			title: Locale.c.MARK_AND_NEXT_UNREAD + ' (G)',
+			title: _T('MARK_AND_NEXT_UNREAD') + ' (G)',
 			icon: 'find_next.png',
 			action: function() {
 				app.actions.execute('articles:markAndNextUnread');
 			}
 		},
 		{
-			title: Locale.c.MARK_AND_PREV_UNREAD + ' (T)',
+			title: _T('MARK_AND_PREV_UNREAD') + ' (T)',
 			icon: 'find_previous.png',
 			action: function() {
 				app.actions.execute('articles:markAndPrevUnread');
 			}
 		},
 		{
-			title: Locale.c.FULL_ARTICLE,
+			title: _T('FULL_ARTICLE'),
 			icon: 'full_article.png',
 			action: function(e) {
 				app.actions.execute('articles:fullArticle', e);
 			}
 		},
 		{
-			title: Locale.c.PIN + ' (P)',
+			title: _T('PIN') + ' (P)',
 			icon: 'pinsource_context.png',
 			action: function() {
 				app.actions.execute('articles:pin');
 			}
 		},
 		{
-			title: Locale.c.DELETE + ' (D)',
+			title: _T('DELETE') + ' (D)',
 			icon: 'delete.png',
 			action: function(e) {
 				app.actions.execute('articles:delete', e);
 			}
 		},
 		{
-			title: Locale.c.UNDELETE + ' (N)',
+			title: _T('UNDELETE') + ' (N)',
 			id: 'context-undelete',
 			icon: 'undelete.png',
 			action: function() {

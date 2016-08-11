@@ -168,29 +168,28 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 									onDataReady();
 								return;
 							}
-							/* Don't reload complete pages even if they do change
-							if (!existingItem || existingItem.get('content') === '&nbsp;') */
+
 							$.ajax({
 								url: item.url,
 								timeout: timeout,
 								dataType: 'html'
 							}).done(function(htm) {
-								new ContentExtractor.parse(htm, sID, item.url, function(content){
-									/* TODO: do we need a lock here? */
-									if (content && content.length)
-										item.content = content;
+								// Don't refetch existing items
+								if (!existingItem)
+									new ContentExtractor.parse(htm, sID, item.url, function(content){
+										// TODO: do we need a lock here?
+										if (content && content.length)
+											item.content = content;
 
-									if (!existingItem) {
 										hasNew = true;
 										items.create(item, { sort: false });
 										createdNo++;
-									} else if (existingItem.get('deleted') === false)
-									{
-										existingItem.save({ content: item.content });
-									}
-									if (--incompleteItems <= 0)
-										onDataReady();
-								});
+
+										if (--incompleteItems <= 0)
+											onDataReady();
+									});
+								else if (--incompleteItems <= 0)
+									onDataReady();
 							}).fail(function() {
 								//console.log('Failed to load URL: ' + item.url);
 								if (--incompleteItems <= 0)

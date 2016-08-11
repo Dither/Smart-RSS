@@ -1,4 +1,4 @@
-if (typeof browser === 'undefined') browser = chrome;
+if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = chrome;
 
 function utf8_to_b64( str ) {
 	return btoa(unescape(encodeURIComponent( str )));
@@ -100,7 +100,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 			return;
 		}
 
-		if (file.size > 1024000) {
+		if (file.size > 1000000) {
 			alert('Please use file smaller than 1Mb!');
 			return;
 		}
@@ -131,7 +131,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 			$('#smart-exported').attr('href', URL.createObjectURL(expr));
 			$('#smart-exported').attr('download', 'exported-rss.smart');
 			$('#smart-exported').html('Click to download exported data');
-		}, 20);
+		}, 100);
 	}
 
 	function handleExportOPML() {
@@ -252,8 +252,8 @@ browser.runtime.getBackgroundPage(function(bg) {
 		}
 
 		var url = browser.runtime.getURL('rss.html');
-		browser.tabs.query({ url: url }, function(tabs) {
-			for (var i=0; i < tabs.length; i++) {
+		browser.tabs.query({ /*url: url*/ }, function(tabs) {
+			for (var i = tabs.length; i-- ;) {
 				browser.tabs.remove(tabs[i].id);
 			}
 

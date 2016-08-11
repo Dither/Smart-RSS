@@ -4,9 +4,9 @@
  */
 define([
 	'backbone', 'jquery', 'underscore', 'helpers/formatDate', 'helpers/escapeHtml', 'helpers/stripTags', 'text!templates/download.html',
-	'text!templates/header.html'
+	'text!templates/header.html', 'modules/Locale'
 ],
-function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader) {
+function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Locale) {
 
 	/**
 	 * Full view of one article (right column)
@@ -30,7 +30,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader) {
 		 * @default ./templates/header.html
 		 * @type Function
 		 */
-		template: _.template(tplHeader),
+		template: _.template(Locale.translateHTML(tplHeader)),
 
 		/**
 		 * Template for downlaoding an article
@@ -79,7 +79,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader) {
 		 */
 		handleAttached: function() {
 			//this.template = _.template($('#template-header').html());
-			
+
 			//window.addEventListener('message', function(e) {
 			app.on('select:article-list', function(data) {
 				this.handleNewSelected(bg.items.findWhere({ id: data.value }));

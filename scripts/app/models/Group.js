@@ -2,7 +2,7 @@
  * @module App
  * @submodule models/Group
  */
-define(['backbone', 'helpers/unixutc', 'helpers/getWOY', 'modules/Locale'], function(BB, unixutc, getWOY, Locale) {
+define(['backbone', 'helpers/unixutc', 'helpers/getWOY'], function(BB, unixutc, getWOY) {
 
 	/**
 	 * Date group model
@@ -44,13 +44,13 @@ define(['backbone', 'helpers/unixutc', 'helpers/getWOY', 'modules/Locale'], func
 		var dc = null;
 		var todayMidnight = null;
 		var dct = null;
-		
+
 
 		return function(date) {
 			var dt = new Date(date);
 			dc = dc || new Date();
 
-			
+
 			var dtt = parseInt(unixutc(dt) / 86400000, 10);
 			dct = dct || parseInt(unixutc(dc) / 86400000, 10);
 
@@ -63,7 +63,7 @@ define(['backbone', 'helpers/unixutc', 'helpers/getWOY', 'modules/Locale'], func
 					dct = null;
 				}, 10000);
 			}
-			
+
 			var itemMidnight = new Date(dt);
 			itemMidnight.setHours(0,0,0,0);
 
@@ -72,32 +72,32 @@ define(['backbone', 'helpers/unixutc', 'helpers/getWOY', 'modules/Locale'], func
 
 			if (dtt >= dct) {
 				group = {
-					title: Locale.c.TODAY.toUpperCase(),
+					title: _T('TODAY').toUpperCase(),
 					date: todayMidnight.getTime() + 86400000 * 5000 // 5000 = make sure "today" is the first element in list
 				};
 			} else if (dtt + 1 == dct) {
 				group = {
-					title: Locale.c.YESTERDAY.toUpperCase(),
+					title: _T('YESTERDAY').toUpperCase(),
 					date: todayMidnight.getTime()
 				};
 			} else if ((dtwoy = getWOY(dt)) == (dcwoy = getWOY(dc)) && dtt + 7 >= dct) {
 				group = {
-					title: Locale.c[days[dt.getDay()]].toUpperCase(),
+					title: _T(days[dt.getDay()]).toUpperCase(),
 					date: itemMidnight.getTime() + 86400000
 				};
 			} else if (dtwoy + 1 == dcwoy &&  dtt + 14 >= dct) {
 				group = {
-					title: Locale.c.LAST_WEEK.toUpperCase(),
+					title: _T('LAST_WEEK').toUpperCase(),
 					date: todayMidnight.getTime() - 86400000 * ( ((todayMidnight.getDay() || 7) - 1) || 1)
 				};
 			} else if (dt.getMonth() == dc.getMonth() && dt.getFullYear() == dc.getFullYear()) {
 				group = {
-					title: Locale.c.EARLIER_THIS_MONTH.toUpperCase(),
+					title: _T('EARLIER_THIS_MONTH').toUpperCase(),
 					date: todayMidnight.getTime() - 86400000 * ((todayMidnight.getDay() || 7) - 1) - 7 * 86400000
 				};
 			} else if (dt.getFullYear() == dc.getFullYear() ) {
 				group = {
-					title: Locale.c[months[dt.getMonth()]].toUpperCase(),
+					title: _T(months[dt.getMonth()]).toUpperCase(),
 					date: (new Date(dt.getFullYear(), dt.getMonth() + 1, 1)).getTime()
 				};
 			} else {

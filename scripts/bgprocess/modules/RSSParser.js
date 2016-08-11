@@ -2,9 +2,7 @@
  * @module BgProcess
  * @submodule modules/RSSParser
  */
-define(['md5', 'locale'], function (CryptoJS, Locale) {
-
-	var _T = function(text) { return Locale.translate(text); }
+define(['md5'], function (CryptoJS) {
 
 	/**
 	 * RSS Parser

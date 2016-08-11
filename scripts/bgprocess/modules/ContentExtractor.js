@@ -2,7 +2,7 @@
  * @module BgProcess
  * @submodule modules/ContentExtractor
  */
-define(['readability', 'locale'], function (Readability, Locale) {
+define(['readability'], function (Readability) {
 
 	/**
 	 * HTML Main Content Extractor
@@ -23,7 +23,7 @@ define(['readability', 'locale'], function (Readability, Locale) {
 		var source = sources.findWhere({ id: sourceID });
 
 		if (!/<body/i.test(html))
-			return callback('<a href="' + url + '" download>' + Locale.translate('[file download]') + '</a>');
+			return callback('<a href="' + url + '" download>[' + _T('DOWNLOAD') + ']</a>');
 		html = createHTML(html);
 		//if (html.documentElement) html.documentElement.normalize();
 
@@ -43,7 +43,7 @@ define(['readability', 'locale'], function (Readability, Locale) {
 					resolvePaths: true
 				});
 
-			for (var i = 0; i < 4; i++) {
+			for (var i = 0, l = readable.getMaxSkipLevel(); i <= l; i++) {
 				readable.setSkipLevel(i);
 				readable.parseDOM(html.childNodes[html.childNodes.length-1]);
 				html_result = readable.getHTML().replace(/[\r\n]+/g, '');
@@ -108,7 +108,6 @@ define(['readability', 'locale'], function (Readability, Locale) {
 	 * @return {HTMLDocument} DOM-document.
 	 * */
 	function createHTML(source) {
-		// Chrome 4, Opera 10, Firefox 4, Internet Explorer 9, Safari 4 have createHTMLDocument
 		var doc = document.implementation.createHTMLDocument('HTMLParser');
 		doc.documentElement.innerHTML = source;
 		return doc;
@@ -131,7 +130,7 @@ define(['readability', 'locale'], function (Readability, Locale) {
 		}
 
 		for (i = 0, r = doc.querySelectorAll(replaces), l = r.length; i < l; i++) {
-			if (r[i].src) r[i].outerHTML = '<a href="'+r[i].src+'">' + Locale.translate('[embedded media]') + '</a>';
+			if (r[i].src) r[i].outerHTML = '<a href="'+r[i].src+'">[' + _T('EMBEDS') + ']</a>';
 			else if (r[i].parentNode) {
 				r[i].parentNode.removeChild(r[i]);
 			}

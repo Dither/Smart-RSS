@@ -13,11 +13,11 @@ define(['backbone', 'models/Log'], function (BB, Log) {
 	var Logs = Backbone.Collection.extend({
 		model: Log,
 		initialze: function() {
-			
+
 		},
 		startLogging: function() {
 			window.onerror = function(a, b, c) {
-				var file = b.replace(/chrome\-extension:\/\/[^\/]+\//, '');
+				var file = b.replace(/\w+\-extension:\/\/[^\/]+\//, '');
 				var msg = a.toString() + ' (Line: ' + c.toString() + ', File: ' + file + ')';
 				logs.add({
 					message: msg
@@ -25,7 +25,6 @@ define(['backbone', 'models/Log'], function (BB, Log) {
 			};
 		}
 	});
-
 
 	return Logs;
 

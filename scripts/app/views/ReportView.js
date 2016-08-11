@@ -18,7 +18,7 @@ function(BB, _, $, tplReport, Locale, comm) {
 			setTimeout(function() {
 				this.$el.find('#report-desc').focus();
 			}.bind(this), 0);
-			
+
 			return this;
 		},
 		handleCancel: function() {
@@ -40,7 +40,7 @@ function(BB, _, $, tplReport, Locale, comm) {
 			var includeFeeds = this.$el.find('#report-include-feeds').is(':checked');
 			var feeds = includeFeeds ? JSON.stringify(bg.sources.pluck('url')) : '[]';
 			var that = this;
-			
+
 			$.support.cors = true;
 			$.ajax({
 				type: 'post',

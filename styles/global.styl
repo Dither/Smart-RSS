@@ -1,19 +1,19 @@
 @import nib
 
-vendor-prefixes = webkit moz official
+vendor-prefixes = official
 flex-version = flex
 support-for-ie = false
 
 html {
-  box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 *, *:before, *:after {
-  box-sizing: inherit;
+	box-sizing: inherit;
 }
 
 body.loading {
-	background: url('/images/tabloading.gif') no-repeat center center;
+	background: url('/images/tabloading.svg') no-repeat center center;
 }
 
 body.loading * {
@@ -22,8 +22,8 @@ body.loading * {
 
 html, body {
 	height: 100%;
-	max-height: 100%;
 	width: 100%;
+	max-height: 100%;
 	max-width: 100%;
 }
 
@@ -123,7 +123,7 @@ input[type=search]:not(:focus):not(:valid) {
 .context-menu {
 	min-width: 150px;
 	max-width: 250px;
-	border: 1px solid rgb(160, 160, 160);
+	border: 1px solid #a0a0a0;
 	/*background: linear-gradient(to right, rgb(240, 240, 240) 27px, rgb(174, 207, 247) 27px, rgb(240, 240, 240) 28px);*/
 	background: url('/images/context-border.png') repeat-y 27px top rgb(240, 240, 240);
 	position: absolute;
@@ -151,7 +151,7 @@ input[type=search]:not(:focus):not(:valid) {
 
 .context-menu-item:hover {
 	border-radius: 3px;
-	border-color: rgb(174, 207, 247);
+	border-color: #aecff7;
 }
 
 /**
@@ -162,8 +162,8 @@ input[type=search]:not(:focus):not(:valid) {
 	display: none;
 	width: 20rem;
 	min-height: 50px;
-	border: 1px solid rgb(160, 160, 160);
-	background: rgb(240, 240, 240);
+	border: 1px solid #a0a0a0;
+	background: #f0f0f0;
 	position: absolute;
 	top: 30px;
 	right: 5px;
@@ -192,6 +192,7 @@ input[type=search]:not(:focus):not(:valid) {
 .regions {
 	display: flex;
 	flex: 1 1 auto;
+	overflow: hidden;
 }
 
 body > .regions {
@@ -210,6 +211,7 @@ body > .regions {
 	display: flex;
 	flex-flow: column;
 	align-items: stretch;
+	max-height:100%;
 }
 
 .vertical .region {
@@ -228,7 +230,7 @@ body > .regions {
 }
 
 .region:last-child {
-	border: none  !important;
+	border: none !important;
 	border-image: none !important;
 }
 
@@ -286,7 +288,7 @@ body > .regions {
 	margin-top: -13rem
 	margin-left: -15rem
 	background: #fff
-	box-shadow: 0 0 6px black
+	box-shadow: 0 0 6px #000
 	padding: 1rem
 
 	strong

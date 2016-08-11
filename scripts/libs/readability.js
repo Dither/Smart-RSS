@@ -197,6 +197,7 @@ var tagsToRemove = { __proto__: null, aside: true, time: true, applet: true, foo
 	cleanConditionally = { __proto__: null, div: true, form: true, ol: true, table: true, ul: true },
 	unpackDivs = { __proto__: embeds, div: true, img: true, svg: true, figure: true, p: true }, // div>[single child] => [single child]
 	noContent = { __proto__: formatTags, font: false, input: false, link: false, meta: false, span: false, path: false, source: false },
+	tagsToScore = { __proto__: null, p: true, pre: true, td: true },
 	formatTags = { __proto__: null, br: new Element('br'), hr: new Element('hr') },
 	headerTags = { __proto__: null, h1: true, h2: true, h3: true, h4: true, h5: true, h6: true },
 	newLinesAfter = { __proto__: headerTags, br: true, li: true, p: true },
@@ -287,6 +288,7 @@ Readability.prototype._settings = {
 	cleanAttributes: true, // remove unneeded attributes
 	replaceImgs: false, // a[href='large.jpg']>img[src='small.jpg'] => img[src='large.jpg']
 	searchFurtherPages: true, // download paginaed pages
+	returnBasic: false, // return minimally processed page
 	resolvePaths: false, //
 	linksToSkip: {},	//pages that are already parsed
 	//pageURL: null,	//URL of the page which is parsed
@@ -519,13 +521,13 @@ Readability.prototype.onattribute = function(name, value){
 	var elem = this._currentElement;
 
 	if (name === 'id' && !re_whitespace.test(value)) {
-		elem.attributes[name] = value
+		elem.attributes[name] = value;
 	}
 
 	if (re_dataAttribute.test(name)) {
 		// Replace lazyload images
 		if ((value.match(re_protocol) || []).length === 1 && re_imgUrl.test(value))
-			elem.attributes['src'] = value.replace(re_dateExtra, '');
+			elem.attributes.src = value.replace(re_dateExtra, '');
 	}
 	else if(name === 'href' || name === 'src'){
 		// fix links
@@ -564,6 +566,16 @@ Readability.prototype.onattribute = function(name, value){
 	}
 	else if(this._settings.cleanAttributes){
 		// filter attributes
+		if(name in goodAttributes) elem.attributes[name] = value;
+	}
+	else elem.attributes[name] = value;
+};
+
+Readability.prototype.onattributemin = function(name, value){
+	if(!value || re_jsAttribute.test(value) || re_onAttribute.test(name)) return;
+	name = name.toLowerCase();
+	var elem = this._currentElement;
+	if(this._settings.cleanAttributes){
 		if(name in goodAttributes) elem.attributes[name] = value;
 	}
 	else elem.attributes[name] = value;
@@ -680,7 +692,10 @@ Readability.prototype.onclosetag = function(tagName){
 		}
 		return;
 	}
+
 	/* jshint ignore:end */
+
+	if (elem.children.length === 1 && (elem.info.tagCount.br === 1 || elem.info.tagCount.hr === 1)) return;
 
 	if(this._settings.replaceImgs &&
 		tagName === 'a' &&
@@ -695,7 +710,7 @@ Readability.prototype.onclosetag = function(tagName){
 	elem.parent.children.push(elem);
 
 	//should node be scored?
-	if(tagName === 'p' || tagName === 'pre' || tagName === 'td' || tagName === 'code');
+	if(tagName in tagsToScore);
 	else if(tagName === 'div'){
 		//check if div should be converted to a p
 		for(i = 0, j = divToPElements.length; i < j; i++){
@@ -718,6 +733,81 @@ Readability.prototype.onclosetag = function(tagName){
 	}
 };
 
+Readability.prototype.onclosetagmin = function(tagName){
+	if(tagName in noContent) return;
+
+	var elem = this._currentElement, title, i, j;
+
+	this._currentElement = elem.parent;
+
+	// prepare title
+	if(tagName === 'title' && !this._origTitle){
+		this._origTitle = elem.toString().trim().replace(re_whitespace, ' ');
+		return;
+	}
+	else if(tagName in headerTags){
+		title = elem.toString().trim().replace(re_whitespace, ' ');
+		if(this._origTitle){
+			if(this._origTitle.indexOf(title) !== -1){
+				if(title.split(' ', 4).length === 4){
+					//It's probably the title, so let's use it!
+					this._headerTitle = title;
+				}
+				return;
+			}
+			if(tagName === 'h1' || tagName === 'h2') return;
+		}
+		//if there was no title tag, use any h1/h2 as the title
+		else if(!this._headerTitle && tagName === 'h1'){
+			this._headerTitle = title;
+			return;
+		}
+		else if(!this._headerTitle && tagName === 'h2'){
+			this._headerTitle = title;
+			return;
+		}
+	}
+
+	if(tagName in tagsToRemove) return;
+
+	if(tagName === 'div' &&
+		elem.children.length === 1 &&
+		typeof elem.children[0] === 'object' &&
+		elem.children[0].name in unpackDivs
+	){
+		//unpack divs
+		elem.parent.children.push(elem.children[0]);
+		return;
+	}
+
+	elem.addInfo();
+
+	/* jshint ignore:start */
+	filterEmptyMin: if(
+		(tagName in removeIfEmpty) &&
+		(elem.info.linkLength + elem.info.textLength === 0) &&
+		elem.children.length !== 0
+	) {
+		for(i = 0, j = okayIfEmpty.length; i < j; i++){
+			if(okayIfEmpty[i] in elem.info.tagCount) break filterEmptyMin;
+		}
+		return;
+	}
+	/* jshint ignore:end */
+
+	if(this._settings.replaceImgs &&
+		tagName === 'a' &&
+		elem.children.length === 1 &&
+		elem.children[0].name === 'img' &&
+		re_imgUrl.test(elem.attributes.href)
+	){
+		elem.children[0].attributes.src = elem.attributes.href;
+		elem = elem.children[0];
+	}
+
+	elem.parent.children.push(elem);
+};
+
 Readability.prototype.onreset = Readability;
 
 /**
@@ -727,6 +817,12 @@ Readability.prototype.onreset = Readability;
  * @return     {Array}   The candidate siblings.
  */
 var getCandidateSiblings = function(candidate){
+	/**
+	 * Converts attributes to array
+	 *
+	 * @param      {string}  arrays  Attribute string
+	 * @return     {Array}  Attributes array
+	 */
 	var toAtrArray = function (node) {
 	    return (node.elementData).replace(/[_-]/g, ' ').split(' ')
 	        	.filter(function(v) { return v === ''; });
@@ -819,6 +915,16 @@ Readability.prototype.setSkipLevel = function(skipLevel){
 	if(skipLevel > 0) this._settings.stripUnlikelyCandidates = false;
 	if(skipLevel > 1) this._settings.weightAttributes = false;
 	if(skipLevel > 2) this._settings.cleanConditionally = false;
+	if(skipLevel > 3) this._settings.returnBasic = true;
+};
+
+/**
+ * Gets current maximum skip level
+ *
+ * @return      {number}  maxSkipLevel  Maximum skip level
+ */
+Readability.prototype.getMaxSkipLevel = function(){
+	return 4;
 };
 
 /**
@@ -895,7 +1001,7 @@ Readability.prototype.getText = function(node){
  *
  * @param      {object}  cbs     CBS
  */
-Readability.prototype.parse = function(cbs){
+Readability.prototype.parseCBS = function(cbs){
 	(function process(node){
 		cbs.onopentag(node.name, node.attributes);
 		for(var i = 0, j = node.children.length; i < j; i++){
@@ -916,6 +1022,11 @@ Readability.prototype.parse = function(cbs){
 Readability.prototype.parseDOM = function(root){
 	var self = this;
 	//root.innerHTML = self._processContent(root.innerHTML, pre_filters);
+
+	if (self._settings.returnBasic) {
+		self.onattribute = self.onattributemin;
+		self.onclosetag = self.onclosetagmin;
+	}
 
 	var parse = function(node){
 		var i, j,

@@ -4,9 +4,9 @@
  */
 define([
 	'backbone', 'underscore', 'jquery', 'collections/Groups', 'models/Group', 'views/GroupView',
-	'views/ItemView', 'mixins/selectable', 'modules/Locale'
+	'views/ItemView', 'mixins/selectable'
 ],
-function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
+function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 
 	function isScrolledIntoView(elem) {
 		if (!screen) {
@@ -670,7 +670,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 		removeItem: function(view) {
 			askRmPinned = bg.settings.get('askRmPinned')
 			if (view.model.get('pinned') && askRmPinned == 'all') {
-				var conf = confirm(Locale.c.PIN_QUESTION_A + view.model.escape('title') + Locale.c.PIN_QUESTION_B);
+				var conf = confirm(_T('PIN_QUESTION_A') + view.model.escape('title') + _T('PIN_QUESTION_B'));
 				if (!conf) {
 					return;
 				}
@@ -687,7 +687,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable, Locale) {
 		removeItemCompletely: function(view) {
 			askRmPinned = bg.settings.get('askRmPinned')
 			if (view.model.get('pinned') && askRmPinned && askRmPinned != 'none') {
-				var conf = confirm(Locale.c.PIN_QUESTION_A + view.model.escape('title') + Locale.c.PIN_QUESTION_B);
+				var conf = confirm(_T('PIN_QUESTION_A') + view.model.escape('title') + _T('PIN_QUESTION_B'));
 				if (!conf) {
 					return;
 				}

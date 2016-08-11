@@ -1,6 +1,6 @@
 define([
-	'backbone', 'jquery', 'underscore', 'modules/Locale', 'text!templates/source.html', 'views/feedList'
-], function(BB, $, _, Locale, tplSource) {
+	'backbone', 'jquery', 'underscore', 'text!templates/source.html', 'views/feedList'
+], function(BB, $, _, tplSource) {
 	var TopView = BB.View.extend({
 		tagName: 'div',
 		className: 'list-item',
@@ -21,7 +21,7 @@ define([
 		},
 		setTitle: function(unread, total) {
 			this.$el.attr('title',
-				this.model.get('title') + ' (' + unread + ' ' + Locale.c.UNREAD + ', ' + total + ' ' + Locale.c.TOTAL + ')'
+				this.model.get('title') + ' (' + unread + ' ' + _T('UNREAD') + ', ' + total + ' ' + _T('TOTAL') + ')'
 			);
 		}
 	});

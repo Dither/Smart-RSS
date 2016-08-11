@@ -1,6 +1,4 @@
-define(['jquery', 'underscore', 'helpers/stripTags', 'modules/Locale', 'controllers/comm'], function($, _, stripTags, Locale, comm) {
-
-var _T = function(text) { return Locale.translate(text); }
+define(['jquery', 'underscore', 'helpers/stripTags', 'controllers/comm'], function($, _, stripTags, comm) {
 
 return {
 	global: {
@@ -86,9 +84,9 @@ return {
 			}
 		},
 		refetch: {
-			title: _T('Refetch'), /****localization needed****/
+			title: _T('REFETCH'),
 			fn: function() {
-				if (!window.confirm(_T('This will delete all elements from selected feed(s). Continue?'))) return;
+				if (!window.confirm(_T('REFETCH_WARNING'))) return;
 
 				var s = require('views/feedList').getSelectedFeeds();
 
@@ -255,7 +253,7 @@ return {
 				app.trigger('select:' + feedList.el.id, {
 					action: 'new-select',
 					feeds: ids,
-					// _.extend is important, because otherwise it would be sent by reference
+					// _.extend is important to avoid referencing
 					filter: special ? _.extend({}, special.get('filter')) : null,
 					name: special ? special.get('name') : null,
 					unreadOnly: !!e.altKey || t.className == 'source-counter'
@@ -567,11 +565,6 @@ return {
 				reader.onload = function() {
 					window.open(this.result.replace('data:text/html;', 'data:text/html;charset=utf-8;'));
 				};
-				/*var url = URL.createObjectURL(blob);
-				window.open(url);
-				setTimeout(function() {
-					URL.revokeObjectURL(url);
-				}, 30000);*/
 			}
 		}
 	},

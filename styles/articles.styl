@@ -1,6 +1,6 @@
 @import nib
 
-vendor-prefixes = webkit moz official
+vendor-prefixes = official
 flex-version = flex
 support-for-ie = false
 
@@ -12,6 +12,7 @@ support-for-ie = false
 	flex: 1 1 auto;
 	user-select: none;
 	overflow-x: hidden;
+	height: 600px;
 	overflow-y: auto;
 	font-family: sans-serif;
 }
@@ -27,19 +28,19 @@ support-for-ie = false
 
 .selected {
 	color: #f1f1f1 !important;
-	background: rgb(51, 153, 255);
-	border-bottom-color: rgb(51, 153, 255);
+	background: #39f;
+	border-bottom-color: #39f;
 	font-smoothing: antialiased;
 }
 
 .region:not(.focused) .selected {
-	background: #94C6F7;
+	background: #94c6f7;
 	border-bottom-color: #ccc;
 }
 
 
 .last-selected {
-	outline: 1px dotted grey;
+	outline: 1px dotted #808080;
 }
 
 .region:not(.focused) .last-selected {
@@ -55,11 +56,11 @@ support-for-ie = false
 }
 
 .unvisited {
-	color: rgb(0, 59, 179) !important;
+	color: #003bb3 !important;
 }
 
 .unvisited .item-author {
-	color: rgb(0, 59, 179) !important;
+	color: #003bb3 !important;
 }
 
 .item-title {
@@ -116,7 +117,7 @@ support-for-ie = false
 
 .date-group
 	border-bottom: 1px solid #a6a6a6;
-	background: linear-gradient(to bottom, white 3px, #ececec);
+	background: linear-gradient(to bottom, #fff 3px, #ececec);
 	height: 22px;
 	line-height: 22px;
 	font-family: sans-serif;

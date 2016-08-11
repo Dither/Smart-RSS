@@ -1,15 +1,15 @@
-define(['backbone', 'jquery', 'modules/Locale', 'domReady!'], function (BB, $, Locale) {
+define(['backbone', 'jquery', 'domReady!'], function (BB, $) {
 	var ToolbarSearchView = BB.View.extend({
 		tagName: 'div',
 		className: 'button',
 		initialize: function() {
-			
+
 			var action = app.actions.get(this.model.get('actionName'));
-			
+
 			var newEl = $('<input type="search" required class="input-search" />');
 			this.$el.replaceWith(newEl);
 			this.$el = newEl;
-			this.$el.attr('placeholder', Locale.c.SEARCH);
+			this.$el.attr('placeholder', _T('SEARCH'));
 			this.$el.attr('tabindex', -1);
 			this.el = this.$el.get(0);
 

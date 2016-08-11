@@ -5,9 +5,9 @@ define([
 	'jquery',
 	'modules/Animation', 'models/Settings', 'models/Info', 'models/Source',
 	'collections/Sources', 'collections/Items', 'collections/Folders', 'models/Loader', 'collections/Logs',
-	'models/Folder', 'models/Item', 'collections/Toolbars', 'locale'
+	'models/Folder', 'models/Item', 'collections/Toolbars'
 ],
-function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader, Logs, Folder, Item, Toolbars, Locale) {
+function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader, Logs, Folder, Item, Toolbars) {
 
 	/**
 	 * Update animations
@@ -206,7 +206,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	 * Messages
 	 */
 	if (browser.runtime.onMessageExternal)
-        browser.runtime.onMessageExternal.addListener(function(message) {
+		browser.runtime.onMessageExternal.addListener(function(message) {
 		if (!message.hasOwnProperty('action')) return;
 		if (message.action == 'new-rss' && message.value) onExternalLink(message.value);
 	});
@@ -218,14 +218,15 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 
 	// Capturing all raw rss feeds added by default; FF;
 	// 	needs "webRequest", "webRequestBlocking",  "<all_urls>" permissions
-	(typeof InstallTrigger !== 'undefined') && browser.webRequest.onHeadersReceived.addListener(
-	    handleHeaders,
-		{
-			urls: ['https://*/*', 'http://*/*'],
-			types: ['main_frame']
-		},
-		['responseHeaders', 'blocking']
-	);
+	if (typeof InstallTrigger !== 'undefined')
+		browser.webRequest.onHeadersReceived.addListener(
+			handleHeaders,
+			{
+				urls: ['https://*/*', 'http://*/*'],
+				types: ['main_frame']
+			},
+			['responseHeaders', 'blocking']
+		);
 
 	function getContentType(arr) {
 		for (var i=0; i < arr.length; i++) {
@@ -251,17 +252,17 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		browser.tabs.query({
 			/*url: url*/
 		}, function(tabs) {
-	        var matchedTab = null; //tabs[0]
+			var matchedTab = null; //tabs[0]
 
-	        // FF hack because moz-extension:// url query won't work
-	        if (tabs && tabs.length) {
-	            for (var i = tabs.length; i--; ) {
-	                if (tabs[i].url === url) {
-	                    matchedTab = tabs[i];
-	                    break;
-	                }
-	            }
-	        }
+			// FF hack because moz-extension:// url query won't work
+			if (tabs && tabs.length) {
+				for (var i = tabs.length; i--; ) {
+					if (tabs[i].url === url) {
+						matchedTab = tabs[i];
+						break;
+					}
+				}
+			}
 			if (matchedTab) {
 				if (matchedTab.active && closeIfActive) {
 					browser.tabs.remove(matchedTab.id);
