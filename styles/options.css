@@ -4,7 +4,6 @@ body {
     margin: 0;
     box-sizing: border-box;
     padding: 0 30px;
-    width: 600px;
     min-height: 800px;
 }
 
@@ -17,6 +16,11 @@ span.selectLabel {
 _:-moz-tree-row(hover),
 body {
     padding: 5px 20px!important;
+}
+
+section {
+    margin: 0 auto;
+    width: 600px;
 }
 
 section:last-child {

@@ -374,13 +374,13 @@ return {
 			}
 		},
 		focusSearch: {
-			title: 'Focus Search',
+			title: _T('Focus Search'),
 			fn: function() {
 				$('input[type=search]').focus();
 			}
 		},
 		focus: {
-			title: 'Focus Articles',
+			title: _T('Focus Articles'),
 			fn: function() {
 				app.setFocus('articles');
 			}
