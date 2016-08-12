@@ -48,7 +48,7 @@ define(['readability'], function (Readability) {
 				readable.parseDOM(html.childNodes[html.childNodes.length-1]);
 				html_result = readable.getHTML().replace(/[\r\n]+/g, '');
 				if (html_result.length > 100) break;
-				//console.log('<ContentExtractor> retry URL:'+url+';attempt='+i+';length='+html_result.length)
+				console.log('<ContentExtractor> retry URL:'+url+';attempt='+i+';length='+html_result.length)
 			}
 
 			return callback(html_result || r_default); // It's already cleaned by Readability

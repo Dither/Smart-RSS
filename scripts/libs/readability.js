@@ -42,6 +42,7 @@ var Element = function(tagName, parent){
 	this.attributes = {};
 	this.children = [];
 	this.tagScore = 0;
+	this.isSVG = false;
 	this.attributeScore = 0;
 	this.totalScore = 0;
 	this.elementData = '';
@@ -160,8 +161,7 @@ Element.prototype = {
 };
 
 //2. list of values
-var tagsToRemove = { __proto__: null, aside: true, time: true, applet: true, footer: true, head: true, label: true, nav: true, noscript: true, script: true, select: true, style: true, textarea: true, button: true },
-	tagCounts = {
+var tagCounts = {
 		__proto__: null,
 		address: -3,
 		article: 30,
@@ -191,19 +191,20 @@ var tagsToRemove = { __proto__: null, aside: true, time: true, applet: true, foo
 		th: -5,
 		ul: -3
 	},
-	removeIfEmpty = { __proto__: null, blockquote: true, a:true, li: true, p: true, pre: true, tbody: true, td: true, th: true, thead: true, tr: true },
+	tagsToRemove = { __proto__: null, aside: true, time: true, applet: true, footer: true, head: true, label: true, nav: true, noscript: true, script: true, select: true, style: true, textarea: true, button: true },
+	removeIfEmpty = { __proto__: null, canvas:true, blockquote: true, a:true, li: true, p: true, pre: true, tbody: true, td: true, th: true, thead: true, tr: true },
 	embeds = { __proto__: null, embed: true, object: true, iframe: true, audio: true, video: true, source: true, param: true },
-	goodAttributes = { __proto__: null, /*style: true,*/ lang: true, src: true, href: true, alt: true, title: true, data: true, height: true, width: true, name: true, value: true, type: true, border: true, frameborder: true, colspan: true, rowspan: true, span: true, cite: true },
+	goodAttributes = { __proto__: null, style: true, lang: true, src: true, href: true, alt: true, title: true, data: true, height: true, width: true, name: true, value: true, type: true, border: true, frameborder: true, colspan: true, rowspan: true, span: true, cite: true },
 	cleanConditionally = { __proto__: null, div: true, form: true, ol: true, table: true, ul: true },
 	unpackDivs = { __proto__: embeds, div: true, img: true, svg: true, figure: true, p: true }, // div>[single child] => [single child]
-	noContent = { __proto__: formatTags, font: false, input: false, link: false, meta: false, span: false, path: false, source: false },
+	noContent = { __proto__: formatTags, font: false, input: false, link: false, meta: false, span: false },
 	tagsToScore = { __proto__: null, p: true, pre: true, td: true },
 	formatTags = { __proto__: null, br: new Element('br'), hr: new Element('hr') },
 	headerTags = { __proto__: null, h1: true, h2: true, h3: true, h4: true, h5: true, h6: true },
 	newLinesAfter = { __proto__: headerTags, br: true, li: true, p: true },
 
 	divToPElements = ['a','blockquote','dl','img','svg','ol','p','pre','code','table','ul'],
-	okayIfEmpty = ['source','path','embed','iframe','img','object','canvas'],
+	okayIfEmpty = ['source','embed','iframe','img','object'],
 
 	re_videos = /\/\/(?:[^.?\/]+\.)?(?:youtu(?:be)?|soundcloud|vimeo|imgur|gfycat|dailymotion|cliphunter|twitch|vid|pornhub|xvideos|twitvid|rutube|viddler)\.(?:com|me|be|org|net|tv|ru)/,
 	re_nextLink = /[>»]|continue|next|more|weiter(?:[^\|]|$)/i,
@@ -215,8 +216,10 @@ var tagsToRemove = { __proto__: null, aside: true, time: true, applet: true, foo
 	re_safe = /hentry|(?:instapaper|article).body|markdown|\bfulltext/,
 	re_final = /first|last/i,
 
+	re_hidden = /display\s*:\s*none|visibility\s*:\s*hidden/i,
+
 	re_positive = /read|full|article|source|content|body|\bcontent|contain|\bentry|main|page|attach|post|text|blog|story/i,
-	re_negative = /pag(?:er|ination)|\bdate|\btime|nav|tag|extra|keyword|foot(?:note)?|^hid$|hid$|\bhid\b|^hid|all|bottom|stat|info|modal|outbrain|masthead|com-|contact|_nav|link|media|\bout|skyscraper|promo|\bad-|related|scroll|shoutbox|sponsor|shopping|teaser/i,
+	re_negative = /pag(?:er|ination)|\bdate|\btime|nav|tag|extra|keyword|foot(?:note)?|^hid$|hid$|\bhid\b|^hid|all|thumb|bottom|stat|info|modal|outbrain|masthead|com-|contact|_nav|link|media|\bout|skyscraper|promo|\bad-|related|scroll|shoutbox|sponsor|shopping|teaser/i,
 	re_unlikelyCandidates =  /auth?or|similar|ignore|\binfo|annoy|clock|\bdate|\btime|footer|com(?:bx|ment|munity)|banner|intro|log.{2}n|edcolinks|hidd?e|about|bookmark|\bcat|search|social|robot|published|mast(?:head)|subscri|category|disqus|extra|head(?:er|note)|floor|agegate|menu|function|remark|rss|tool|header|teaserlist|widget|meta|adsense|inner-?ad|ad-|\badv\b|\bads\b|agr?egate?|pager|sidebar|popup|tweet|twit|like/i,
 	re_okMaybeItsACandidate = /and|out(?:er|side)|wrap|post|article\b|body|entry|\bmain|page|contain|\bcontent|column|general|detail|shadow|lightbox|blog/i,
 
@@ -245,27 +248,27 @@ var tagsToRemove = { __proto__: null, aside: true, time: true, applet: true, foo
 	re_imgUrl = /\.(?:gif|jpe?g|a?png|webp|svg)/i,
 
 	// constants
-    SCORE_CHARS_IN_PARAGRAPH = 100,
-    GRANDPARENT_SCORE_DIVISOR = 2,
-    MIN_PARAGRAPH_LENGTH = 20,
-    MIN_COMMAS_IN_PARAGRAPH = 6,
-    MIN_NODE_LENGTH = 80,
-    MAX_LINK_DENSITY = 0.25,
-    SIBLING_SCORE_MULTIPLIER = 0.2,
+	SCORE_CHARS_IN_PARAGRAPH = 100,
+	GRANDPARENT_SCORE_DIVISOR = 2,
+	MIN_PARAGRAPH_LENGTH = 20,
+	MIN_COMMAS_IN_PARAGRAPH = 6,
+	MIN_NODE_LENGTH = 80,
+	MAX_LINK_DENSITY = 0.25,
+	SIBLING_SCORE_MULTIPLIER = 0.2,
 
-    // TODO: raw HTML filters
-    pre_filters = [
-        { r: /^\s+|\s+$/g, s: '' }, // trim()
-        { r: /[\r\n]+(?=\n)/g, s: '' }
-    ],
+	// TODO: raw HTML filters
+	pre_filters = [
+		{ r: /^\s+|\s+$/g, s: '' }, // trim()
+		{ r: /[\r\n]+(?=\n)/g, s: '' }
+	],
 
-    // output HTML filters
-    post_filters = [
-        { r: /(?:<br\/>(?:\s|&nbsp;?)*)+(?=<\/?p)/g, s:'' }, //remove <br>s in front of opening & closing <p>s
-        { r: /(?:\s|&nbsp;?)+(?=<br\/>)/g, s: '' }, // remove spaces in front of <br>s
-        { r: /(?:<br\/>){2,}/g, s: '</p><p>' },
-        { r: /\s{2,}/g, s: ' ' }
-    ];
+	// output HTML filters
+	post_filters = [
+		{ r: /(?:<br\/>(?:\s|&nbsp;?)*)+(?=<\/?p)/g, s:'' }, //remove <br>s in front of opening & closing <p>s
+		{ r: /(?:\s|&nbsp;?)+(?=<br\/>)/g, s: '' }, // remove spaces in front of <br>s
+		{ r: /(?:<br\/>){2,}/g, s: '</p><p>' },
+		{ r: /\s{2,}/g, s: ' ' }
+	];
 
 //
 // 3. the readability class
@@ -287,7 +290,7 @@ Readability.prototype._settings = {
 	cleanConditionally: true, // clean node based on its metrics
 	cleanAttributes: true, // remove unneeded attributes
 	replaceImgs: false, // a[href='large.jpg']>img[src='small.jpg'] => img[src='large.jpg']
-	searchFurtherPages: true, // download paginaed pages
+	searchFurtherPages: false, // detect paginaed pages
 	returnBasic: false, // return minimally processed page
 	resolvePaths: false, //
 	linksToSkip: {},	//pages that are already parsed
@@ -303,11 +306,11 @@ Readability.prototype._settings = {
  * @return     {string}  Filtered content
  */
 Readability.prototype._processContent = function(content, filters) {
-    if (typeof content !== 'string' || !content) return '';
-    for (var i = 0, l = filters.length; i < l; i++) {
-        content = String.prototype.replace.apply(content, [filters[i].r, filters[i].s]);
-    }
-    return content;
+	if (typeof content !== 'string' || !content) return '';
+	for (var i = 0, l = filters.length; i < l; i++) {
+		content = String.prototype.replace.apply(content, [filters[i].r, filters[i].s]);
+	}
+	return content;
 };
 
 /**
@@ -520,8 +523,13 @@ Readability.prototype.onattribute = function(name, value){
 
 	var elem = this._currentElement;
 
-	if (name === 'id' && !re_whitespace.test(value)) {
+	if (name === 'id' && !re_whitespace.test(value)) // for hash-navigation
 		elem.attributes[name] = value;
+
+	if ((elem.parent && elem.parent.isSVG) || elem.name === 'svg') {
+		elem.isSVG = true;
+		elem.attributes[name] = value;
+        return;
 	}
 
 	if (re_dataAttribute.test(name)) {
@@ -540,7 +548,7 @@ Readability.prototype.onattribute = function(name, value){
 		value = value.trim().toLowerCase();
 		if(!this._settings.weightAttributes);
 		else if(re_safe.test(value)){
-			elem.attributeScore += 100;
+			elem.attributeScore += 200;
 			elem.isCandidate = true;
 		}
 		else if(re_negative.test(value)) elem.attributeScore -= 25;
@@ -560,9 +568,6 @@ Readability.prototype.onattribute = function(name, value){
 			else if(name === 'width' ? value >= 200 : value >= 150) elem.parent.attributeScore += 5;
 		}
 		else if(name === 'alt') elem.parent.attributeScore += 10;
-	}
-	else if(elem.name === 'svg' || (elem.parent && elem.parent.name === 'svg')) {
-		elem.attributes[name] = value;
 	}
 	else if(this._settings.cleanAttributes){
 		// filter attributes
@@ -602,6 +607,33 @@ Readability.prototype.onclosetag = function(tagName){
 
 	this._currentElement = elem.parent;
 
+	if (elem.attributes && elem.attributes.style) {
+		if(re_hidden.test(elem.attributes.style))
+			return;
+		else
+			delete elem.attributes.style;
+	}
+
+	// ​SVG sub-tree
+	if ((elem.parent && elem.parent.isSVG) || tagName === 'svg') {
+		elem.isSVG = true;
+		elem.parent.children.push(elem);
+		return;
+	}
+
+	// ​picture > *
+	if ((elem.parent && elem.parent.name === 'picture' && tagName === 'img') || tagName === 'picture') {
+		elem.parent.children.push(elem);
+		// ​picture > img[srcset] approach of some sites
+		if(tagName === 'img' && elem.attributes && elem.attributes.srcset &&
+		   (elem.attributes.srcset.match(re_imgUrl) || []).length === 1) {
+			elem.attributes.src = elem.attributes.srcset;
+			delete elem.attributes.srcset;
+			return;
+		}
+		return;
+	}
+
 	// prepare title
 	if(this._settings.searchFurtherPages && tagName === 'a'){
 		this._scanLink(elem);
@@ -635,13 +667,11 @@ Readability.prototype.onclosetag = function(tagName){
 
 	if(tagName in tagsToRemove) return;
 	if(this._settings.stripUnlikelyCandidates &&
-	   re_unlikelyCandidates.test(elem.elementData) &&
-	   !re_okMaybeItsACandidate.test(elem.elementData))
+		re_unlikelyCandidates.test(elem.elementData) && !re_okMaybeItsACandidate.test(elem.elementData))
 			return;
 
 	if(tagName === 'div' &&
-		elem.children.length === 1 &&
-		typeof elem.children[0] === 'object' &&
+		elem.children.length === 1 && typeof elem.children[0] === 'object' &&
 		elem.children[0].name in unpackDivs
 	){
 		//unpack divs
@@ -692,7 +722,6 @@ Readability.prototype.onclosetag = function(tagName){
 		}
 		return;
 	}
-
 	/* jshint ignore:end */
 
 	if (elem.children.length === 1 && (elem.info.tagCount.br === 1 || elem.info.tagCount.hr === 1)) return;
@@ -739,6 +768,13 @@ Readability.prototype.onclosetagmin = function(tagName){
 	var elem = this._currentElement, title, i, j;
 
 	this._currentElement = elem.parent;
+
+	if (elem.attributes) {
+		if(elem.attributes.style && re_hidden.test(elem.attributes.style))
+			return;
+		else
+			delete elem.attributes.style;
+	}
 
 	// prepare title
 	if(tagName === 'title' && !this._origTitle){
@@ -811,37 +847,37 @@ Readability.prototype.onclosetagmin = function(tagName){
 Readability.prototype.onreset = Readability;
 
 /**
+ * Converts attributes to array
+ *
+ * @param      {string}  arrays  Attribute string
+ * @return     {Array}  Attributes array
+ */
+var toAtrArray = function (node) {
+	return (node.elementData).replace(/[_-]/g, ' ').split(' ')
+			.filter(function(v) { return v === ''; });
+};
+
+/**
+ * Intersection of arrays
+ *
+ * @param      {Array}  arrays  Input arrays
+ * @return     {Array}  Intersection array
+ */
+var intersect = function (arrays) {
+	return arrays.shift().filter(function(v) {
+		return arrays.every(function(a) {
+			return a.indexOf(v) !== -1;
+		});
+	});
+};
+
+/**
  * Gets the candidate siblings.
  *
  * @param      {Element} candidate  The candidate node
  * @return     {Array}   The candidate siblings.
  */
 var getCandidateSiblings = function(candidate){
-	/**
-	 * Converts attributes to array
-	 *
-	 * @param      {string}  arrays  Attribute string
-	 * @return     {Array}  Attributes array
-	 */
-	var toAtrArray = function (node) {
-	    return (node.elementData).replace(/[_-]/g, ' ').split(' ')
-	        	.filter(function(v) { return v === ''; });
-	};
-
-	/**
-	 * Intersection of arrays
-	 *
-	 * @param      {Array}  arrays  Input arrays
-	 * @return     {Array}  Intersection array
-	 */
-	var intersect = function (arrays) {
-	    return arrays.shift().filter(function(v) {
-	        return arrays.every(function(a) {
-	            return a.indexOf(v) !== -1;
-	        });
-	    });
-	};
-
 	// check all siblings
 	var ret = [],
 		childs = candidate.parent.children,
@@ -1031,7 +1067,7 @@ Readability.prototype.parseDOM = function(root){
 	var parse = function(node){
 		var i, j,
 			name = node.tagName.toLowerCase(),
-		    attributeNodes = node.attributes;
+			attributeNodes = node.attributes;
 
 		self.onopentagname(name);
 
@@ -1040,7 +1076,7 @@ Readability.prototype.parseDOM = function(root){
 
 		var nodeType,
 			childs = node.childNodes,
-		    num = childs.length;
+			num = childs.length;
 
 		for(i = 0; i < num; i++){
 			nodeType = childs[i].nodeType;
