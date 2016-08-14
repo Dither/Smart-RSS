@@ -7,7 +7,7 @@ var _T = function () {
 
 require.config({
 	baseUrl: 'scripts/bgprocess',
-	waitSeconds: 0,
+	waitSeconds: 2000,
 
 	paths: {
 		jquery: '../libs/jquery.min',

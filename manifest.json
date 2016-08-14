@@ -4,7 +4,7 @@
 		"name": "BS-Harou (Martin Kadlec)",
 		"url": "http://blog.martinkadlec.eu/"
 	},
-	"description": "RSS feeds reader similar to Opera 12's internal",
+	"description": "RSS feeds reader similar to Opera 12's internal.",
 	"manifest_version": 2,
 	"version": "2.1",
 	"default_locale": "en_GB",

@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html dir="ltr">
 <head>
 	<meta charset="utf-8">
 	<title>Smart RSS [options]</title>
-	<link rel="stylesheet" href="styles/options.css">
+	<link rel="stylesheet" type="text/css" href="styles/options.css">
+	<link rel="stylesheet" type="text/css" href="styles/modals.css">
 	<script src="scripts/libs/jquery.min.js"></script>
+	<script src="scripts/libs/jquery.confirm.js"></script>
+	<script src="scripts/libs/jquery.modal.js"></script>
 	<script src="scripts/options/options.js"></script>
 </head>
 <body>
@@ -162,7 +165,7 @@
 			<select id="useSound">
 				<option value=":user"></option>
 				<option value=":none"></option>
-				<optgroup label="Default sounds">
+				<optgroup label="DEFAULT_SOUNDS">
 					<option value="knock"></option>
 					<option value="taptap"></option>
 					<option value="glass"></option>
@@ -189,7 +192,7 @@
 </section>
 
 <section>
-	<h3 class="section-header export"></h3>
+	<h3 class="section-header export-group"></h3>
 	<div class="settings-row learn-more" title="TITLE_SMART_EXPORT">
 		<label class="web-content-select-label">
 			<span class="selectLabel export-smart">SMART:</span>
@@ -207,7 +210,7 @@
 </section>
 
 <section>
-	<h3 class="section-header import"></h3>
+	<h3 class="section-header import-group"></h3>
 	<div class="settings-row learn-more" title="TITLE_SMART_IMPORT">
 		<label class="web-content-select-label">
 			<span class="selectLabel import-smart">SMART:</span>
@@ -242,8 +245,8 @@
 
 <section>
 	<h3 class="section-header bug-reps"></h3>
-	<p class="found-bug"></p>
-	<a href="http://blog.martinkadlec.eu/post/501-smart-rss-final-v10">Martin Kadlec (BS-Harou)</a>.
+	<p><span class="found-bug"></span>
+	<a href="http://blog.martinkadlec.eu/post/501-smart-rss-final-v10">Martin Kadlec (BS-Harou)</a>.</p>
 </section>
 </body>
 </html>

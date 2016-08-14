@@ -9,12 +9,12 @@ body {
 
 span.selectLabel {
     display: inline-block;
-    min-width: 200px;
-    max-width: 200px;
+    display: inline-block;
+    min-width: 250px;
+    max-width: 300px;
 }
 
-_:-moz-tree-row(hover),
-body {
+_:-moz-tree-row(hover), body {
     padding: 5px 20px!important;
 }
 
@@ -97,6 +97,7 @@ input[type=number] {
 
 button {
     padding: 2px 12px;
+    margin-right: 5px;
 }
 
 input[type=checkbox] {
@@ -132,7 +133,9 @@ input[type=checkbox] {
 .use-sound:before { content: '__MSG_USE_SOUND__'; }
 .user-sound:before { content: '__MSG_USER_SOUND__'; }
 .volume:before { content: '__MSG_VOLUME__'; }
+.export-group:before { content: '__MSG_EXPORT_GROUP__'; }
 .export:before { content: '__MSG_EXPORT__'; }
+.import-group:before { content: '__MSG_IMPORT_GROUP__'; }
 .import:before { content: '__MSG_IMPORT__'; }
 .clear:before { content: '__MSG_CLEAR__'; }
 .clear-all:before { content: '__MSG_CLEAR_ALL__'; }
@@ -140,4 +143,3 @@ input[type=checkbox] {
 .version:before { content: '__MSG_VERSION__'; }
 .bug-reps:before { content: '__MSG_BUG_REPS__'; }
 .found-bug:before { content: '__MSG_FOUND_BUG__'; }
-

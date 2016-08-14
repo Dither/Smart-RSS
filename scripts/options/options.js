@@ -1,7 +1,7 @@
 if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = chrome;
 
 function utf8_to_b64( str ) {
-	return btoa(unescape(encodeURIComponent( str )));
+	return btoa(unescape(encodeURIComponent(str)));
 }
 
 function b64_to_utf8( str ) {
@@ -29,14 +29,14 @@ function escapeHtml(string) {
 
 function decodeHTML(str) {
 	str = str || '';
-    var map = {"gt":">", 'lt': '<', 'amp': '&', 'quot': '"' };
-    return str.replace(/&(#(?:x[0-9a-f]+|\d+)|[a-z]+);?/gmi, function($0, $1) {
-        if ($1[0] === "#") {
-            return String.fromCharCode($1[1].toLowerCase() === "x" ? parseInt($1.substr(2), 16)  : parseInt($1.substr(1), 10));
-        } else {
-            return map.hasOwnProperty($1) ? map[$1] : $0;
-        }
-    });
+	var map = {"gt":">", 'lt': '<', 'amp': '&', 'quot': '"' };
+	return str.replace(/&(#(?:x[0-9a-f]+|\d+)|[a-z]+);?/gmi, function($0, $1) {
+		if ($1[0] === "#") {
+			return String.fromCharCode($1[1].toLowerCase() === "x" ? parseInt($1.substr(2), 16)  : parseInt($1.substr(1), 10));
+		} else {
+			return map.hasOwnProperty($1) ? map[$1] : $0;
+		}
+	});
 }
 
 var _T = function () {
@@ -52,6 +52,10 @@ function localizeNodes() {
 	$('[title]').each(function(i, item) {
 		//log += $(item).attr('title') + '\n';
 		$(item).attr('title', _T($(item).attr('title')));
+	});
+	$('optgroup[label]').each(function(i, item) {
+		//log += $(item).attr('label') + '\n';
+		$(item).attr('label', _T($(item).attr('label')));
 	});
 	//console.log(log);
 }
@@ -111,18 +115,21 @@ browser.runtime.getBackgroundPage(function(bg) {
 
 	function handleDefaultSound(e) {
 		var file = e.currentTarget.files[0];
-		if (!file || file.size == 0) {
-			return;
-		}
+		if (!file || file.size == 0) return;
 
 		if (!file.type.match(/audio.*/)) {
-			alert('Please select audio file!')
+			$.confirm({
+				text: _T('SELECT_AUDIO'),
+				confirmButton: _T("OK")
+			});
 			return;
 		}
 
 		if (file.size > 1000000) {
-			alert('Please use file smaller than 1Mb!');
-			return;
+			$.confirm({
+				text: _T('NO_LARGE_FILES'),
+				confirmButton: _T("OK")
+			});
 		}
 
 		var reader = new FileReader();
@@ -131,7 +138,6 @@ browser.runtime.getBackgroundPage(function(bg) {
 		}
 
 		reader.readAsDataURL(file);
-
 	}
 
 	function handleExportSmart() {
@@ -143,51 +149,48 @@ browser.runtime.getBackgroundPage(function(bg) {
 
 		$('#smart-exported').attr('href', '#');
 		$('#smart-exported').removeAttr('download');
-		$('#smart-exported').html('Exporting, please wait');
-
+		$('#smart-exported').html(_T('WAIT_EXPORTING'));
 
 		setTimeout(function() {
 			var expr = new Blob([JSON.stringify(data)]);
 			$('#smart-exported').attr('href', URL.createObjectURL(expr));
 			$('#smart-exported').attr('download', 'exported-rss.smart');
-			$('#smart-exported').html('Click to download exported data');
+			$('#smart-exported').html(_T('CLICK_TO_DOWNLOAD'));
 		}, 100);
 	}
 
 	function handleExportOPML() {
-
-		function addFolder(doc, title, id) {
+		var addFolder = function(doc, title, id) {
 			var tmp = doc.createElement('outline');
 			tmp.setAttribute('text', escapeHtml(title));
 			tmp.setAttribute('title', escapeHtml(title));
 			tmp.setAttribute('id', id);
 			return tmp;
-		}
+		};
 
-		function addSource(doc, title, url) {
+		var addSource = function (doc, title, url) {
 			var tmp = doc.createElement('outline');
 			tmp.setAttribute('text', escapeHtml(title));
 			tmp.setAttribute('title', escapeHtml(title));
 			tmp.setAttribute('type', 'rss');
 			tmp.setAttribute('xmlUrl', url);
 			return tmp;
-		}
+		};
 
-		function addLine(doc, to, ctn) {
+		var addLine = function(doc, to, ctn) {
 			var line = doc.createTextNode(ctn || '\n\t');
 			to.appendChild(line);
 		}
 
 		$('#opml-exported').attr('href', '#');
 		$('#opml-exported').removeAttr('download');
-		$('#opml-exported').html('Exporting, please wait');
+		$('#opml-exported').html(_T('WAIT_EXPORTING'));
 
-		var start = '<?xml version="1.0" encoding="utf-8"?>\n<opml version="1.0">\n<head>\n\t<title>Newsfeeds exported from Smart RSS</title>\n</head>\n<body>';
+		var start = '<?xml version="1.0" encoding="utf-8"?>\n<opml version="1.0">\n<head>\n\t<title>Feeds exported from Smart RSS</title>\n</head>\n<body>';
 		var end = '\n</body>\n</opml>';
 
 		var parser = new DOMParser();
-        var doc = parser.parseFromString(start + end, 'application/xml');
-
+		var doc = parser.parseFromString(start + end, 'application/xml');
 
 		setTimeout(function() {
 			var body = doc.querySelector('body');
@@ -196,7 +199,6 @@ browser.runtime.getBackgroundPage(function(bg) {
 				addLine(doc, body);
 				body.appendChild( addFolder(doc, folder.get('title'), folder.get('id')) );
 			});
-
 
 			bg.sources.forEach(function(source) {
 				//middle += '\n\t<outline text="' + escapeHtml(source.get('title')) + '" title="' + escapeHtml(source.get('title')) + '" type="rss" xmlUrl="' + escapeHtml(source.get('url')) + '" />';
@@ -226,38 +228,38 @@ browser.runtime.getBackgroundPage(function(bg) {
 			var expr = new Blob([ (new XMLSerializer()).serializeToString(doc) ]);
 			$('#opml-exported').attr('href', URL.createObjectURL(expr));
 			$('#opml-exported').attr('download', 'exported-rss.opml');
-			$('#opml-exported').html('Click to download exported data');
+			$('#opml-exported').html(_T('CLICK_TO_DOWNLOAD'));
 		}, 20);
 	}
 
 	function handleImportSmart(e) {
 		var file = e.currentTarget.files[0];
 		if (!file || file.size == 0) {
-			$('#smart-imported').html('Wrong file');
+			$('#smart-imported').html(_T('WRONG_FILE'));
 			return;
 		}
 
-		$('#smart-imported').html('Loading & parsing file');
+		$('#smart-imported').html(_T('LOADING_PARSING'));
 
 		var reader = new FileReader();
 		reader.onload = function(e) {
 			var data = JSON.safeParse(this.result);
 
 			if (!data || !data.items || !data.sources) {
-				$('#smart-imported').html('Wrong file');
+				$('#smart-imported').html(_T('WRONG_FILE'));
 				return;
 			}
 
-			$('#smart-imported').html('Importing, please wait!');
+			$('#smart-imported').html(_T('WAIT_IMPORTING'));
 
 			var worker = new Worker('scripts/options/worker.js');
 			worker.onmessage = function(e) {
 				if (e.data.action == 'finished'){
-					$('#smart-imported').html('Loading data to memory!');
+					$('#smart-imported').html(_T('LOADING_TO_MEMORY'));
 
 					bg.fetchAll().always(function() {
 						bg.info.autoSetData();
-						$('#smart-imported').html('Import fully completed!');
+						$('#smart-imported').html(_T('IMPORT_COMPLETE'));
 						bg.loader.downloadAllFeeds(true);
 					});
 				} else if (e.data.action == 'message'){
@@ -267,7 +269,10 @@ browser.runtime.getBackgroundPage(function(bg) {
 			worker.postMessage({ action: 'file-content', value: data });
 
 			worker.onerror = function(e) {
-				alert('Importing error: ' + e.message);
+				$.confirm({
+					text: _T('IMPORT_ERROR') + e.message,
+					confirmButton: _T("OK")
+				});
 			}
 		}
 
@@ -287,19 +292,19 @@ browser.runtime.getBackgroundPage(function(bg) {
 	function handleImportOPML(e) {
 		var file = e.currentTarget.files[0];
 		if (!file || file.size == 0) {
-			$('#opml-imported').html('Wrong file');
+			$('#opml-imported').html(_T('WRONG_FILE'));
 			return;
 		}
 
-		$('#opml-imported').html('Importing, please wait!');
+		$('#opml-imported').html(_T('WAIT_IMPORTING'));
 
 		var reader = new FileReader();
 		reader.onload = function(e) {
 			var parser = new DOMParser();
-        	var doc = parser.parseFromString(this.result, 'application/xml');
+			var doc = parser.parseFromString(this.result, 'application/xml');
 
 			if (!doc) {
-				$('#opml-imported').html('Wrong file');
+				$('#opml-imported').html(_T('WRONG_FILE'));
 				return;
 			}
 
@@ -335,24 +340,30 @@ browser.runtime.getBackgroundPage(function(bg) {
 				}
 			}
 
-			$('#opml-imported').html('Import completed!');
+			$('#opml-imported').html(_T('IMPORT_COMPLETE'));
 
 			setTimeout(function() {
 				bg.loader.downloadAllFeeds();
 			}, 10);
 		}
 
-
 		reader.readAsText(file);
 	}
 
 	function handleClearData() {
-		var c = confirm('Do you really want to remove all extension data?');
-		if (!c) return;
-
-		bg.indexedDB.deleteDatabase('backbone-indexeddb');
-		localStorage.clear();
-		browser.alarms.clearAll()
-		browser.runtime.reload();
+		$.confirm({
+			text: _T('REMOVE_ALL_DATA'),
+			confirm: function() {
+				bg.indexedDB.deleteDatabase('backbone-indexeddb');
+				localStorage.clear();
+				browser.alarms.clearAll()
+				browser.runtime.reload();
+			},
+			cancel: function() {},
+			confirmButton: _T('OK'),
+			cancelButton: _T('CANCEL'),
+			confirmButtonClass: 'btn-default',
+			cancelButtonClass: 'btn-primary',
+		});
 	}
 });

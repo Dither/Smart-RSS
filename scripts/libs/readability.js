@@ -168,7 +168,7 @@ var tagCounts = {
 		blockquote: 3,
 		body: -5,
 		code: 4,
-		canvas: 3,
+		canvas: -3,
 		dd: -3,
 		div: 5,
 		dl: -3,
@@ -203,7 +203,7 @@ var tagCounts = {
 	headerTags = { __proto__: null, h1: true, h2: true, h3: true, h4: true, h5: true, h6: true },
 	newLinesAfter = { __proto__: headerTags, br: true, li: true, p: true },
 
-	divToPElements = ['a','blockquote','dl','img','svg','ol','p','pre','code','table','ul'],
+	divToPElements = ['a','blockquote','dl','img','svg','math','ol','p','pre','code','table','ul'],
 	okayIfEmpty = ['source','embed','iframe','img','object'],
 
 	re_videos = /\/\/(?:[^.?\/]+\.)?(?:youtu(?:be)?|soundcloud|vimeo|imgur|gfycat|dailymotion|cliphunter|twitch|vid|pornhub|xvideos|twitvid|rutube|viddler)\.(?:com|me|be|org|net|tv|ru)/,
@@ -526,7 +526,8 @@ Readability.prototype.onattribute = function(name, value){
 	if (name === 'id' && !re_whitespace.test(value)) // for hash-navigation
 		elem.attributes[name] = value;
 
-	if ((elem.parent && elem.parent.isSVG) || elem.name === 'svg') {
+    // keep SVG and MathML attributes intact
+	if ((elem.parent && elem.parent.isSVG) || elem.name === 'svg' || elem.name === 'math') {
 		elem.isSVG = true;
 		elem.attributes[name] = value;
         return;
@@ -614,8 +615,8 @@ Readability.prototype.onclosetag = function(tagName){
 			delete elem.attributes.style;
 	}
 
-	// ​SVG sub-tree
-	if ((elem.parent && elem.parent.isSVG) || tagName === 'svg') {
+	// ​SVG/MathML nodes
+	if ((elem.parent && elem.parent.isSVG) || tagName === 'svg' || elem.name === 'math') {
 		elem.isSVG = true;
 		elem.parent.children.push(elem);
 		return;
@@ -633,6 +634,8 @@ Readability.prototype.onclosetag = function(tagName){
 		}
 		return;
 	}
+
+    if (tagName === 'figure' && elem.attributes.src) elem.name = 'img';
 
 	// prepare title
 	if(this._settings.searchFurtherPages && tagName === 'a'){
