@@ -276,10 +276,12 @@ browser.runtime.getBackgroundPage(function(bg) {
 			}
 		}
 
-		var url = browser.runtime.getURL('rss.html');
+		var url = browser.runtime.getURL('reader.html');
 		browser.tabs.query({ /*url: url*/ }, function(tabs) {
 			for (var i = tabs.length; i-- ;) {
-				browser.tabs.remove(tabs[i].id);
+				if (tabs[i].url === url) {
+					browser.tabs.remove(tabs[i].id);
+				}
 			}
 
 			// wait for clear events to happen

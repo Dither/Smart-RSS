@@ -248,7 +248,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	}
 
 	function openRSS(closeIfActive, focusSource) {
-		var url = browser.runtime.getURL('rss.html');
+		var url = browser.runtime.getURL('reader.html');
 		browser.tabs.query({
 			/*url: url*/
 		}, function(tabs) {

@@ -122,12 +122,13 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		},
 
 		/**
-		 * Opens articles url in new tab
+		 * Opens article's url in new tab if title-link is disabled
 		 * @method handleItemDblClick
 		 * @triggered on double click on article
 		 */
 		handleItemDblClick: function() {
-			app.actions.execute('articles:oneFullArticle');
+			if (!bg.settings.get('titleIsLink'))
+				app.actions.execute('articles:oneFullArticle');
 		},
 
 		/**
@@ -166,14 +167,16 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @method initialize
 		 */
 		initialize: function() {
-
 			this.$el.addClass('lines-' + bg.settings.get('lines'));
+
 			bg.items.on('reset', this.addItems, this);
 			bg.items.on('add', this.addItem, this);
 			bg.items.on('sort', this.handleSort, this);
 			bg.items.on('render-screen', this.handleRenderScreen, this);
+
 			bg.settings.on('change:lines', this.handleChangeLines, this);
 			bg.settings.on('change:layout', this.handleChangeLayout, this);
+
 			bg.sources.on('destroy', this.handleSourcesDestroy, this);
 			bg.sources.on('clear-events', this.handleClearEvents, this);
 
@@ -181,8 +184,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 
 			this.on('attach', this.handleAttached, this);
 			this.on('pick', this.handlePick, this);
-
-
 			this.$el.on('scroll', this.handleScroll.bind(this));
 
 		},
@@ -194,11 +195,9 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @param view {views/ItemView}
 		 */
 		handlePick: function(view) {
-			if (!view.model.collection) {
-				// This shouldn't usually happen
-				// It might happen when source is deleted and created in the same tick
-				return;
-			}
+			// This shouldn't usually happen
+			// It might happen when source is deleted and created in the same tick
+			if (!view.model.collection) return;
 
 			app.trigger('select:' + this.el.id, { action: 'new-select', value: view.model.id });
 
@@ -218,7 +217,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @triggered when article list is attached to DOM
 		 */
 		handleAttached: function() {
-
 			app.on('select:feed-list', function(data) {
 				this.el.scrollTop = 0;
 				this.unreadOnly = data.unreadOnly;
@@ -262,7 +260,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 					that.addItems(bg.items.where({ trashed: false }));
 				}
 			}, 0);
-
 			return this;
 		},
 
@@ -294,7 +291,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		redraw: function() {
 			var start = -1;
 			var count = 0;
-			for (var i=0,j=this.viewsToRender.length; i<j; i++) {
+			for (var i = 0, j = this.viewsToRender.length; i < j; i++) {
 				if ((start >= 0 && count % 10 != 0) || isScrolledIntoView(this.viewsToRender[i].el)) {
 					this.viewsToRender[i].render();
 					count++;
@@ -303,7 +300,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 					break;
 				}
 			}
-
 
 			if (start >= 0 && count > 0) {
 				this.viewsToRender.splice(start, count);
@@ -387,18 +383,17 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @param view {views/ItemView}
 		 */
 		selectAfterDelete: function(view) {
-			if (view && view == this.selectedItems[0]) {
+			if (!view) return;
+			if (view == this.selectedItems[0]) {
 				var last = this.$el.find('.item:not(.invisible):last').get(0);
-				if (last && view == last.view) {
+				if (!last) return;
+				if (view == last.view) {
 					this.selectPrev({ currentIsRemoved: true });
 				} else {
 					this.selectNext({ currentIsRemoved: true });
 				}
 			} else {
-				// if first item is the last item to be deleted, selecting it will trigger error - rAF to get around it
-				requestAnimationFrame(function() {
-					this.selectFirst();
-				}.bind(this));
+				this.selectFirst();
 			}
 		},
 
@@ -542,7 +537,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 			this.setItemHeight();
 			this.reuseIndex = 0;
 
-
 			items.forEach(function(item) {
 				this.addItem(item, true);
 			}, this);
@@ -558,7 +552,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 				app.actions.execute('articles:search');
 			}
 
-			//alert(Date.now() - st);
+			//console.warn(Date.now() - st);
 
 		},
 
@@ -567,9 +561,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @method clearOnSelect
 		 */
 		clearOnSelect: function() {
-			// Smart RSS used to reset search on feed select change. It instead keeps the fitler now.
-			//$('input[type=search]').val('');
-
 			// if prev selected was trash, hide undelete buttons
 			if (this.currentData.name == 'trash') {
 				/*$('[data-action="articles:update"]').css('display', 'block');
@@ -757,8 +748,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 */
 		destroyItemFrame: function(view) {
 			// START: REMOVE DATE GROUP
-			/*var prev = view.el.previousElementSibling;
-			var next = view.el.nextElementSibling;*/
 			var prev = view.el.findPrev(':not(.unpluged)');
 			var next = view.el.findNext(':not(.unpluged)');
 			if (prev && prev.classList.contains('date-group')) {
@@ -769,10 +758,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 			// END: REMOVE DATE GROUP
 
 			view.clearEvents();
-			// view.undelegateEvents(); - I moved all events to _list_ so this shouldn't be neccesary
-			// view.$el.removeData() - i removed this as I don't use jquery .data, if I will in future I have to add it again
-			// view.$el.unbind(); - - I'm not adding any jquery events
-			// view.off(); - This takes from some reason quite a time, and does nothing because I'm not adding events on the view
 			view.remove();
 
 			var io = this.selectedItems.indexOf(view);

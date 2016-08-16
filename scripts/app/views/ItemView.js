@@ -104,7 +104,7 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		prerender: function() {
 			this.prerendered = true;
 			this.list.viewsToRender.push(this);
-			this.el.className = this.model.get('unread') ? 'item unread' : 'item';
+			this.el.className = this.model.get('unread') ? 'item unread invisible' : 'item invisible';
 		},
 
 		/**
@@ -153,7 +153,6 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		 * @chainable
 		 */
 		render: function() {
-
 			this.$el.toggleClass('unvisited', !this.model.get('visited'));
 			this.$el.toggleClass('unread', this.model.get('unread'));
 
@@ -165,14 +164,13 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 				}
 			}
 
-			this.$el.css('height','');
+			this.$el.css('height', '');
 			var data = this.model.toJSON();
 			data.date = this.getItemDate(data.date);
-			data.title = stripTags(data.title).trim() || '&lt;' + 'no title' + '&gt;';
-
-			//this.el.title = data.title + '\n' + formatDate(this.model.get('date'), pickedFormat + ' ' + timeFormatTitle);
+			data.title = stripTags(data.title).trim() || '&lt;' + _T('NO_TITLE') + '&gt;';
 
 			this.$el.html(this.template(data));
+			this.$el.removeClass('invisible');
 
 			return this;
 		},

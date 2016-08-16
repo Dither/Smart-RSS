@@ -122,6 +122,8 @@
 	"REFETCH_WARNING": { "message": "This will delete all elements from selected feed(s). Continue?" },
 
 	"EMBEDS": { "message": "embeded media" },
+    "NO_TITLE": { "message": "No title" },
+    "NO_AUTHOR": { "message": "No author" },
 
 	"LOCALIZATION": { "message": "Localization" },
 	"DATE_FORMAT": { "message": "Date format:" },
@@ -212,5 +214,8 @@
 	"LOADING_TO_MEMORY": { "message": "Loading data to memory!" },
 	"IMPORT_COMPLETE": { "message": "Import completed!" },
 	"IMPORT_ERROR": { "message": "Importing error: " },
-	"REMOVE_ALL_DATA": { "message": "Do you really want to remove all extension data?" }
+	"REMOVE_ALL_DATA": { "message": "Do you really want to remove all extension data?" },
+
+	"OPEN_TEN_WARN_A": { "message": "Do you really want to open " },
+	"OPEN_TEN_WARN_B": { "message": " articles?" }
 }

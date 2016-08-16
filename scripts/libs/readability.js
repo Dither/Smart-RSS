@@ -191,8 +191,8 @@ var tagCounts = {
 		th: -5,
 		ul: -3
 	},
-	tagsToRemove = { __proto__: null, aside: true, time: true, applet: true, footer: true, head: true, label: true, nav: true, noscript: true, script: true, select: true, style: true, textarea: true, button: true },
-	removeIfEmpty = { __proto__: null, canvas:true, blockquote: true, a:true, li: true, p: true, pre: true, tbody: true, td: true, th: true, thead: true, tr: true },
+	tagsToRemove = { __proto__: null, canvas:true, aside: true, time: true, applet: true, footer: true, head: true, label: true, nav: true, noscript: true, script: true, select: true, style: true, textarea: true, button: true },
+	removeIfEmpty = { __proto__: null, blockquote: true, a:true, li: true, p: true, pre: true, tbody: true, td: true, th: true, thead: true, tr: true },
 	embeds = { __proto__: null, embed: true, object: true, iframe: true, audio: true, video: true, source: true, param: true },
 	goodAttributes = { __proto__: null, style: true, lang: true, src: true, href: true, alt: true, title: true, data: true, height: true, width: true, name: true, value: true, type: true, border: true, frameborder: true, colspan: true, rowspan: true, span: true, cite: true },
 	cleanConditionally = { __proto__: null, div: true, form: true, ol: true, table: true, ul: true },
@@ -218,7 +218,7 @@ var tagCounts = {
 
 	re_hidden = /display\s*:\s*none|visibility\s*:\s*hidden/i,
 
-	re_positive = /read|full|article|source|content|body|\bcontent|contain|\bentry|main|page|attach|post|text|blog|story/i,
+	re_positive = /read|full|article|abstract|source|content|body|\bcontent|contain|\bentry|main|page|attach|post|text|blog|story/i,
 	re_negative = /pag(?:er|ination)|\bdate|\btime|nav|tag|extra|keyword|foot(?:note)?|^hid$|hid$|\bhid\b|^hid|all|thumb|bottom|stat|info|modal|outbrain|masthead|com-|contact|_nav|link|media|\bout|skyscraper|promo|\bad-|related|scroll|shoutbox|sponsor|shopping|teaser/i,
 	re_unlikelyCandidates =  /auth?or|similar|ignore|\binfo|annoy|clock|\bdate|\btime|footer|com(?:bx|ment|munity)|banner|intro|log.{2}n|edcolinks|hidd?e|about|bookmark|\bcat|search|social|robot|published|mast(?:head)|subscri|category|disqus|extra|head(?:er|note)|floor|agegate|menu|function|remark|rss|tool|header|teaserlist|widget|meta|adsense|inner-?ad|ad-|\badv\b|\bads\b|agr?egate?|pager|sidebar|popup|tweet|twit|like/i,
 	re_okMaybeItsACandidate = /and|out(?:er|side)|wrap|post|article\b|body|entry|\bmain|page|contain|\bcontent|column|general|detail|shadow|lightbox|blog/i,

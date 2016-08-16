@@ -86,6 +86,7 @@ return {
 		refetch: {
 			title: _T('REFETCH'),
 			fn: function() {
+				window.stop();
 				if (!window.confirm(_T('REFETCH_WARNING'))) return;
 
 				var s = require('views/feedList').getSelectedFeeds();
@@ -392,9 +393,8 @@ return {
 				var articleList = app.articles.articleList;
 				if (!articleList.selectedItems || !articleList.selectedItems.length) return;
 				if (articleList.selectedItems.length > 10 && bg.settings.get('askOnOpening')) {
-					if (!confirm('Do you really want to open ' + articleList.selectedItems.length + ' articles?')) {
+					if (!confirm(_T('OPEN_TEN_WARN_A') + articleList.selectedItems.length + _T('OPEN_TEN_WARN_B')))
 						return;
-					}
 				}
 				articleList.selectedItems.forEach(function(item) {
 					browser.tabs.create({ url: stripTags(item.model.get('url')), active: !e.shiftKey });

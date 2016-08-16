@@ -1,13 +1,13 @@
 {
+	"manifest_version": 2,
 	"name": "Smart RSS",
+	"version": "2.1",
+	"description": "RSS feeds reader similar to Opera 12's internal.",
+	"default_locale": "en_GB",
 	"developer": {
 		"name": "BS-Harou (Martin Kadlec)",
 		"url": "http://blog.martinkadlec.eu/"
 	},
-	"description": "RSS feeds reader similar to Opera 12's internal.",
-	"manifest_version": 2,
-	"version": "2.1",
-	"default_locale": "en_GB",
 	"background": {
 		"page": "index.html"
 	},

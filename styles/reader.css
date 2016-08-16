@@ -5,7 +5,7 @@ html {
 	box-sizing: inherit;
 }
 body.loading {
-	background: url("/images/tabloading.gif") no-repeat center center;
+	background: url("/images/tabloading.svg") no-repeat center center;
 }
 body.loading * {
 	visibility: hidden;
@@ -36,6 +36,7 @@ label {
 	font-size: 0.75rem;
 	font-weight: bold;
 }
+
 /**
  * Toolbars & Toolbar Buttons
  */
@@ -106,6 +107,7 @@ input[type=search] {
 input[type=search]:not(:focus):not(:valid) {
 	background: url("/images/search.png") no-repeat right center #fff;
 }
+
 /**
  * Context Menus & Context Menu Items
  */
@@ -143,6 +145,7 @@ input[type=search]:not(:focus):not(:valid) {
 	border-radius: 3px;
 	border-color: #aecff7;
 }
+
 /**
  * Overlays
  */
@@ -173,6 +176,7 @@ input[type=search]:not(:focus):not(:valid) {
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 }
+
 /**
  * Main regions
  */
@@ -254,6 +258,7 @@ body > .regions {
 #panel-toggle:not(.toggled) {
 	background-image: url("/images/toggle_right.png");
 }
+
 /**
  * Report
  */
@@ -320,14 +325,14 @@ body > .regions {
 }
 @media (max-height: 26rem) {
 	.report-window {
-	top: 0 !important;
-	margin-top: 0 !important;
+	   top: 0 !important;
+	   margin-top: 0 !important;
 	}
 }
 @media (max-width: 30rem) {
 	.report-window {
-	left: 0 !important;
-	margin-left: 0 !important;
+	   left: 0 !important;
+	   margin-left: 0 !important;
 	}
 }
 
@@ -660,6 +665,7 @@ body > .regions {
 .unpluged {
 	display: none !important;
 }
+
 /**
  * One line layout
  */

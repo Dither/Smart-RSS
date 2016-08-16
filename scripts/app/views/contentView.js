@@ -65,9 +65,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 * @method initialize
 		 */
 		initialize: function() {
-
 			this.on('attach', this.handleAttached);
-
 			bg.items.on('change:pinned', this.handleItemsPin, this);
 			bg.sources.on('clear-events', this.handleClearEvents, this);
 		},
@@ -147,9 +145,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		getFormatedDate: function(unixtime) {
 			var dateFormats = { normal: 'DD.MM.YYYY', iso: 'YYYY-MM-DD', us: 'MM/DD/YYYY' };
 			var pickedFormat = dateFormats[bg.settings.get('dateType') || 'normal'] || dateFormats['normal'];
-
 			var timeFormat = bg.settings.get('hoursFormat') == '12h' ? 'H:mm a' : 'hh:mm:ss';
-
 			return formatDate(new Date(unixtime), pickedFormat + ' ' + timeFormat);
 		},
 
@@ -177,7 +173,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 
 				var data = Object.create(that.model.attributes);
 				data.date = that.getFormatedDate(that.model.get('date'));
-				data.title = stripTags(data.title).trim() || '&lt;no title&gt;';
+				data.title = stripTags(data.title).trim() || '&lt;'+_T('NO_TITLE')+'&gt;';
 				data.url = escapeHtml(data.url);
 				data.titleIsLink = bg.settings.get('titleIsLink');
 

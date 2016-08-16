@@ -210,5 +210,10 @@
 	"LOADING_TO_MEMORY": { "message": "Загрузка в оперативную память" },
 	"IMPORT_COMPLETE": { "message": "Импорт завершён!" },
 	"IMPORT_ERROR": { "message": "Ошибка загрузки: " },
-	"REMOVE_ALL_DATA": { "message": "Вы уверены, что хотите удалить все данные?" }
+	"REMOVE_ALL_DATA": { "message": "Вы уверены, что хотите удалить все данные?" },
+
+	"NO_TITLE": { "message": "Без заголовка" },
+	"NO_AUTHOR": { "message": "Без автора" },
+	"OPEN_TEN_WARN_A": { "message": "Вы точно хотите открыть " },
+	"OPEN_TEN_WARN_B": { "message": " новостей?" }
 }

@@ -6,9 +6,8 @@ define(['backbone'], function(BB) {
 			'load': 'handleLoad'
 		},
 		initialize: function() {
-			this.$el.attr('src', 'rss_content.html');
+			this.$el.attr('src', 'content.html');
 			this.$el.attr('name', 'sandbox');
-			/*this.$el.attr('sandbox', 'allow-popups allow-same-origin');*/
 			this.$el.attr('frameborder', 0);
 			this.$el.attr('tabindex', -1);
 		},

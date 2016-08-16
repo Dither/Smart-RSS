@@ -14,7 +14,5 @@ iframe:not([width]), video:not([width]) {min-width: 480px;}
 ul { margin-left: 0em; list-style: disc outside; }
 ul li img { max-width: 100%; }
 hr { display: none; }
-div { text-align: center; }
-p, ul, ol, dl, table, code, pre, blockquote, div>div { text-align: left; }
 footer a:hover { text-decoration: underline; }
 @media print {  iframe, video, footer { display: none !important; }}

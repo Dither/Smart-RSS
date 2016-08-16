@@ -120,35 +120,6 @@ module.exports = function(grunt) {
 				}
 			}
 		},
-
-		stylus: {
-			compile: {
-				options: {
-					compress: false,
-					//imports: ['nib']
-				},
-				files: {
-					//'styles/options-compiled.css': 'options.styl', // 1:1 compile
-					'styles/main_compiled.css': [
-						'styles/global.styl',
-						'styles/feeds.styl',
-						'styles/articles.styl',
-						'styles/content.styl'
-					]
-				}
-			}
-		},
-		watch: {
-			scripts: {
-				files: ['styles/*.styl'],
-				tasks: ['stylus'],
-				options: {
-					spawn: false,
-					interrupt: true,
-					events: ['all']
-				},
-			},
-		},
 		yuidoc: {
 			compile: {
 				name: '<%= pkg.name %>',
@@ -167,8 +138,6 @@ module.exports = function(grunt) {
 
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-requirejs');
-	grunt.loadNpmTasks('grunt-contrib-stylus');
-	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-contrib-yuidoc');
 
 	// Default task(s).

@@ -14,7 +14,10 @@ return {
 	},
 	selectFirst: function() {
 		var first = $('.' + this.itemClass + ':not(.invisible)').get(0);
-		if (first) this.select(first.view);
+		if (first && first.view) {
+			if (first.classList.contains('selected')) return; // won't re-select items
+			this.select(first.view);
+		}
 	},
 	selectNext: function(e) {
 		e = e || {};
@@ -55,7 +58,7 @@ return {
 		e = e || {};
 		var q = e.selectUnread ? '.unread:not(.invisible)' : '.' + this.itemClass + ':not(.invisible)';
 		var prev;
-		if (e.selectUnread &&  this.selectPivot) {
+		if (e.selectUnread && this.selectPivot) {
 			prev = this.selectPivot.el.previousElementSibling;
 		} else {
 			prev = this.$el.find('.last-selected');
@@ -91,7 +94,6 @@ return {
 			this.selectedItems = [];
 			this.selectPivot = view;
 			this.$el.find('.selected').removeClass('selected');
-
 
 			if (!window || !window.frames) {
 				bg.logs.add({ message: 'Event duplication bug! Clearing events now...' });

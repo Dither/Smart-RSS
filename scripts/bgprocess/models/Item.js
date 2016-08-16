@@ -12,11 +12,11 @@ define(['backbone'], function (BB) {
 	 */
 	var Item = BB.Model.extend({
 		defaults: {
-			title: '<no title>',
-			author: '<no author>',
+			title: '<'+_T('NO_TITLE')+'>',
+			author: '<'+_T('NO_AUTHOR')+'>',
 			url: 'about:blank',
 			date: 0,
-			content: 'No content loaded.',
+			content: '&nbsp', // No content loaded
 			sourceID: -1,
 			unread: true,
 			visited: false,

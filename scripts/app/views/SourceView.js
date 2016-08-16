@@ -47,7 +47,7 @@ function(BB, TopView, contextMenus) {
 		render: function() {
 			if (this.renderInterval == 'first-time') return this.realRender();
 			if (this.renderInterval) return this;
-			
+
 			var that = this;
 			this.renderInterval = requestAnimationFrame(function() {
 				that.realRender();
@@ -65,7 +65,7 @@ function(BB, TopView, contextMenus) {
 			}
 
 			this.setTitle(this.model.get('count'), this.model.get('countAll'));
-			
+
 			this.$el.html(this.template(this.model.toJSON()));
 			this.renderInterval = null;
 
