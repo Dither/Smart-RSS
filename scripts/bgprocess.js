@@ -1,7 +1,7 @@
 if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = chrome;
 
 var _T = function () {
-	console.log(arguments);
+	//console.log(arguments);
 	return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
 }
 

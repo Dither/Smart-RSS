@@ -164,12 +164,12 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 
 						if (fullText) {
 							if (!item.url) {
-								if (--incompleteItems <= 0)
-									onDataReady();
+								if (--incompleteItems <= 0) onDataReady();
 								return;
 							}
 
-							$.ajax({
+							// Should add array ['url':'xhr'] for each one to abort them on global abort
+							var xhr = $.ajax({
 								url: item.url,
 								timeout: timeout,
 								dataType: 'html'
@@ -185,16 +185,17 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 										items.create(item, { sort: false });
 										createdNo++;
 
-										if (--incompleteItems <= 0)
-											onDataReady();
+										if (--incompleteItems <= 0) onDataReady();
 									});
-								else if (--incompleteItems <= 0)
-									onDataReady();
+								else if (--incompleteItems <= 0) onDataReady();
 							}).fail(function() {
 								//console.log('Failed to load URL: ' + item.url);
-								if (--incompleteItems <= 0)
-									onDataReady();
+
+								if (--incompleteItems <= 0) onDataReady();
+							}).always(function() {
+								//delete loader.pagesLoading[item.url];
 							});
+							//loader.pagesLoading[item.url]=xhr;
 						} else {
 							if (!existingItem) {
 								hasNew = true;
@@ -208,8 +209,7 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 						}
 					});
 
-					if (!fullText)
-						onDataReady();
+					if (!fullText) onDataReady();
 				};
 
 				var onDataReady = function () {

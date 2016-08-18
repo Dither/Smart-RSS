@@ -48,9 +48,8 @@ return {
 			title: _T('UPDATE'),
 			fn: function() {
 				var s = require('views/feedList').selectedItems;
-				if (s.length) {
-					bg.loader.download(_.pluck(s, 'model'));
-				}
+				if (!s.length) return;
+				bg.loader.download(_.pluck(s, 'model'));
 			}
 		},
 		stopUpdate: {
@@ -68,7 +67,7 @@ return {
 				if (!s.length) return;
 
 				bg.items.forEach(function(item) {
-					if (item.get('unread') == true && s.indexOf(item.getSource()) >= 0) {
+					if (item.get('unread') === true && s.indexOf(item.getSource()) >= 0) {
 						item.save({
 							unread: false,
 							visited: true
@@ -86,21 +85,25 @@ return {
 		refetch: {
 			title: _T('REFETCH'),
 			fn: function() {
+				bg.loader.abortDownloading();
+
 				window.stop();
-				if (!window.confirm(_T('REFETCH_WARNING'))) return;
+
+				if (!confirm(_T('REFETCH_WARNING'))) return;
 
 				var s = require('views/feedList').getSelectedFeeds();
 
 				if (!s.length) return;
 
 				s.forEach(function(source) {
+					source.set('favicon', '');
 					bg.items.where({ sourceID: source.get('id') }).forEach(function(item) {
-						item.destroy();
+						if (item.get('pinned') !== true)
+							item.destroy();
 					});
 				});
 
 				app.actions.execute('feeds:update');
-
 			}
 		},
 		delete: {
@@ -132,14 +135,13 @@ return {
 				var feeds = feedList.getSelectedFeeds();
 				var folders = feedList.getSelectedFolders();
 
-				if (feedList.selectedItems.length == 1 && folders.length == 1) {
+				if (feedList.selectedItems.length === 1 && folders.length === 1) {
 					properties.show(folders[0]);
-				} else if (!folders.length && feeds.length == 1) {
+				} else if (!folders.length && feeds.length === 1) {
 					properties.show(feeds[0]);
 				} else if (feeds.length > 0) {
 					properties.show(feeds);
 				}
-
 			}
 		},
 		addSource: {
@@ -251,17 +253,19 @@ return {
 				var special = $('.special.selected').get(0);
 				if (special) special = special.view.model;
 
+				bg.items.sort();
+
 				app.trigger('select:' + feedList.el.id, {
 					action: 'new-select',
 					feeds: ids,
 					// _.extend is important to avoid referencing
 					filter: special ? _.extend({}, special.get('filter')) : null,
 					name: special ? special.get('name') : null,
-					unreadOnly: !!e.altKey || t.className == 'source-counter'
+					unreadOnly: !!e.altKey || t.className === 'source-counter'
 				});
 
 
-				if (special && special.get('name') == 'all-feeds') {
+				if (special && special.get('name') === 'all-feeds') {
 					bg.sources.forEach(function(source) {
 						if (source.get('hasNew')) {
 							source.save({ hasNew: false });
@@ -316,7 +320,7 @@ return {
 			title: _T('DELETE'),
 			fn: function(e) {
 				var list = require('views/articleList');
-				if (list.currentData.name == 'trash' || e.shiftKey) {
+				if (list.currentData.name === 'trash' || e.shiftKey) {
 					list.destroyBatch(list.selectedItems, list.removeItemCompletely);
 				} else {
 					list.destroyBatch(list.selectedItems, list.removeItem);
@@ -348,14 +352,14 @@ return {
 				e = e || { currentTarget: $('input[type=search]').get(0) };
 				var str = e.currentTarget.value || '';
 				var list = require('views/articleList');
-				if (str == '') {
-					$('.date-group').css('display', 'block');
-				} else {
+				if (str.length) {
 					$('.date-group').css('display', 'none');
+				} else {
+					$('.date-group').css('display', 'block');
 				}
 
 				var searchInContent = false;
-				if (str[0] && str[0] == ':') {
+				if (str[0] && str[0] === ':') {
 					str = str.replace(/^:/, '', str);
 					searchInContent = true;
 				}
@@ -370,7 +374,6 @@ return {
 				});
 
 				list.redraw();
-
 				list.restartSelection();
 			}
 		},
@@ -457,14 +460,14 @@ return {
 				var filter = articleList.currentData.filter;
 				if (f.length) {
 					(filter ? bg.items.where(articleList.currentData.filter) : bg.items).forEach(function(item) {
-						if (item.get('unread') == true && f.indexOf(item.get('sourceID')) >= 0) {
+						if (item.get('unread') === true && f.indexOf(item.get('sourceID')) >= 0) {
 							item.save({ unread: false, visited: true });
 						}
 					});
-				} else if (articleList.currentData.name == 'all-feeds') {
+				} else if (articleList.currentData.name === 'all-feeds') {
 					if (confirm(_T('MARK_ALL_QUESTION'))) {
 						bg.items.forEach(function(item) {
-							if (item.get('unread') == true) {
+							if (item.get('unread') === true) {
 								item.save({ unread: false, visited: true });
 							}
 						});
@@ -628,7 +631,7 @@ return {
 
 					contentView.model.markAsDeleted();
 				} else {
-					if (contentView.model.get('pinned') && askRmPinned == 'all') {
+					if (contentView.model.get('pinned') && askRmPinned === 'all') {
 						if (!confirm(_T('PIN_QUESTION_A') + contentView.model.escape('title') + _T('PIN_QUESTION_B'))) return;
 					}
 

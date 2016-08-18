@@ -7,14 +7,12 @@ define(['backbone'], function(BB) {
 			'click': 'handleClick'
 		},
 		initialize: function() {
-			if (this.model.id) {
+			if (this.model.id)
 				this.el.id = this.model.id;
-			}
 		},
 		render: function() {
-			if (this.model.get('icon')) {
+			if (this.model.get('icon'))
 				this.$el.css('background', 'url(/images/' + this.model.get('icon') + ') no-repeat left center');
-			}
 			this.$el.html(this.model.get('title'));
 			return this;
 		},

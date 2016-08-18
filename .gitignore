@@ -4,3 +4,4 @@ docs/*
 *.map
 *-compiled.js
 *.sublime-*
+*.bak

@@ -19,7 +19,7 @@ define([], function() {
 	        if(xhr.readyState === XMLHttpRequest.DONE) {
 	        	if (xhr.status === 200) {
 	            	var type = xhr.getResponseHeader('content-type');
-	            	if (!~type.indexOf('image')) // Not an image file
+	            	if (!~type.indexOf('image') || xhr.response.byteLength < 10) // Not an image file
                         callback(favicon ? defaultImage : '');
 		        	else {
                         var imgData = 'data:' + type + ';base64,' + AB2B64(xhr.response);
