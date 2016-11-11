@@ -1,5 +1,5 @@
 define([
-	'backbone', 'underscore', 'jquery', 'text!templates/report.html', 'modules/Locale', 'controllers/comm'
+	'backbone', 'underscore', 'jquery', 'text!templates/report.txt', 'modules/Locale', 'controllers/comm'
 ],
 function(BB, _, $, tplReport, Locale, comm) {
 	var ReportView = BB.View.extend({

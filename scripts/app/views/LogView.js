@@ -3,7 +3,7 @@
  * @submodule views/LogView
  */
 define([
-	'backbone', 'underscore', 'jquery', 'helpers/formatDate', 'text!templates/log.html'
+	'backbone', 'underscore', 'jquery', 'helpers/formatDate', 'text!templates/log.txt'
 ], function(BB, _, $, formatDate, tplLog) {
 
 	/**

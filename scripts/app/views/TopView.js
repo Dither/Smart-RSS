@@ -1,5 +1,5 @@
 define([
-	'backbone', 'jquery', 'underscore', 'text!templates/source.html', 'views/feedList'
+	'backbone', 'jquery', 'underscore', 'text!templates/source.txt', 'views/feedList'
 ], function(BB, $, _, tplSource) {
 	var TopView = BB.View.extend({
 		tagName: 'div',

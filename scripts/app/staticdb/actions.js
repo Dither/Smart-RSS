@@ -253,8 +253,6 @@ return {
 				var special = $('.special.selected').get(0);
 				if (special) special = special.view.model;
 
-				bg.items.sort();
-
 				app.trigger('select:' + feedList.el.id, {
 					action: 'new-select',
 					feeds: ids,
@@ -279,6 +277,8 @@ return {
 						}
 					});
 				}
+
+                bg.items.sort({ silent: true });
 			}
 		},
 		showAndFocusArticles: {
@@ -396,7 +396,7 @@ return {
 				var articleList = app.articles.articleList;
 				if (!articleList.selectedItems || !articleList.selectedItems.length) return;
 				if (articleList.selectedItems.length > 10 && bg.settings.get('askOnOpening')) {
-					if (!confirm(_T('OPEN_TEN_WARN_A') + articleList.selectedItems.length + _T('OPEN_TEN_WARN_B')))
+					if (!confirm(_T('OPEN_TEN_WARN_A').replace('%s', articleList.selectedItems.length)))
 						return;
 				}
 				articleList.selectedItems.forEach(function(item) {
@@ -626,13 +626,13 @@ return {
 				askRmPinned = bg.settings.get('askRmPinned')
 				if (e.shiftKey) {
 					if (contentView.model.get('pinned') && askRmPinned && askRmPinned != 'none') {
-						if (!confirm(_T('PIN_QUESTION_A') + contentView.model.escape('title') + _T('PIN_QUESTION_B'))) return;
+						if (!confirm(_T('PIN_QUESTION').replace('%s', contentView.model.escape('title')))) return;
 					}
 
 					contentView.model.markAsDeleted();
 				} else {
 					if (contentView.model.get('pinned') && askRmPinned === 'all') {
-						if (!confirm(_T('PIN_QUESTION_A') + contentView.model.escape('title') + _T('PIN_QUESTION_B'))) return;
+						if (!confirm(_T('PIN_QUESTION').replace('%s', contentView.model.escape('title')))) return;
 					}
 
 					contentView.model.save({

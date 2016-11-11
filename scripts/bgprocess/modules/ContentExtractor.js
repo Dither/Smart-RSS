@@ -87,7 +87,7 @@ define(['readability'], function (Readability) {
 					while (k--) {
 						attr = attributes[k];
 						if (whitelist.indexOf(attr.name) === -1)
-							inner_nodes[j].removeAttributeNode(attr);
+							inner_nodes[j].removeAttribute(attr.name);
 					}
 				}
 			}

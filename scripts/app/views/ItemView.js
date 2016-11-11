@@ -2,7 +2,7 @@
  * @module App
  * @submodule views/ItemView
  */
-define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/contextMenus', 'helpers/stripTags', 'text!templates/item.html'],
+define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/contextMenus', 'helpers/stripTags', 'text!templates/item.txt'],
        function(BB, $, _, formatDate, contextMenus, stripTags, tplItem) {
 
 	/**
@@ -32,7 +32,7 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		/**
 		 * Article item view template
 		 * @property template
-		 * @default ./templates/item.html
+		 * @default ./templates/item.txt
 		 * @type Function
 		 */
 		template: _.template(tplItem),
@@ -168,6 +168,7 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 			var data = this.model.toJSON();
 			data.date = this.getItemDate(data.date);
 			data.title = stripTags(data.title).trim() || '&lt;' + _T('NO_TITLE') + '&gt;';
+            data.author = stripTags(data.author).trim();
 
 			this.$el.html(this.template(data));
 			this.$el.removeClass('invisible');

@@ -1,0 +1,10 @@
+<% if (typeof isLoading == 'undefined' || !isLoading) { %>
+	<img src="<%= favicon %>" class="source-icon" />
+<% } else { %>
+	<img src="/images/feedupdate.svg" class="source-icon" />
+<% } %>
+
+<div class="source-title"><%- title %></div>
+<% if (count > 0) { %>
+	<div class="source-counter"><%- count %></div>
+<% } %>

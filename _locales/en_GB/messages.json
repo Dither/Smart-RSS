@@ -43,8 +43,7 @@
 	"MARK_AND_NEXT_UNREAD": { "message": "Mark And Next Unread" },
 	"MARK_AND_PREV_UNREAD": { "message": "Mark And Prev Unread" },
 	"PIN": { "message": "(Un)Pin" },
-	"PIN_QUESTION_A": { "message": "Item '" },
-	"PIN_QUESTION_B": { "message": "' is pinned. Do you really want to delete it?" },
+	"PIN_QUESTION": { "message": "Item '%s' is pinned. Do you really want to delete it?" },
 	"MARK_ALL_QUESTION": { "message": "Do you really want to mark ALL articles as read?" },
 	"ADD_RSS_SOURCE": { "message": "Add RSS Source" },
 	"UPDATE_ALL": { "message": "Update all" },
@@ -122,8 +121,8 @@
 	"REFETCH_WARNING": { "message": "This will delete all elements from selected feed(s). Continue?" },
 
 	"EMBEDS": { "message": "embeded media" },
-    "NO_TITLE": { "message": "No title" },
-    "NO_AUTHOR": { "message": "No author" },
+	"NO_TITLE": { "message": "No title" },
+	"NO_AUTHOR": { "message": "No author" },
 
 	"LOCALIZATION": { "message": "Localization" },
 	"DATE_FORMAT": { "message": "Date format:" },
@@ -216,6 +215,5 @@
 	"IMPORT_ERROR": { "message": "Importing error: " },
 	"REMOVE_ALL_DATA": { "message": "Do you really want to remove all extension data?" },
 
-	"OPEN_TEN_WARN_A": { "message": "Do you really want to open " },
-	"OPEN_TEN_WARN_B": { "message": " articles?" }
+	"OPEN_TEN_WARN": { "message": "Do you really want to open %s articles?" }
 }

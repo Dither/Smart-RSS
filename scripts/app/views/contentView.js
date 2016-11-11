@@ -3,8 +3,8 @@
  * @submodule views/contentView
  */
 define([
-	'backbone', 'jquery', 'underscore', 'helpers/formatDate', 'helpers/escapeHtml', 'helpers/stripTags', 'text!templates/download.html',
-	'text!templates/header.html', 'modules/Locale'
+	'backbone', 'jquery', 'underscore', 'helpers/formatDate', 'helpers/escapeHtml', 'helpers/stripTags', 'text!templates/download.txt',
+	'text!templates/header.txt', 'modules/Locale'
 ],
 function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Locale) {
 
@@ -174,6 +174,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 				var data = Object.create(that.model.attributes);
 				data.date = that.getFormatedDate(that.model.get('date'));
 				data.title = stripTags(data.title).trim() || '&lt;'+_T('NO_TITLE')+'&gt;';
+				data.author = stripTags(data.author).trim();
 				data.url = escapeHtml(data.url);
 				data.titleIsLink = bg.settings.get('titleIsLink');
 

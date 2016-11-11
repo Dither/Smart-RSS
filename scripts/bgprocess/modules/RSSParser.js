@@ -13,7 +13,7 @@ define(['md5'], function (CryptoJS) {
 	function parseRSS(xml, sourceID, callback) {
 		var items = [];
 
-		if (!callback ) throw Error('No parseRSS callback specified');
+		if (!callback) throw Error('No parseRSS callback specified');
 		if (!xml || !(xml instanceof XMLDocument)) return callback(items);
 
 		var nodes = xml.querySelectorAll('item');
@@ -184,7 +184,7 @@ define(['md5'], function (CryptoJS) {
 			while (j--) {
 				attr = attributes[j];
 				if (whitelist.indexOf(attr.name) === -1)
-					nodes[i].removeAttributeNode(attr);
+					nodes[i].removeAttribute(attr.name);
 			}
 
 		};

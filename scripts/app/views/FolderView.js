@@ -3,7 +3,7 @@
  * @submodule views/FolderView
  */
 define([
-	'backbone', 'jquery', 'underscore', 'views/TopView', 'instances/contextMenus', 'text!templates/folder.html'
+	'backbone', 'jquery', 'underscore', 'views/TopView', 'instances/contextMenus', 'text!templates/folder.txt'
 ],
 function(BB, $, _, TopView, contextMenus, tplFolder) {
 

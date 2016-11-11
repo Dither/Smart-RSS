@@ -1,4 +1,4 @@
-{
+﻿{
 	"MARK_AS_READ": { "message": "Отметить прочтённой" },
 	"DELETE": { "message": "Удалить" },
 	"UPDATE": { "message": "Обновление" },
@@ -41,8 +41,7 @@
 	"MARK_AND_NEXT_UNREAD": { "message": "Прочтено; к следующей" },
 	"MARK_AND_PREV_UNREAD": { "message": "Прочтено; к предыдущей" },
 	"PIN": { "message": "Закрепить" },
-	"PIN_QUESTION_A": { "message": "Новость '" },
-	"PIN_QUESTION_B": { "message": "' закреплена. Вы действительно хотите её удалить?" },
+	"PIN_QUESTION": { "message": "Новость '%s' закреплена. Вы действительно хотите её удалить?" },
 	"MARK_ALL_QUESTION": { "message": "Вы действительно хотите отметить все новости прочтёнными?" },
 	"ADD_RSS_SOURCE": { "message": "Добавить RSS" },
 	"UPDATE_ALL": { "message": "Обновить всё" },
@@ -214,6 +213,5 @@
 
 	"NO_TITLE": { "message": "Без заголовка" },
 	"NO_AUTHOR": { "message": "Без автора" },
-	"OPEN_TEN_WARN_A": { "message": "Вы точно хотите открыть " },
-	"OPEN_TEN_WARN_B": { "message": " новостей?" }
+	"OPEN_TEN_WARN": { "message": "Вы точно хотите открыть %s новостей?" }
 }

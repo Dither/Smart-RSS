@@ -12,6 +12,7 @@ require.config({
 	paths: {
 		jquery: '../libs/jquery.min',
 		underscore: '../libs/underscore.min',
+		punycode: '../libs/punycode',
 		backbone: '../libs/backbone.min',
 		text: '../text',
 		domReady: '../domReady'/*,

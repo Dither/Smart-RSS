@@ -106,7 +106,6 @@ define(['backbone', 'jquery', 'underscore', 'views/SourceView', 'views/FolderVie
 		 */
 		insertFeeds: function() {
 			this.addFolders(bg.folders);
-
 			this.addSpecial(specials.allFeeds);
 			this.addSpecial(specials.pinned);
 			this.addSpecial(specials.trash);

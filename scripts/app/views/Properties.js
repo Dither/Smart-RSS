@@ -1,5 +1,5 @@
 define([
-	'backbone', 'jquery', 'underscore', 'text!templates/properties.html', 'modules/Locale'
+	'backbone', 'jquery', 'underscore', 'text!templates/properties.txt', 'modules/Locale'
 ],
 function(BB, $, _, tplProperties, Locale) {
 

@@ -1,5 +1,5 @@
 define([
-	'backbone', 'underscore', 'jquery', 'text!templates/overlay.html', 'modules/Locale'
+	'backbone', 'underscore', 'jquery', 'text!templates/overlay.txt', 'modules/Locale'
 ],
 function(BB, _, $, tplOverlay, Locale) {
 	var OverlayView = BB.View.extend({

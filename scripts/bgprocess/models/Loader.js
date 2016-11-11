@@ -95,6 +95,15 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 		animation.stop();
 	}
 
+	function onFeedCompleted (source, update) {
+		loader.set('loaded', loader.get('loaded') + 1);
+		// reset alarm to make sure next call isn't too soon + to make sure alarm acutaly exists (it doesn't after import)
+		source.trigger('reset-alarm', source);
+		source.set('isLoading', false);
+		source.trigger('update', { ok: update });
+		downloadFeedByURL();
+	}
+
 	function downloadFeedByURL() {
 		if (!loader.sourcesToLoad.length) {
 			// IF DOWNLOADING FINISHED, DELETED ITEMS WITH DELETED SOURCE (should not really happen)
@@ -120,19 +129,11 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 
 		markAutoRemovals(sourceToLoad);
 
-		function onFeedCompleted() {
-			loader.set('loaded', loader.get('loaded') + 1);
-			// reset alarm to make sure next call isn't too soon + to make sure alarm acutaly exists (it doesn't after import)
-			sourceToLoad.trigger('reset-alarm', sourceToLoad);
-			sourceToLoad.set('isLoading', false);
-			downloadFeedByURL();
-		}
-
 		var fullText = sourceToLoad.get('fulltextEnable');
 
 		var options = {
 			url: sourceToLoad.get('url'),
-			timeout: settings.get('rssTimeout') || 12000,
+			timeout: settings.get('rssTimeout') || 5000,
 			dataType: 'xml',
 			beforeSend: function(xhr) {
 				xhr.setRequestHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
@@ -147,8 +148,11 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 		}
 
 		if (settings.get('showSpinner')) sourceToLoad.set('isLoading', true);
+		//console.log('AJAX called: ' + sourceToLoad.get('url'));
 		loader.currentRequest = $.ajax(options)
-			.done(function(r) {
+			.done(function(data, status) {
+				if (!loader.sourceLoading) return onFeedCompleted(sourceToLoad, false);
+
 				var donethis = this,
 					parsedData = [],
 					hasNew = false,
@@ -157,9 +161,11 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 
 				var onRSSLoaded = function(parsedData){
 					var incompleteItems = parsedData.length,
-						timeout = settings.get('htmlTimeout') || 24000;
+						timeout = settings.get('htmlTimeout') || 7000;
 
 					parsedData.forEach(function(item) {
+						if (!loader.sourceLoading) return;
+
 						var existingItem = items.get(item.id) || items.get(item.oldId);
 
 						if (fullText) {
@@ -174,6 +180,7 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 								timeout: timeout,
 								dataType: 'html'
 							}).done(function(htm) {
+								if (!loader.sourceLoading) return onDataReady();
 								// Don't refetch existing items
 								if (!existingItem)
 									new ContentExtractor.parse(htm, sID, item.url, function(content){
@@ -189,8 +196,8 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 									});
 								else if (--incompleteItems <= 0) onDataReady();
 							}).fail(function() {
+								if (!loader.sourceLoading) return onDataReady();
 								//console.log('Failed to load URL: ' + item.url);
-
 								if (--incompleteItems <= 0) onDataReady();
 							}).always(function() {
 								//delete loader.pagesLoading[item.url];
@@ -202,8 +209,7 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 								items.create(item, { sort: false });
 								createdNo++;
 							} else if (existingItem.get('deleted') === false &&
-									   existingItem.get('content') !== item.content)
-							{
+									   existingItem.get('content') !== item.content) {
 								existingItem.save({ content: item.content });
 							}
 						}
@@ -213,6 +219,8 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 				};
 
 				var onDataReady = function () {
+					if (!loader.sourceLoading) onFeedCompleted(sourceToLoad, false);
+
 					items.sort({ silent: true });
 					if (hasNew) {
 						loader.itemsDownloaded = true;
@@ -245,17 +253,15 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 						allCountUnvisited: info.get('allCountUnvisited') + createdNo
 					});
 
-					sourceToLoad.trigger('update', { ok: true });
-					if (fullText) onFeedCompleted();
+					onFeedCompleted(sourceToLoad, true);
 				};
 
-				new RSSParser.parse(r, sID, onRSSLoaded);
+				new RSSParser.parse(data, sID, onRSSLoaded);
+				//console.log('Done called: ' + sourceToLoad.get('url'));
 
 			}).fail(function() {
-				//log('Failed load RSS: ' + sourceToLoad.get('url'));
-				sourceToLoad.trigger('update', { ok: false });
-			}).always(function() {
-				if (!fullText) onFeedCompleted();
+				//console.log('Fail called: ' + sourceToLoad.get('url'));
+				onFeedCompleted(sourceToLoad, false);
 			});
 	}
 
@@ -284,7 +290,13 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 				this.set('maxSources', this.get('maxSources') + s.length);
 			}
 		},
+		isDownloading: function(model) {
+			if (typeof model !== 'undefined')
+				return this.sourceLoading === model;
+			return !!this.sourceLoading;
+		},
 		abortDownloading: function() {
+			this.sourceLoading = null;
 			if (loader.currentRequest)
 				loader.currentRequest.abort();
 			this.sourcesToLoad = [];

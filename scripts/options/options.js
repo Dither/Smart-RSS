@@ -356,10 +356,11 @@ browser.runtime.getBackgroundPage(function(bg) {
 		$.confirm({
 			text: _T('REMOVE_ALL_DATA'),
 			confirm: function() {
+				browser.alarms.clearAll();
 				bg.indexedDB.deleteDatabase('backbone-indexeddb');
 				localStorage.clear();
-				browser.alarms.clearAll()
 				browser.runtime.reload();
+				location.reload();
 			},
 			cancel: function() {},
 			confirmButton: _T('OK'),

@@ -4,10 +4,10 @@
 
 define([
 	'controllers/comm',
-	'layouts/Layout', 'jquery', 'domReady!', 'collections/Actions', 'layouts/FeedsLayout', 'layouts/ArticlesLayout',
-	'layouts/ContentLayout', 'staticdb/shortcuts', 'modules/Locale', 'views/ReportView', 'preps/all'
+	'layouts/Layout', 'punycode', 'jquery', 'domReady!', 'collections/Actions', 'layouts/FeedsLayout', 'layouts/ArticlesLayout',
+	'layouts/ContentLayout', 'staticdb/shortcuts', 'modules/Locale', 'views/ReportView', 'preps/all',
 ],
-function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLayout, shortcuts, Locale, ReportView) {
+function (comm, Layout, punycode, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLayout, shortcuts, Locale, ReportView) {
 
 	document.documentElement.style.fontSize = bg.settings.get('uiFontSize') + '%';
 
@@ -25,9 +25,12 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 	var app = window.app = new (Layout.extend({
 		el: 'body',
 		fixURL: function(url) {
-			if (url.search(/[a-z]+:\/\//) == -1) {
-				url = 'http://' + url;
-			}
+			if (url.search(/[a-z]+:\/\//) === -1) url = 'http://' + url;
+			if (url.match(/\/\/(?:[^@]*@)?([\d]+\.){3}\d+/g) || url.match(/\/\/(?:[^@]*@)?\[/g)) return url;
+			url = url.replace(/[a-z]+:\/\/(?:[^@]*@)?([^\/?#@:]+)(?::\d*)?/, function replacer(match, domain) {
+				if (punycode.isUnicode(domain)) return match.replace(domain, punycode.toASCII(domain));
+				else return match;
+			});
 			return url;
 		},
 		validatePosition: function(path) {
@@ -61,10 +64,6 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 
 			}.bind(this));
 
-			bg.settings.on('change:layout', this.handleLayoutChange, this);
-			bg.settings.on('change:panelToggled', this.handleToggleChange, this);
-			bg.sources.on('clear-events', this.handleClearEvents, this);
-
 			if (bg.settings.get('enablePanelToggle')) {
 				$('#panel-toggle').css('display', 'block');
 			}
@@ -72,6 +71,10 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 			if (bg.settings.get('thickFrameBorders')) {
 				this.$el.addClass('thick-borders');
 			}
+
+			bg.settings.on('change:layout', this.handleLayoutChange, this);
+			bg.settings.on('change:panelToggled', this.handleToggleChange, this);
+			bg.sources.on('clear-events', this.handleClearEvents, this);
 		},
 		handleClearEvents: function(id) {
 			if (window == null || id == tabID) {
@@ -109,9 +112,9 @@ function (comm, Layout, $, doc, Actions, FeedsLayout, ArticlesLayout, ContentLay
 		 * @method handleToggleChange
 		 */
 		handleToggleChange: function() {
-			this.feeds.$el.toggleClass('hidden', !bg.settings.get('panelToggled'));
 			$('#panel-toggle').toggleClass('toggled', bg.settings.get('panelToggled'));
 
+			this.feeds.$el.toggleClass('hidden', !bg.settings.get('panelToggled'));
 			if (!bg.settings.get('panelToggled')) {
 				this.feeds.disableResizing();
 			} else {

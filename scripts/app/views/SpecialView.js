@@ -1,5 +1,5 @@
 define([
-	'jquery', 'underscore', 'views/TopView', 'text!templates/special.html'
+	'jquery', 'underscore', 'views/TopView', 'text!templates/special.txt'
 ],
 function($, _, TopView, tplSpecial) {
 	var SpecialView = TopView.extend({

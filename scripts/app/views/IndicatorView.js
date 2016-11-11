@@ -2,7 +2,7 @@
  * @module App
  * @submodule views/IndicatorView
  */
-define(['backbone', 'text!templates/indicator.html'], function(BB, tplIndicator) {
+define(['backbone', 'text!templates/indicator.txt'], function(BB, tplIndicator) {
 
 	/**
 	 * Feeds update indicator view

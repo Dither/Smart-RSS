@@ -9,7 +9,7 @@ define([
 function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 
 	function isScrolledIntoView(elem) {
-		if (!screen) {
+		if (typeof screen === 'undefined' || !screen || !elem) {
 			bg.sources.trigger('clear-events', -1);
 			return false;
 		}
@@ -18,6 +18,11 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		var docViewBottom = screen.height;
 
 		var rect = elem.getBoundingClientRect();
+		if (!rect) {
+			bg.sources.trigger('clear-events', -1);
+			return false;
+		}
+
 		var elemTop = rect.top;
 		var elemBottom = elemTop + rect.height;
 
@@ -195,9 +200,8 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @param view {views/ItemView}
 		 */
 		handlePick: function(view) {
-			// This shouldn't usually happen
-			// It might happen when source is deleted and created in the same tick
-			if (!view.model.collection) return;
+			// It might happen when source is deleted and created in the same tick but shouldn't
+			if (!view || !view.model || !view.model.collection) return;
 
 			app.trigger('select:' + this.el.id, { action: 'new-select', value: view.model.id });
 
@@ -426,9 +430,8 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @param noManualSort {Boolean} true when adding items in a batch in right order
 		 */
 		addItem: function(item, noManualSort) {
-
 			//Don't add newly fetched items to middle column, when they shouldn't be
-			if (noManualSort !== true && !this.inCurrentData(item)) {
+			if (!item || (noManualSort !== true && !this.inCurrentData(item))) {
 				return false;
 			}
 
@@ -661,7 +664,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		removeItem: function(view) {
 			askRmPinned = bg.settings.get('askRmPinned')
 			if (view.model.get('pinned') && askRmPinned == 'all') {
-				var conf = confirm(_T('PIN_QUESTION_A') + view.model.escape('title') + _T('PIN_QUESTION_B'));
+				var conf = confirm(_T('PIN_QUESTION_A').replace('%s', view.model.escape('title')));
 				if (!conf) {
 					return;
 				}
