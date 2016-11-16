@@ -14,7 +14,6 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	 */
 	animation.start();
 
-
 	/*$.ajaxSetup({
 		cache: false
 	});*/
@@ -64,10 +63,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	 * Fetch all
 	 */
 	function fetchOne(arr, allDef) {
-		if (!arr.length) {
-			allDef.resolve();
-			return;
-		}
+		if (!arr.length) return allDef.resolve();
 		var one = arr.shift();
 		one.always(function() {
 			fetchOne(arr, allDef);
@@ -85,10 +81,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		deferreds.push( settingsDef = settings.fetch({ silent: true }) );
 
 		fetchOne(deferreds, allDef);
-
-		settingsDef.always(function() {
-			settingsLoaded.resolve();
-		});
+		settingsDef.always(settingsLoaded.resolve);
 
 		return allDef.promise();
 	}
@@ -134,18 +127,14 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		browser.alarms.onAlarm.addListener(function(alarm) {
 			var sourceID = alarm.name.replace('source-', '');
 			if (sourceID) {
-				var source = sources.findWhere({
-					id: sourceID
-				});
+				var source = sources.findWhere({ id: sourceID });
 				if (source) {
-					if (!loader.downloadSingleFeed(source)) {
+					if (!loader.downloadSingleFeed(source))
 						setTimeout(loader.downloadSingleFeed, 30000, source);
-					}
 				} else {
 					console.log('No source with ID: ' + sourceID);
 					browser.alarms.clear(alarm.name);
 				}
-
 			}
 
 		});
@@ -156,9 +145,8 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 
 		sources.on('change:title', function(source) {
 			// if url was changed as well change:url listener will download the source
-			if (!source.get('title')) {
+			if (!source.get('title'))
 				loader.downloadSingleFeed(source);
-			}
 
 			sources.sort();
 		});
@@ -182,12 +170,15 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		/**
 		 * onclick:button -> open RSS
 		 */
+		var pending = false;
 		browser.browserAction.onClicked.addListener(function() {
+			if (pending) return;
+			pending = true;
+			setTimeout(function () { pending = false; }, 500);
 			openRSS(true);
 		});
-
-	});
-	});
+	}); //fetchAll().always
+	}); //$
 
 	function onExternalLink(url) {
 		url = url.replace(/^feed:/i, 'http:');
@@ -197,7 +188,6 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 			var s = sources.create({ title: url, url: url, updateEvery: 180 }, { wait: true });
 			openRSS(false, s.get('id'));
 		} else {
-			//duplicate.trigger('change');
 			openRSS(false, duplicate.get('id'));
 		}
 	}
@@ -216,9 +206,9 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		xmlMimes = ['text/xml', 'application/xml'],
 		urlParts = /(new|feed|rss)/i;
 
-	// Capturing all raw rss feeds added by default; FF;
-	// 	needs "webRequest", "webRequestBlocking",  "<all_urls>" permissions
-	if (typeof InstallTrigger !== 'undefined')
+	// Capture raw feeds in Firefox and prevent embedded feed viewer.
+	// We need additional "webRequest", "webRequestBlocking", "<all_urls>" permissions only for that.
+	if (typeof InstallTrigger !== 'undefined') {
 		browser.webRequest.onHeadersReceived.addListener(
 			handleHeaders,
 			{
@@ -227,6 +217,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 			},
 			['responseHeaders', 'blocking']
 		);
+	}
 
 	function getContentType(arr) {
 		for (var i=0; i < arr.length; i++) {
@@ -254,7 +245,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		}, function(tabs) {
 			var matchedTab = null; //tabs[0]
 
-			// FF hack because moz-extension:// url query won't work
+			// Firefox hack because `moz-extension://` url query won't work
 			if (tabs && tabs.length) {
 				for (var i = tabs.length; i--; ) {
 					if (tabs[i].url === url) {

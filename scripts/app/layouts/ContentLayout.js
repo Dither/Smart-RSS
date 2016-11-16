@@ -7,7 +7,6 @@ define([
 	'views/OverlayView', 'views/LogView', 'controllers/comm', 'domReady!'
 ],
 function ($, Layout, ToolbarView, contentView, SandboxView, OverlayView, LogView, comm) {
-
 	var toolbar = bg.toolbars.findWhere({ region: 'content' });
 
 	/**
@@ -17,7 +16,6 @@ function ($, Layout, ToolbarView, contentView, SandboxView, OverlayView, LogView
 	 * @extends Layout
 	 */
 	var ContentLayout = Layout.extend({
-
 		/**
 		 * View element
 		 * @property el
@@ -31,7 +29,6 @@ function ($, Layout, ToolbarView, contentView, SandboxView, OverlayView, LogView
 		 */
 		initialize: function() {
 			this.on('attach', function() {
-
 				this.attach('toolbar', new ToolbarView({ model: toolbar }) );
 				this.attach('content', contentView );
 				this.attach('sandbox', new SandboxView() );
@@ -63,7 +60,13 @@ function ($, Layout, ToolbarView, contentView, SandboxView, OverlayView, LogView
 					focus = true;
 				}.bind(this), 0);
 			});
-			
+		},
+
+		/**
+		 * Clears events
+		 * @method clearEvents
+		 */
+		clearEvents: function(){
 		},
 
 		/**
@@ -71,11 +74,9 @@ function ($, Layout, ToolbarView, contentView, SandboxView, OverlayView, LogView
 		 * @method hideOverlay
 		 */
 		hideOverlay: function() {
-			if (this.overlay.isVisible()) {
+			if (this.overlay.isVisible())
 				this.overlay.hide();
-			}
 		}
-		
 	});
 
 	return ContentLayout;

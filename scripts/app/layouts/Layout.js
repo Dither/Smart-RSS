@@ -18,8 +18,17 @@ define(['backbone'], function(BB) {
 		 * @param name {String} Name of the region
 		 */
 		setFocus: function(name) {
-			if (!name || !this[name]) return;
-			this[name].el.focus();
+			if (!name) return;
+
+			var retries = 10,
+				that = this;
+
+			if (that[name]) return that[name].el.focus();
+
+			var id = setInterval(function _focus() {
+				if (that[name]) that[name].el.focus();
+				if (retries-- <= 0 || that[name]) clearInterval(id);
+			}, 200);
 		},
 
 		/**
@@ -31,10 +40,12 @@ define(['backbone'], function(BB) {
 		 * @param view {Backbone.View} Backbone view to be the attached region
 		 */
 		attach: function(name, view) {
-			var old = this[name];
+			if (!name || !view) return;
 
+			var old = this[name];
 			this[name] = view;
-			if (!view.el.parentNode) {
+
+			if (view.el && !view.el.parentNode) {
 				if (old && old instanceof BB.View) {
 					old.$el.replaceWith(view.el);
 					old.trigger('close');
@@ -42,8 +53,9 @@ define(['backbone'], function(BB) {
 					this.$el.append(view.el);
 				}
 			}
+
 			view.trigger('attach');
-			if (!this.focus) this.setFocus(name);
+			//if (!this.focus) this.setFocus(name);
 		}
 	});
 

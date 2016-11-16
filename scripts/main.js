@@ -1,14 +1,17 @@
 if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = chrome;
 
 var _T = function () {
-	return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
+	//console.log(arguments);
+	try {
+		return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
+	} catch (e) {
+		return arguments[0] || '';
+	}
 }
 
 require.config({
-
 	baseUrl: 'scripts/app',
 	waitSeconds: 0,
-
 	paths: {
 		jquery: '../libs/jquery.min',
 		underscore: '../libs/underscore.min',
@@ -20,7 +23,6 @@ require.config({
 		mochacss: 'https://cdnjs.cloudflare.com/ajax/libs/mocha/1.12.1/mocha.min.css?nojs',
 		chai: 'https://raw.github.com/chaijs/chai/master/chai'*/
 	},
-
 	shim: {
 		jquery: { exports: '$' },
 		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },

@@ -8,7 +8,6 @@ define([
 	'controllers/comm', 'domReady!'
 ],
 function ($, Layout, ToolbarView, feedList, contextMenus, Properties, resizable, IndicatorView, comm) {
-
 	var toolbar = bg.toolbars.findWhere({ region: 'feeds' });
 
 	/**
@@ -30,7 +29,6 @@ function ($, Layout, ToolbarView, feedList, contextMenus, Properties, resizable,
 		 * @method initialize
 		 */
 		initialize: function() {
-
 			this.on('attach', function() {
 				this.attach('toolbar', new ToolbarView({ model: toolbar }) );
 				this.attach('properties', new Properties);
@@ -63,10 +61,26 @@ function ($, Layout, ToolbarView, feedList, contextMenus, Properties, resizable,
 				}.bind(this), 0);
 			});
 
+			if (bg.settings.get('enablePanelToggle')) $('#panel-toggle').css('display', 'block');
 			this.on('resize:after', this.handleResize);
-			//window.addEventListener('resize', this.handleResize.bind(this));
+			bg.settings.on('change:panelToggled', this.handleToggleChange, this);
+			this.handleToggleChange();
 
-			this.enableResizing('horizontal', bg.settings.get('posA'));
+		},
+
+		/**
+		 * Shows/hides the panel
+		 * @method handleToggleChange
+		 */
+		handleToggleChange: function() {
+			$('#panel-toggle').toggleClass('toggled', bg.settings.get('panelToggled'));
+
+			this.$el.toggleClass('hidden', !bg.settings.get('panelToggled'));
+			if (!bg.settings.get('panelToggled')) {
+				this.disableResizing();
+			} else {
+				this.enableResizing('horizontal', bg.settings.get('posA'));
+			}
 		},
 
 		/**
@@ -78,6 +92,14 @@ function ($, Layout, ToolbarView, feedList, contextMenus, Properties, resizable,
 				var wid = this.el.offsetWidth;
 				bg.settings.save({ posA: wid });
 			}
+		},
+
+		/**
+		 * Clears events
+		 * @method clearEvents
+		 */
+		clearEvents: function(){
+			bg.settings.off('change:panelToggled', this.handleToggleChange, this);
 		}
 	});
 

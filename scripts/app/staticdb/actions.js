@@ -278,7 +278,7 @@ return {
 					});
 				}
 
-                bg.items.sort({ silent: true });
+				bg.items.sort({ silent: true });
 			}
 		},
 		showAndFocusArticles: {

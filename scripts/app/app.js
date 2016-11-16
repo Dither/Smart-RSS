@@ -24,6 +24,22 @@ function (comm, Layout, punycode, $, doc, Actions, FeedsLayout, ArticlesLayout, 
 
 	var app = window.app = new (Layout.extend({
 		el: 'body',
+		events: {
+			'mousedown': 'handleMouseDown',
+			'click #panel-toggle': 'handleClickToggle'
+		},
+		initialize: function() {
+			this.actions = new Actions();
+
+			window.addEventListener('blur', function(e) {
+				this.hideContextMenus();
+				if (e.target instanceof window.Window) comm.trigger('stop-blur');
+			}.bind(this));
+
+			if (bg.settings.get('thickFrameBorders')) this.$el.addClass('thick-borders');
+
+			bg.sources.on('clear-events', this.handleClearEvents, this);
+		},
 		fixURL: function(url) {
 			if (url.search(/[a-z]+:\/\//) === -1) url = 'http://' + url;
 			if (url.match(/\/\/(?:[^@]*@)?([\d]+\.){3}\d+/g) || url.match(/\/\/(?:[^@]*@)?\[/g)) return url;
@@ -34,92 +50,34 @@ function (comm, Layout, punycode, $, doc, Actions, FeedsLayout, ArticlesLayout, 
 			return url;
 		},
 		validatePosition: function(path) {
-			var path_val = '';
+			var pathVal = '';
 			try {
-				document.querySelector(path); path_val = path;
+				document.querySelector(path);
+				pathVal = path;
 			} catch (e) {
 				try {
 					document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-					path_val = path;
+					pathVal = path;
 				} catch (e) {
-					path_val = '';
+					pathVal = '';
 				}
 			}
-			return path_val;
-		},
-		events: {
-			'mousedown': 'handleMouseDown',
-			'click #panel-toggle': 'handleClickToggle'
-		},
-		initialize: function() {
-			this.actions = new Actions();
-
-			window.addEventListener('blur', function(e) {
-				this.hideContextMenus();
-				//$('.focused').removeClass('focused');
-
-				if (e.target instanceof window.Window) {
-					comm.trigger('stop-blur');
-				}
-
-			}.bind(this));
-
-			if (bg.settings.get('enablePanelToggle')) {
-				$('#panel-toggle').css('display', 'block');
-			}
-
-			if (bg.settings.get('thickFrameBorders')) {
-				this.$el.addClass('thick-borders');
-			}
-
-			bg.settings.on('change:layout', this.handleLayoutChange, this);
-			bg.settings.on('change:panelToggled', this.handleToggleChange, this);
-			bg.sources.on('clear-events', this.handleClearEvents, this);
+			return pathVal;
 		},
 		handleClearEvents: function(id) {
-			if (window == null || id == tabID) {
-				bg.settings.off('change:layout', this.handleLayoutChange, this);
-				bg.settings.off('change:panelToggled', this.handleToggleChange, this);
+			if (!window || id === tabID) {
+				if (this.feeds) this.feeds.clearEvents();
+				if (this.articles) this.articles.clearEvents();
+				if (this.content) this.content.clearEvents();
 				bg.sources.off('clear-events', this.handleClearEvents, this);
 			}
 		},
-		handleLayoutChange: function() {
-			if (bg.settings.get('layout') == 'vertical') {
-				this.layoutToVertical();
-				this.articles.enableResizing(bg.settings.get('layout'), bg.settings.get('posC'));
-			} else {
-				this.layoutToHorizontal();
-				this.articles.enableResizing(bg.settings.get('layout'), bg.settings.get('posB'));
-			}
-		},
-		layoutToVertical: function() {
-			$('.regions .regions').addClass('vertical');
-		},
-		layoutToHorizontal: function() {
-			$('.regions .regions').removeClass('vertical');
-		},
-
 		/**
 		 * Saves the panel toggle state (panel visible/hidden)
 		 * @method handleClickToggle
 		 */
 		handleClickToggle: function() {
 			bg.settings.save('panelToggled', !bg.settings.get('panelToggled'));
-		},
-
-		/**
-		 * Shows/hides the panel
-		 * @method handleToggleChange
-		 */
-		handleToggleChange: function() {
-			$('#panel-toggle').toggleClass('toggled', bg.settings.get('panelToggled'));
-
-			this.feeds.$el.toggleClass('hidden', !bg.settings.get('panelToggled'));
-			if (!bg.settings.get('panelToggled')) {
-				this.feeds.disableResizing();
-			} else {
-				this.feeds.enableResizing('horizontal', bg.settings.get('posA'));
-			}
 		},
 		handleMouseDown: function(e) {
 			if (!e.target.matchesSelector('.context-menu, .context-menu *, .overlay, .overlay *')) {
@@ -133,43 +91,38 @@ function (comm, Layout, punycode, $, doc, Actions, FeedsLayout, ArticlesLayout, 
 			this.setFocus(e.currentTarget.getAttribute('name'));
 		},
 		start: function() {
+			this.trigger('start');
+
 			this.attach('feeds', new FeedsLayout);
 			this.attach('articles', new ArticlesLayout);
 			this.attach('content', new ContentLayout);
 
-			this.handleToggleChange();
+			var retries = 10,
+				that = this;
 
-			this.trigger('start');
+			var id = setInterval(function _isLoaded() {
+				_loaded = !!that.feeds && !!that.articles && !!that.content;
+				if (_loaded) $('body').removeClass('loading');
+				if (retries-- <= 0 || _loaded) clearInterval(id);
+			}, 150);
+
+			this.setFocus('articles');
 			this.trigger('start:after');
-
-			setTimeout(function(that) {
-				$('body').removeClass('loading');
-				that.setFocus('articles');
-				that.handleLayoutChange();
-
-			}, 0, this);
 		},
 		report: function() {
-			var report = new ReportView();
-			document.body.appendChild(report.render().el);
+			document.body.appendChild((new ReportView()).render().el);
 		},
 		handleKeyDown: function(e) {
 			var ac = document.activeElement;
-			if (ac && (ac.tagName == 'INPUT' || ac.tagName == 'TEXTAREA')) {
-				return;
-			}
+			if (ac && (ac.tagName == 'INPUT' || ac.tagName == 'TEXTAREA')) return;
 
 			var str = '';
 			if (e.ctrlKey) str += 'ctrl+';
 			if (e.shiftKey) str += 'shift+';
 
-			if (e.keyCode > 46 && e.keyCode < 91) {
-				str += String.fromCharCode(e.keyCode).toLowerCase();
-			} else if (e.keyCode in shortcuts.keys) {
-				str += shortcuts.keys[e.keyCode];
-			} else {
-				return;
-			}
+			if (e.keyCode > 46 && e.keyCode < 91) str += String.fromCharCode(e.keyCode).toLowerCase();
+			else if (e.keyCode in shortcuts.keys) str += shortcuts.keys[e.keyCode];
+			else return;
 
 			var focus = document.activeElement.getAttribute('name');
 

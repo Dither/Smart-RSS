@@ -76,25 +76,17 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 * @triggered when content view is attached to DOM
 		 */
 		handleAttached: function() {
-			//this.template = _.template($('#template-header').html());
-
-			//window.addEventListener('message', function(e) {
 			app.on('select:article-list', function(data) {
 				this.handleNewSelected(bg.items.findWhere({ id: data.value }));
 			}, this);
 
-			app.on('space-pressed', function() {
-				this.handleSpace();
-			}, this);
+			app.on('space-pressed', this.handleSpace, this);
 
 			app.on('no-items:article-list', function() {
-				if (this.renderTimeout) {
-					clearTimeout(this.renderTimeout);
-				}
+				if (this.renderID) clearTimeout(this.renderID);
 				this.model = null;
 				this.hide();
 			}, this);
-
 		},
 
 		/**
@@ -150,25 +142,33 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		},
 
 		/**
-		 * Rendering of article is delayed with timeout for 50ms to spped up quick select changed in article list.
-		 * This property contains descriptor for that timeout.
-		 * @property renderTimeout
+		 * Identificator of asynchronous render function.
+		 * @property renderID
 		 * @default null
 		 * @type Integer
 		 */
-		renderTimeout: null,
+		renderID: null,
+
+		/**
+		 * Delay of asynchronous render in ms.
+		 * @property renderDelay
+		 * @default 100
+		 * @type Integer
+		 */
+		renderDelay: 100,
 
 		/**
 		 * Renders articles content asynchronously
+		 * Rendering of article is delayed for %renderDelay% ms to speed up successive selection in article list.
 		 * @method render
 		 * @chainable
 		 */
 		render: function() {
-			clearTimeout(this.renderTimeout);
+			clearTimeout(this.renderID);
 
-			this.renderTimeout = setTimeout(function(that) {
+			this.renderID = setTimeout(function(that) {
+				if (!that || !that.model) return;
 
-				if (!that.model) return;
 				that.show();
 
 				var data = Object.create(that.model.attributes);
@@ -178,32 +178,35 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 				data.url = escapeHtml(data.url);
 				data.titleIsLink = bg.settings.get('titleIsLink');
 
-				var source = that.model.getSource();
-				var content = that.model.get('content');
-
+				var source = that.model.getSource(),
+					content = that.model.get('content'),
+					sandbox = app.content.sandbox,
+					frame = sandbox.el;
 
 				that.$el.html(that.template(data));
 
-				// first load might be too soon
-				var sandbox = app.content.sandbox;
-				var fr = sandbox.el;
+				var _render = function() {
+					if (!frame || !that) return;
 
-				if (sandbox.loaded) {
-					fr.contentWindow.scrollTo(0, 0);
-					fr.contentDocument.documentElement.style.fontSize = bg.settings.get('articleFontSize') + '%';
-					fr.contentDocument.querySelector('base').href = source.get('base') || source.get('url');
-					fr.contentDocument.querySelector('#smart-rss-content').innerHTML = content;
-					fr.contentDocument.querySelector('#smart-rss-url').href = that.model.get('url');
-				} else {
-					sandbox.on('load', function() {
-						fr.contentWindow.scrollTo(0, 0);
-						fr.contentDocument.documentElement.style.fontSize = bg.settings.get('articleFontSize') + '%';
-						fr.contentDocument.querySelector('base').href = source ? source.get('base') || source.get('url') : '#';
-						fr.contentDocument.querySelector('#smart-rss-content').innerHTML = content;
-						fr.contentDocument.querySelector('#smart-rss-url').href = that.model.get('url');
-					});
-				}
-			}, 50, this);
+					frame.contentWindow.scrollTo(0, 0);
+
+					var _url = that.model.get('url'),
+						_base = frame.contentDocument.querySelector('base');
+
+					if (source && source.get('fulltextEnable'))
+						_base.href = (_url.match(/^https?:\/\/\S+$/i) || [])[0] || '#';
+					else
+						_base.href = source ? source.get('base') || source.get('url') : '#';
+
+					frame.contentDocument.querySelector('#smart-rss-content').innerHTML = content;
+					frame.contentDocument.querySelector('#smart-rss-url').href = _url;
+					frame.contentDocument.documentElement.style.fontSize = bg.settings.get('articleFontSize') + '%';
+					frame.contentDocument.querySelector('body').removeAttribute('style');
+				};
+
+				if (sandbox.loaded) _render();
+				else sandbox.on('load', _render);
+			}, this.renderDelay, this);
 
 			return this;
 		},
@@ -214,14 +217,10 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 * @param model {Item} The new article model
 		 */
 		handleNewSelected: function(model) {
-			if (model == this.model) return;
+			if (!model) return this.hide();
+			if (model === this.model) return;
 			this.model = model;
-			if (!this.model) {
-				// should not happen but happens
-				this.hide();
-			} else {
-				this.render();
-			}
+			this.render();
 		},
 
 		/**

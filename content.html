@@ -25,11 +25,9 @@ footer a:hover { text-decoration: underline; }
 @media print {  iframe, video, footer { display: none !important; }}
 	</style>
 </head>
-<body>
+<body style="visibility:hidden;">
 	<section id="smart-rss-content"></section>
 	<div style="clear: both"></div>
-	<footer>
-		<a href="<%- url %>" id="smart-rss-url">{{FULL_ARTICLE}}</a>
-	</footer>
+	<footer><a href="<%- url %>" id="smart-rss-url">{{FULL_ARTICLE}}</a></footer>
 </body>
 </html>

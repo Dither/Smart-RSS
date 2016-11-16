@@ -75,13 +75,11 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		 * @param newModel {Item} Item model to be used
 		 */
 		swapModel: function(newModel) {
-			if (this.model == newModel) {
+			if (this.model === newModel) {
 				this.prerender();
 				return;
 			}
-			if (this.model) {
-				this.clearEvents();
-			}
+			this.clearEvents();
 			this.model = newModel;
 			this.setEvents();
 			this.prerender();
@@ -114,13 +112,12 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		 * @method unplugModel
 		 */
 		unplugModel: function() {
-			if (this.model) {
-				this.el.className = 'unpluged';
-				this.clearEvents();
-				this.model = null;
-				this.el.innerHTML = '';
-				if (this.list._itemHeight) this.$el.css('height', this.list._itemHeight + 'px');
-			}
+			if (!this.model) return;
+			this.el.className = 'unpluged';
+			this.clearEvents();
+			this.model = null;
+			this.el.innerHTML = '';
+			if (this.list._itemHeight) this.$el.css('height', this.list._itemHeight + 'px');
 		},
 
 		/**
@@ -130,9 +127,7 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		 * @param id {Number} ID of closed tab
 		 */
 		handleClearEvents: function(id) {
-			if (window == null || id == tabID) {
-				this.clearEvents();
-			}
+			if (window == null || id == tabID) this.clearEvents();
 		},
 
 		/**
@@ -159,9 +154,9 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 			var ca = this.model.changedAttributes();
 			if (ca) {
 				var caKeys =  Object.keys(ca);
-				if ( ( ('unread' in ca || 'visited' in ca) && caKeys.length == 1) || ('unread' in ca && 'visited' in ca && caKeys.length == 2) ) {
+				if ((('unread' in ca || 'visited' in ca) && caKeys.length === 1) ||
+				    ('unread' in ca && 'visited' in ca && caKeys.length === 2))
 					return this;
-				}
 			}
 
 			this.$el.css('height', '');
@@ -183,23 +178,21 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		 * @return String
 		 */
 		getItemDate: function(date) {
+			if (!date) return '';
+
 			var dateFormats = { normal: 'DD.MM.YYYY', iso: 'YYYY-MM-DD', us: 'MM/DD/YYYY' };
 			var pickedFormat = dateFormats[bg.settings.get('dateType') || 'normal'] || dateFormats['normal'];
-
 			var timeFormat = bg.settings.get('hoursFormat') == '12h' ? 'H:mm a' : 'hh:mm';
 			//var timeFormatTitle = bg.settings.get('hoursFormat') == '12h' ? 'H:mm a' : 'hh:mm:ss';
 
-			if (date) {
-				if (bg.settings.get('fullDate')) {
-					date = formatDate(new Date(date), pickedFormat + ' ' + timeFormat);
-				} else if (parseInt(formatDate(date, 'T') / 86400000, 10) >= parseInt(formatDate(Date.now(), 'T') / 86400000, 10)) {
-					date = formatDate(new Date(date), timeFormat);
-				} else if ((new Date(date)).getFullYear() == (new Date()).getFullYear() ) {
-					date = formatDate(new Date(date), pickedFormat.replace(/\/?YYYY(?!-)/, ''));
-				} else {
-					date = formatDate(new Date(date), pickedFormat);
-				}
-			}
+			if (bg.settings.get('fullDate'))
+				date = formatDate(new Date(date), pickedFormat + ' ' + timeFormat);
+			else if (parseInt(formatDate(date, 'T') / 86400000, 10) >= parseInt(formatDate(Date.now(), 'T') / 86400000, 10))
+				date = formatDate(new Date(date), timeFormat);
+			else if ((new Date(date)).getFullYear() == (new Date()).getFullYear() )
+				date = formatDate(new Date(date), pickedFormat.replace(/\/?YYYY(?!-)/, ''));
+			else
+				date = formatDate(new Date(date), pickedFormat);
 
 			return date;
 		},
@@ -211,9 +204,7 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		 * @param event {MouseEvent}
 		 */
 		handleMouseUp: function(e) {
-			if (e.which == 3) {
-				this.showContextMenu(e);
-			}
+			if (e.which == 3) this.showContextMenu(e);
 		},
 
 		/**
@@ -222,9 +213,7 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 		 * @param event {MouseEvent}
 		 */
 		showContextMenu: function(e) {
-			if (!this.$el.hasClass('selected')) {
-				this.list.select(this, e);
-			}
+			if (!this.$el.hasClass('selected')) this.list.select(this, e);
 			contextMenus.get('items').currentSource = this.model;
 			contextMenus.get('items').show(e.clientX, e.clientY);
 		},

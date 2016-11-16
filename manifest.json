@@ -5,13 +5,13 @@
 	"description": "RSS feeds reader similar to Opera 12's internal.",
 	"default_locale": "en_GB",
 	"developer": {
-		"name": "BS-Harou (Martin Kadlec)",
+		"name": "BS-Harou (Martin Kadlec), DitherSky",
 		"url": "http://blog.martinkadlec.eu/"
 	},
 	"background": {
 		"page": "index.html"
 	},
-	"web_accessible_resources": ["libs/jquery.min.js", "libs/underscore.min.js", "libs/backbone.min.js", "libs/backbone.indexDB.js", "images/icon16_v2.png"],
+	"web_accessible_resources": ["images/icon16_v2.png"],
 	"permissions": ["https://*/*", "http://*/*", "storage", "unlimitedStorage", "alarms", "tabs", "contextMenus", "webRequest", "webRequestBlocking",  "<all_urls>"],
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'unsafe-eval';",
 	"browser_action": {

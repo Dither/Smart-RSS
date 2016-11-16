@@ -113,7 +113,7 @@
 
 	/**
 	 * Method to detect if string is Unicode.
-     * @memberOf punycode
+	 * @memberOf punycode
 	 * @param {String} test Test string.
 	 * @returns {boolean} If string is unicode.
 	 */
@@ -122,15 +122,15 @@
 	}
 
 
-    /**
-     * Method to detect if string is Punycode.
-     * @memberOf punycode
-     * @param {String} test Test string.
-     * @returns {boolean} If string is punycode.
-     */
-    function isPunycode(test) {
-        return regexPunycode.test(test);
-    }
+	/**
+	 * Method to detect if string is Punycode.
+	 * @memberOf punycode
+	 * @param {String} test Test string.
+	 * @returns {boolean} If string is punycode.
+	 */
+	function isPunycode(test) {
+		return regexPunycode.test(test);
+	}
 
 	/**
 	 * Creates an array containing the numeric code points of each Unicode
@@ -147,10 +147,10 @@
 	 */
 	function ucs2decode(string) {
 		var output = [],
-		    counter = 0,
-		    length = string.length,
-		    value,
-		    extra;
+			counter = 0,
+			length = string.length,
+			value,
+			extra;
 		while (counter < length) {
 			value = string.charCodeAt(counter++);
 			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
@@ -256,21 +256,21 @@
 	function decode(input) {
 		// Don't use UCS-2
 		var output = [],
-		    inputLength = input.length,
-		    out,
-		    i = 0,
-		    n = initialN,
-		    bias = initialBias,
-		    basic,
-		    j,
-		    index,
-		    oldi,
-		    w,
-		    k,
-		    digit,
-		    t,
-		    /** Cached calculation results */
-		    baseMinusT;
+			inputLength = input.length,
+			out,
+			i = 0,
+			n = initialN,
+			bias = initialBias,
+			basic,
+			j,
+			index,
+			oldi,
+			w,
+			k,
+			digit,
+			t,
+			/** Cached calculation results */
+			baseMinusT;
 
 		// Handle the basic code points: let `basic` be the number of input code
 		// points before the last delimiter, or `0` if there is none, then copy
@@ -356,23 +356,23 @@
 	 */
 	function encode(input) {
 		var n,
-		    delta,
-		    handledCPCount,
-		    basicLength,
-		    bias,
-		    j,
-		    m,
-		    q,
-		    k,
-		    t,
-		    currentValue,
-		    output = [],
-		    /** `inputLength` will hold the number of code points in `input`. */
-		    inputLength,
-		    /** Cached calculation results */
-		    handledCPCountPlusOne,
-		    baseMinusT,
-		    qMinusT;
+			delta,
+			handledCPCount,
+			basicLength,
+			bias,
+			j,
+			m,
+			q,
+			k,
+			t,
+			currentValue,
+			output = [],
+			/** `inputLength` will hold the number of code points in `input`. */
+			inputLength,
+			/** Cached calculation results */
+			handledCPCountPlusOne,
+			baseMinusT,
+			qMinusT;
 
 		// Convert the input in UCS-2 to Unicode
 		input = ucs2decode(input);
@@ -523,7 +523,7 @@
 		'decode': decode,
 		'encode': encode,
 		'isUnicode': isUnicode,
-        'isPunycode': isPunycode,
+		'isPunycode': isPunycode,
 		'toASCII': toASCII,
 		'toUnicode': toUnicode
 	};
