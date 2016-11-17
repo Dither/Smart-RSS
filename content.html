@@ -6,15 +6,40 @@
 	<meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'self';">
 	<style>
 html { font-size: 100%;}
-a { text-decoration: none; color: #55b;}
+a { text-decoration: none; color: #55b; }
 body { padding: 20px 30px; margin: 0; font-family: "helvetica neue", "helvetica-neue", "helvetica", "arial", sans-serif; font-size: 0.9rem; overflow: scroll-y; overflow-x: hidden; line-height: 1.5rem; word-wrap: break-word; }
 body * { max-width: 100% !important; word-wrap: break-word; }
 html { background-color: transparent; }
 footer { padding-top: 20px }
 footer a {
-    color:#556; padding-left: 16px; font-family: sans-serif; font-size: 0.85rem;
-    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAAb0lEQVQY02P4//8/A7GYoaGhARveC8T/0fBqXIo90BS+AmJRBiQBmEJdIH6IpjgEJMeAplAaiJ8A8WcgXgrEf0DWw+SRFbMB8SUgXgfEQlCxdiQ2iuJ8IM7B4QcMxd5YFPzHpZiBWMX4MEIxKTEIAEBQ/MqRjinNAAAAAElFTkSuQmCC') no-repeat left center #fff;
+	color:#556; padding-left: 16px; font-family: sans-serif; font-size: 0.85rem;
+	background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAAb0lEQVQY02P4//8/A7GYoaGhARveC8T/0fBqXIo90BS+AmJRBiQBmEJdIH6IpjgEJMeAplAaiJ8A8WcgXgrEf0DWw+SRFbMB8SUgXgfEQlCxdiQ2iuJ8IM7B4QcMxd5YFPzHpZiBWMX4MEIxKTEIAEBQ/MqRjinNAAAAAElFTkSuQmCC') no-repeat left center #fff;
 }
+pre {
+	white-space: pre-wrap;
+	background-color: #f9f9f9;
+	border: 1px dashed #2f6fab;
+	color: black;
+	line-height: 1.1rem;
+	padding: 0.8rem;
+}
+blockquote {
+	background: #f9f9f9;
+	font-family: Georgia, serif;
+	border-left: 10px solid #ccc;
+	margin: 1.5em 10px;
+	padding: 0.5em 10px;
+	quotes: "\201C""\201D""\2018""\2019";
+}
+blockquote:before {
+	color: #ccc;
+	content: open-quote;
+	font-size: 5em;
+	line-height: 0.1em;
+	margin-right: 0.1em;
+	vertical-align: -0.3em;
+}
+blockquote p { display: inline; }
 img, svg, iframe, video { display: block; border: 0; margin: 0 auto; }
 iframe:not([height]), video:not([height]) {min-height: 320px;}
 iframe:not([width]), video:not([width]) {min-width: 480px;}

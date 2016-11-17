@@ -1,0 +1,6 @@
+[
+{
+    "url": "^https://twitter\\.com/",
+    "pageElement": ".js-tweet-text-container"
+}
+]

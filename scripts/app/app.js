@@ -103,6 +103,7 @@ function (comm, Layout, punycode, $, doc, Actions, FeedsLayout, ArticlesLayout, 
 			var id = setInterval(function _isLoaded() {
 				_loaded = !!that.feeds && !!that.articles && !!that.content;
 				if (_loaded) $('body').removeClass('loading');
+				bg.settings.trigger('change:layout');
 				if (retries-- <= 0 || _loaded) clearInterval(id);
 			}, 150);
 

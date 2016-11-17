@@ -2,13 +2,16 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = c
 
 var _T = function () {
 	//console.log(arguments);
-	return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
+	try {
+		return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
+	} catch (e) {
+		return arguments[0] || '';
+	}
 }
 
 require.config({
 	baseUrl: 'scripts/bgprocess',
 	waitSeconds: 2000,
-
 	paths: {
 		jquery: '../libs/jquery.min',
 		underscore: '../libs/underscore.min',
@@ -17,9 +20,9 @@ require.config({
 		md5: '../libs/md5',
 		readability: '../libs/readability',
 		text: '../text',
-		domReady: '../domReady'
+		domReady: '../domReady',
+		siteinfo: '../siteinfo'
 	},
-
 	shim: {
 		jquery: { exports: '$' },
 		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },
@@ -34,9 +37,8 @@ require.config({
  * Events handlers that has to be set right on start
  */
 
-
 browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
- 	if (message.action == 'get-tab-id') {
+ 	if (message.action === 'get-tab-id') {
  		sendResponse({
  			action: 'response-tab-id',
  			value: sender.tab.id
@@ -46,7 +48,8 @@ browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 
 browser.runtime.onConnect.addListener(function(port) {
  	port.onDisconnect.addListener(function(port) {
- 		if (port) sources.trigger('clear-events', port.sender.tab.id);
+ 		if (sources && port)
+ 			sources.trigger('clear-events', port.sender.tab.id);
  	});
 });
 
