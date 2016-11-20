@@ -36,8 +36,8 @@ define(['backbone', 'text!templates/indicator.txt'], function(BB, tplIndicator) 
 		initialize: function() {
 			this.$el.html(this.template());
 			bg.loader.on('change:loading', this.handleLoadingChange, this);
-			bg.loader.on('change:loaded', this.render, this);
-			bg.loader.on('change:maxSources', this.render, this);
+			bg.loader.on('change:numLoaded', this.render, this);
+			bg.loader.on('change:numSources', this.render, this);
 			bg.sources.on('clear-events', this.handleClearEvents, this);
 
 			this.handleLoadingChange();
@@ -49,10 +49,10 @@ define(['backbone', 'text!templates/indicator.txt'], function(BB, tplIndicator) 
 		 * @param id {Integer} ID of the closed tab
 		 */
 		handleClearEvents: function(id) {
-			if (window == null || id == tabID) {
+			if (window === null || id === tabID) {
 				bg.loader.off('change:loading', this.handleLoadingChange, this);
-				bg.loader.off('change:loaded', this.render, this);
-				bg.loader.off('change:maxSources', this.render, this);
+				bg.loader.off('change:numLoaded', this.render, this);
+				bg.loader.off('change:numSources', this.render, this);
 				bg.sources.off('clear-events', this.handleClearEvents, this);
 			}
 		},
@@ -88,11 +88,11 @@ define(['backbone', 'text!templates/indicator.txt'], function(BB, tplIndicator) 
 		 * @chainable
 		 */
 		render: function() {
-			var l = bg.loader;
-			if (l.get('maxSources') == 0) return;
-			var perc = Math.round(l.get('loaded') * 100 / l.get('maxSources'));
+			var l = bg.loader, nld = l.get('numLoaded'), nsrc = l.get('numSources');
+			if (nsrc === 0) return this;
+			var perc = Math.round(nld * 100 / nsrc);
 			this.$el.find('#indicator-progress').css('background', 'linear-gradient(to right,  #c5c5c5 ' + perc + '%, #eee ' + perc + '%)');
-			this.$el.find('#indicator-progress').html(_T('UPDATING_FEEDS') + ' (' + l.get('loaded') + '/' + l.get('maxSources') + ')');
+			this.$el.find('#indicator-progress').html(_T('UPDATING_FEEDS') + ' (' + nld + '/' + nsrc + ')');
 			return this;
 		}
 	});

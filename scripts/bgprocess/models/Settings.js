@@ -30,9 +30,9 @@ define(['backbone', 'preps/indexeddb'], function (BB) {
 			dateType: 'normal', // normal = DD.MM.YYYY, ISO = YYYY-MM-DD, US = MM/DD/YYYY
 			layout: 'horizontal', // or vertical
 			lines: 'auto', // one-line, two-lines
-			posA: '250,*',
-			posB: '350,*',
-			posC: '50%,*',
+			posA: 250,
+			posB: 270,
+			posC: 250,
 			sortOrder: 'desc',
 			sortOrder2: 'asc',
 			icon: 'orange',

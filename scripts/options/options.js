@@ -1,5 +1,7 @@
 if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = chrome;
 
+var FILE_SIZE_LARGE = 1000000;
+
 function utf8_to_b64( str ) {
 	return btoa(unescape(encodeURIComponent(str)));
 }
@@ -39,8 +41,17 @@ function decodeHTML(str) {
 	});
 }
 
+JSON.safeParse = function(str) {
+	try { return JSON.parse(str); } catch(e) { return null; }
+}
+
 var _T = function () {
-	return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
+	//console.log(arguments);
+	try {
+		return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
+	} catch (e) {
+		return arguments[0] || '';
+	}
 }
 
 function localizeNodes() {
@@ -60,16 +71,7 @@ function localizeNodes() {
 	//console.log(log);
 }
 
-
-JSON.safeParse = function(str) {
-	try {
-		return JSON.parse(str);
-	} catch(e) {
-		return null;
-	}
-}
-
-$(function() { localizeNodes(); });
+$(function(){ localizeNodes(); });
 
 browser.runtime.getBackgroundPage(function(bg) {
 	$(function call() {
@@ -125,7 +127,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 			return;
 		}
 
-		if (file.size > 1000000) {
+		if (file.size > FILE_SIZE_LARGE) {
 			$.confirm({
 				text: _T('NO_LARGE_FILES'),
 				confirmButton: _T("OK")
@@ -156,7 +158,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 			$('#smart-exported').attr('href', URL.createObjectURL(expr));
 			$('#smart-exported').attr('download', 'exported-rss.smart');
 			$('#smart-exported').html(_T('CLICK_TO_DOWNLOAD'));
-		}, 100);
+		}, 200);
 	}
 
 	function handleExportOPML() {
@@ -211,7 +213,6 @@ browser.runtime.getBackgroundPage(function(bg) {
 					} else {
 						addLine(doc, body);
 						body.appendChild( addSource(doc, source.get('title'), source.get('url')) );
-
 					}
 
 				} else {
@@ -229,26 +230,19 @@ browser.runtime.getBackgroundPage(function(bg) {
 			$('#opml-exported').attr('href', URL.createObjectURL(expr));
 			$('#opml-exported').attr('download', 'exported-rss.opml');
 			$('#opml-exported').html(_T('CLICK_TO_DOWNLOAD'));
-		}, 20);
+		}, 200);
 	}
 
 	function handleImportSmart(e) {
 		var file = e.currentTarget.files[0];
-		if (!file || file.size == 0) {
-			$('#smart-imported').html(_T('WRONG_FILE'));
-			return;
-		}
+		if (!file || file.size == 0) return $('#smart-imported').html(_T('WRONG_FILE'));
 
 		$('#smart-imported').html(_T('LOADING_PARSING'));
 
 		var reader = new FileReader();
 		reader.onload = function(e) {
 			var data = JSON.safeParse(this.result);
-
-			if (!data || !data.items || !data.sources) {
-				$('#smart-imported').html(_T('WRONG_FILE'));
-				return;
-			}
+			if (!data || !data.items || !data.sources) return $('#smart-imported').html(_T('WRONG_FILE'));
 
 			$('#smart-imported').html(_T('WAIT_IMPORTING'));
 
@@ -260,12 +254,13 @@ browser.runtime.getBackgroundPage(function(bg) {
 					bg.fetchAll().always(function() {
 						bg.info.autoSetData();
 						$('#smart-imported').html(_T('IMPORT_COMPLETE'));
-						bg.loader.downloadAllFeeds(true);
+						bg.loader.downloadFeeds(bg.sources.toArray(), true);
 					});
 				} else if (e.data.action == 'message'){
 					$('#smart-imported').html(e.data.value);
 				}
-			}
+			};
+
 			worker.postMessage({ action: 'file-content', value: data });
 
 			worker.onerror = function(e) {
@@ -293,10 +288,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 
 	function handleImportOPML(e) {
 		var file = e.currentTarget.files[0];
-		if (!file || file.size == 0) {
-			$('#opml-imported').html(_T('WRONG_FILE'));
-			return;
-		}
+		if (!file || file.size == 0) return $('#opml-imported').html(_T('WRONG_FILE'));
 
 		$('#opml-imported').html(_T('WAIT_IMPORTING'));
 
@@ -304,24 +296,15 @@ browser.runtime.getBackgroundPage(function(bg) {
 		reader.onload = function(e) {
 			var parser = new DOMParser();
 			var doc = parser.parseFromString(this.result, 'application/xml');
-
-			if (!doc) {
-				$('#opml-imported').html(_T('WRONG_FILE'));
-				return;
-			}
+			if (!doc) return $('#opml-imported').html(_T('WRONG_FILE'));
 
 			var feeds = doc.querySelectorAll('body > outline[text], body > outline[title]');
-
 			for (var i=0; i<feeds.length; i++) {
 				if ( !feeds[i].hasAttribute('xmlUrl') ) {
 					var subfeeds = feeds[i].querySelectorAll('outline[xmlUrl]');
 					var folderTitle = decodeHTML(feeds[i].getAttribute('title') || feeds[i].getAttribute('text'));
-
 					var duplicite = bg.folders.findWhere({ title: folderTitle });
-
-					var folder = duplicite || bg.folders.create({
-						title: folderTitle
-					}, { wait: true });
+					var folder = duplicite || bg.folders.create({ title: folderTitle }, { wait: true });
 
 					for (var n=0; n<subfeeds.length; n++) {
 						if ( bg.sources.findWhere({ url: decodeHTML(subfeeds[n].getAttribute('xmlUrl')) }) ) continue;
@@ -345,8 +328,8 @@ browser.runtime.getBackgroundPage(function(bg) {
 			$('#opml-imported').html(_T('IMPORT_COMPLETE'));
 
 			setTimeout(function() {
-				bg.loader.downloadAllFeeds();
-			}, 10);
+				bg.loader.downloadFeeds(bg.sources.toArray());
+			}, 200);
 		}
 
 		reader.readAsText(file);

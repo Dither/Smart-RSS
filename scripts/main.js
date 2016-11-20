@@ -33,38 +33,22 @@ require.config({
 
 var tabID = -1;
 
+function init(message) {
+	if (message.started) {
+		browser.runtime.onMessage.removeListener(init);
+		requirejs(['app'], function(app) { app.start(); });
+	}
+}
+
+browser.runtime.onMessage.addListener(init);
 browser.runtime.getBackgroundPage(function(bg) {
 	/**
 	 * Setup work, that has to be done before any dependencies get executed
 	 */
 	window.bg = bg;
-
 	browser.runtime.sendMessage({ action: 'get-tab-id'}, function(response) {
-		if (response.action == 'response-tab-id') {
-			tabID = response.value;
-		}
+		if (response.action === 'response-tab-id') tabID = response.value;
 	});
 	browser.runtime.connect();
-
-	checkState();
+	if (bg.appStarted) init({started: true});
 });
-
-/**
- * This is retarded solution. It is too late to think of something else.
- * Broadcasting message from bgprocess might help.
- */
-function checkState() {
-	if ('appStarted' in bg) {
-		init();
-	} else {
-		setTimeout(checkState, 100);
-	}
-}
-
-function init() {
-	bg.appStarted.always(function() {
-		requirejs(['app'], function(app) {
-			app.start();
-		});
-	});
-}

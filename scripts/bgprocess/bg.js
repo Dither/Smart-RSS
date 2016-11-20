@@ -18,7 +18,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		cache: false
 	});*/
 
-	window.appStarted = new (jQuery.Deferred)();
+	window.appStarted = false;
 	window.settingsLoaded = new (jQuery.Deferred)();
 
 	/**
@@ -45,12 +45,13 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 
 	window.toolbars = new Toolbars();
 
-
 	/**
 	 * Non-db models & collections
 	 */
 	window.loader = new Loader();
 	window.logs = new Logs();
+
+	window.defaultDownloadTimeout = 20000;
 
 	logs.startLogging();
 
@@ -71,9 +72,10 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	}
 
 	function fetchAll() {
-		var allDef = new (jQuery.Deferred)();
-		var deferreds = [];
-		var settingsDef;
+		var allDef = new (jQuery.Deferred)(),
+			deferreds = [],
+			settingsDef;
+
 		deferreds.push(  folders.fetch({ silent: true }) );
 		deferreds.push(  sources.fetch({ silent: true }) );
 		deferreds.push(    items.fetch({ silent: true }) );
@@ -88,6 +90,8 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 
 	window.fetchAll = fetchAll;
 	window.fetchOne = fetchOne;
+
+	var isFirefox = (typeof InstallTrigger !== 'undefined');
 
 	/**
 	 * Init
@@ -104,20 +108,22 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		 * Set events
 		 */
 		sources.on('add', function(source) {
-			if (source.get('updateEvery') > 0) {
+			var ttl = source.get('updateEvery');
+			if (!isNaN(ttl) && ttl > 0 && ttl < 100000) {
 				browser.alarms.create('source-' + source.get('id'), {
-					delayInMinutes: source.get('updateEvery'),
-					periodInMinutes: source.get('updateEvery')
+					delayInMinutes: ttl,
+					periodInMinutes: ttl
 				});
 			}
-			loader.downloadSingleFeed(source);
+			loader.downloadFeeds([source]);
 		});
 
 		sources.on('change:updateEvery reset-alarm', function(source) {
-			if (source.get('updateEvery') > 0) {
+			var ttl = source.get('updateEvery');
+			if (!isNaN(ttl) && ttl > 0 && ttl < 100000) {
 				browser.alarms.create('source-' + source.get('id'), {
-					delayInMinutes: source.get('updateEvery'),
-					periodInMinutes: source.get('updateEvery')
+					delayInMinutes: ttl,
+					periodInMinutes: ttl
 				});
 			} else {
 				browser.alarms.clear('source-' + source.get('id'));
@@ -129,28 +135,25 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 			if (sourceID) {
 				var source = sources.findWhere({ id: sourceID });
 				if (source) {
-					if (!loader.downloadSingleFeed(source))
-						setTimeout(loader.downloadSingleFeed, 30000, source);
+					setTimeout(function(source) { loader.downloadFeeds([source]); }, window.defaultDownloadTimeout);
 				} else {
 					console.log('No source with ID: ' + sourceID);
 					browser.alarms.clear(alarm.name);
 				}
 			}
-
 		});
 
-		sources.on('change:url', function(source) {
-			loader.downloadSingleFeed(source);
-		});
-
+		sources.on('change:url', function(source) { loader.downloadFeeds([source]); });
 		sources.on('change:title', function(source) {
 			// if url was changed as well change:url listener will download the source
-			if (!source.get('title'))
-				loader.downloadSingleFeed(source);
-
+			if (!source.get('title')) loader.downloadFeeds([source]);
 			sources.sort();
 		});
 
+		/**
+		 * Set icon
+		 */
+		animation.stop();
 		sources.on('change:hasNew', animation.handleIconChange);
 		settings.on('change:icon', animation.handleIconChange);
 
@@ -159,14 +162,9 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		/**
 		 * Init
 		 */
-		setTimeout(loader.downloadAllFeeds, 30000);
-		appStarted.resolve();
-
-		/**
-		 * Set icon
-		 */
-		animation.stop();
-
+		setTimeout(function() { loader.downloadFeeds(sources.toArray()) }, window.defaultDownloadTimeout);
+		appStarted = true;
+		browser.runtime.sendMessage({started: true});
 		/**
 		 * onclick:button -> open RSS
 		 */
@@ -174,11 +172,20 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		browser.browserAction.onClicked.addListener(function() {
 			if (pending) return;
 			pending = true;
-			setTimeout(function () { pending = false; }, 500);
+			setTimeout(function() { pending = false; }, 1000);
 			openRSS(true);
 		});
 	}); //fetchAll().always
 	}); //$
+
+	/**
+	 * Messages
+	 */
+	if (browser.runtime.onMessageExternal)
+		browser.runtime.onMessageExternal.addListener(function(message) {
+		if (!message.hasOwnProperty('action')) return;
+		if (message.action === 'new-rss' && message.value) onExternalLink(message.value);
+	});
 
 	function onExternalLink(url) {
 		url = url.replace(/^feed:/i, 'http:');
@@ -192,23 +199,9 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		}
 	}
 
-	/**
-	 * Messages
-	 */
-	if (browser.runtime.onMessageExternal)
-		browser.runtime.onMessageExternal.addListener(function(message) {
-		if (!message.hasOwnProperty('action')) return;
-		if (message.action == 'new-rss' && message.value) onExternalLink(message.value);
-	});
-
-
-	var rssMimes = ['application/rss', 'application/rss+xml', 'application/atom+xml', 'application/atom', 'text/atom', 'text/atom+xml'],
-		xmlMimes = ['text/xml', 'application/xml'],
-		urlParts = /(new|feed|rss)/i;
-
 	// Capture raw feeds in Firefox and prevent embedded feed viewer.
 	// We need additional "webRequest", "webRequestBlocking", "<all_urls>" permissions only for that.
-	if (typeof InstallTrigger !== 'undefined') {
+	if (isFirefox) {
 		browser.webRequest.onHeadersReceived.addListener(
 			handleHeaders,
 			{
@@ -226,14 +219,18 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 				return arr[0];
 			}
 		}
-		return '';
+		return 'application/octet-stream';
 	}
+
+	var rssMimes = ['application/rss', 'application/rss+xml', 'application/atom+xml', 'application/atom', 'text/atom', 'text/atom+xml'],
+		xmlMimes = ['text/xml', 'application/xml'],
+		urlParts = /(new|feed|rss|atom)/i;
 
 	function handleHeaders(details) {
 		var contentType = getContentType(details.responseHeaders);
 		if (~rssMimes.indexOf(contentType) || (~xmlMimes.indexOf(contentType) && urlParts.test(details.url))) {
 			browser.tabs.remove(details.tabId);
-			return onExternalLink(details.url.replace(/[^-A-Za-z0-9+&@#/%?=~_|!:,.;\(\)]/, ''));
+			return onExternalLink(details.url.replace(/(?:data|javascript):.+/ig, ''));
 		}
 		return false;
 	}

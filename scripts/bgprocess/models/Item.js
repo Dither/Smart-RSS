@@ -16,7 +16,7 @@ define(['backbone'], function (BB) {
 			author: '<'+_T('NO_AUTHOR')+'>',
 			url: 'about:blank',
 			date: 0,
-			content: '&nbsp', // No content loaded
+			content: _T('NO_CONTENT') || '&nbsp', // No content
 			sourceID: -1,
 			unread: true,
 			visited: false,
@@ -31,16 +31,16 @@ define(['backbone'], function (BB) {
 				deleted: true,
 				visited: true,
 				unread: false,
-				'pinned': false,
-				'content': '',
-				'author': '',
-				'title': ''
+				pinned: false,
+				content: '',
+				author: '',
+				title: ''
 			});
 		},
 		_source: null,
 		getSource: function() {
 			if (!this._source) {
-				this._source = sources.findWhere({ id: this.get('sourceID')	}) || sourceJoker;
+				this._source = sources.findWhere({ id: this.get('sourceID') }) || sourceJoker;
 			}
 			return this._source;
 		},

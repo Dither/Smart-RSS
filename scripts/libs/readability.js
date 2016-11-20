@@ -198,7 +198,7 @@ var tagCounts = {
 	embeds = { __proto__: null, embed: true, object: true, iframe: true, audio: true, video: true, source: true, param: true },
 	goodAttributes = { __proto__: null, style: true, lang: true, src: true, href: true, alt: true, title: true, data: true, height: true, width: true, name: true, value: true, type: true, border: true, frameborder: true, colspan: true, rowspan: true, span: true, cite: true },
 	cleanConditionally = { __proto__: null, div: true, form: true, ol: true, table: true, ul: true },
-	unpackDivs = { __proto__: embeds, div: true, img: true, svg: true, figure: true, p: true }, // div>[single child] => [single child]
+	unpackDivs = { __proto__: embeds, div: true, img: true, svg: true, math:true, figure: true, p: true }, // div>[single child] => [single child]
 	noContent = { __proto__: formatTags, font: false, input: false, link: false, meta: false, span: false },
 	tagsToScore = { __proto__: null, p: true, pre: true, code: true, td: true },
 	formatTags = { __proto__: null, br: new Element('br'), hr: new Element('hr') },

@@ -22,7 +22,6 @@ define(['jquery'], function($) {
 				setPosition.call(this, e.clientX);
 				this.$el.css('flex-basis', Math.abs(e.clientX - this.el.offsetLeft + toLeft) );
 			}
-			
 			this.trigger('resize');
 		}
 	}
@@ -52,16 +51,9 @@ define(['jquery'], function($) {
 
 	function loadPosition(resetting) {
 		if (!this.resizer) return;
-
-		if (this.layout == 'vertical') {
-			setPosition.call(this, this.el.offsetTop + this.el.offsetHeight);
-		} else {
-			setPosition.call(this, this.el.offsetLeft + this.el.offsetWidth);
-		}
-
-		if (!resetting) {
-			resetPositions.call(this);
-		}
+		if (this.layout == 'vertical') setPosition.call(this, this.el.offsetTop + this.el.offsetHeight);
+		else setPosition.call(this, this.el.offsetLeft + this.el.offsetWidth);
+		if (!resetting) resetPositions.call(this);
 	}
 
 	function resetPositions() {
@@ -78,13 +70,9 @@ define(['jquery'], function($) {
 		resizer: null,
 		layout: 'horizontal',
 		enableResizing: function(layout, size) {
-
 			layout = this.layout = layout || 'horizontal';
 
-			if (size) {
-				this.$el.css('flex-basis', size + 'px');
-			}
-			
+			if (size) this.$el.css('flex-basis', size + 'px');
 
 			els.push(this);
 
@@ -105,7 +93,6 @@ define(['jquery'], function($) {
 				this.resizer.style.width = resizeWidth + 'px';
 			}
 
-			
 			loadPosition.call(this);
 			requestAnimationFrame(function() {
 				this.trigger('resize:enabled');

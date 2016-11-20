@@ -1,5 +1,5 @@
 <% if (typeof isLoading == 'undefined' || !isLoading) { %>
-	<img src="<%= favicon %>" class="source-icon" />
+	<img src="<%= favicon %>" class="source-icon" width="16" height="16" />
 <% } else { %>
 	<img src="/images/feedupdate.svg" class="source-icon" />
 <% } %>

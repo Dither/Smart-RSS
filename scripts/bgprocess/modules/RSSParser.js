@@ -2,7 +2,7 @@
  * @module BgProcess
  * @submodule modules/RSSParser
  */
-define(['md5'], function (CryptoJS) {
+define([], function () {
 
 	/**
 	 * RSS Parser
@@ -11,14 +11,14 @@ define(['md5'], function (CryptoJS) {
 	 * @extends Object
 	 */
 	function parseRSS(xml, sourceID, callback) {
-		var items = [];
+		var entries = [];
 
 		if (!callback) throw Error('No parseRSS callback specified');
-		if (!xml || !(xml instanceof XMLDocument)) return callback(items);
+		if (!xml || !(xml instanceof XMLDocument)) return callback(entries, sourceID);
 
 		var nodes = xml.querySelectorAll('item');
 		if (!nodes.length) nodes = xml.querySelectorAll('entry');
-		if (!nodes.length) callback(items);
+		if (!nodes.length) callback(entries, sourceID);
 
 		var title = getFeedTitle(xml);
 		var source = sources.findWhere({ id: sourceID });
@@ -31,7 +31,7 @@ define(['md5'], function (CryptoJS) {
 		var ttl = xml.querySelector('channel > ttl, feed > ttl, rss > ttl');
 		if (ttl && source.get('lastUpdate') == 0) {
 			ttl = parseInt(ttl.textContent, 10);
-			var vals = [300, 600, 1440, 10080];
+			var vals = [360, 720, 1440, 10080];
 			if (ttl > 10080) {
 				source.save({ updateEvery: 10080 });
 			} else if (ttl > 180) {
@@ -52,35 +52,58 @@ define(['md5'], function (CryptoJS) {
 			if (baseStr) source.save({ base: baseStr });
 		}
 
-
-		[].forEach.call(nodes, function(node) {
-			var link = rssGetLink(node);
-			items.push({
-				id: rssGetGuid(node) || link,
-				title: rssGetTitle(node),
-				url: link,
-				date: rssGetDate(node),
-				author: rssGetAuthor(node, title),
-				content: rssGetContent(node, true),
-				sourceID: sourceID,
-				unread: true,
-				deleted: false,
-				trashed: false,
-				visited: false,
-				pinned: false,
-				dateCreated: Date.now()
-			});
-
-			var last = items[items.length - 1];
-			last.oldId = last.id;
-			last.id = CryptoJS.MD5(last.sourceID + (last.id ? last.id : (last.title + last.date))).toString();
-
-			if (last.date == 0) last.date = Date.now();
+		Promise.all(Array.prototype.slice.call(nodes).map(function(node) {
+			var link = rssGetLink(node),
+				entry = {
+					id: rssGetGuid(node) || link,
+					title: rssGetTitle(node),
+					url: link,
+					date: rssGetDate(node),
+					author: rssGetAuthor(node, title),
+					content: rssGetContent(node, true),
+					sourceID: sourceID,
+					unread: true,
+					deleted: false,
+					trashed: false,
+					visited: false,
+					pinned: false,
+					dateCreated: Date.now()
+				};
+			return digest(entry.sourceID + (entry.id ? entry.id : (entry.title + entry.date))).then(function(hash) {
+					entry.id = hash;
+					if (!entry.date) entry.date = Date.now();
+					entries.push(entry);
+				});
+		})).then(function(){
+			callback(entries, sourceID);
 		});
-
-		callback(items);
 	}
 
+	function digest(str) {
+		// We transform the string into an arraybuffer.
+		var buffer = new TextEncoder("utf-8").encode(str);
+		return crypto.subtle.digest("SHA-1", buffer).then(function(hash) {
+			return hex(hash);
+		});
+	}
+
+	function hex(buffer) {
+		var hexCodes = [];
+		var view = new DataView(buffer);
+		for (var i = 0; i < view.byteLength; i += 4) {
+			// Using getUint32 reduces the number of iterations needed (we process 4 bytes each time)
+			var value = view.getUint32(i)
+			// toString(16) will give the hex representation of the number without padding
+			var stringValue = value.toString(16)
+			// We use concatenation and slice for padding
+			var padding = '00000000'
+			var paddedValue = (padding + stringValue).slice(-padding.length)
+			hexCodes.push(paddedValue);
+		}
+
+		// Join all the hex strings into one
+		return hexCodes.join("");
+	}
 
 	function rssGetGuid(node) {
 		if (!node) return false;

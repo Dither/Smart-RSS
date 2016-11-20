@@ -3,32 +3,32 @@ define(['jquery', 'underscore', 'helpers/stripTags', 'controllers/comm'], functi
 return {
 	global: {
 		default: {
-			title: _T('Unknown'),
+			title: 'Unknown',
 			fn: function() {
 				alert('no action');
 			}
 		},
 		hideOverlays: {
-			title: _T('Hide Overlays'),
+			title: 'Hide Overlays',
 			fn: function() {
 				comm.trigger('hide-overlays');
 			}
 		},
 		runTests: {
-			title: _T('Run tests (dev dependencies needed)'),
+			title: 'Run tests (dev dependencies needed',
 			fn: function() {
 				require(['../runtests']);
 			}
 		},
 		openOptions: {
-			title: _T('Options'),
+			title: 'Options',
 			icon: 'options.png',
 			fn: function() {
 				window.open('options.html');
 			}
 		},
 		report: {
-			title: _T('Report a problem'),
+			title: 'Report a problem',
 			icon: 'report.png',
 			fn: function() {
 				app.report();
@@ -40,7 +40,7 @@ return {
 			icon: 'reload.png',
 			title: _T('UPDATE_ALL'),
 			fn: function() {
-				bg.loader.downloadAllFeeds(true);
+				bg.loader.downloadFeeds(bg.sources.toArray(), true);
 			}
 		},
 		update: {
@@ -49,12 +49,12 @@ return {
 			fn: function() {
 				var s = require('views/feedList').selectedItems;
 				if (!s.length) return;
-				bg.loader.download(_.pluck(s, 'model'));
+				bg.loader.downloadFeeds(_.pluck(s, 'model'), true);
 			}
 		},
 		stopUpdate: {
 			icon: 'stop.png',
-			title: _T('Stop updating feeds'),
+			title: 'Stop updating feeds',
 			fn: function() {
 				bg.loader.abortDownloading();
 			}
@@ -86,13 +86,11 @@ return {
 			title: _T('REFETCH'),
 			fn: function() {
 				bg.loader.abortDownloading();
-
 				window.stop();
 
 				if (!confirm(_T('REFETCH_WARNING'))) return;
 
 				var s = require('views/feedList').getSelectedFeeds();
-
 				if (!s.length) return;
 
 				s.forEach(function(source) {
@@ -191,25 +189,25 @@ return {
 			}
 		},
 		focus: {
-			title: _T('Focus feeds'),
+			title: 'Focus feeds',
 			fn: function() {
 				app.setFocus('feeds');
 			}
 		},
 		selectNext: {
-			title: _T('Select next'),
+			title: 'Select next',
 			fn: function(e) {
 				require('views/feedList').selectNext(e);
 			}
 		},
 		selectPrevious: {
-			title: _T('Select previous'),
+			title: 'Select previous',
 			fn: function(e) {
 				require('views/feedList').selectPrev(e);
 			}
 		},
 		closeFolders: {
-			title: _T('Close folders'),
+			title: 'Close folders',
 			fn: function(e) {
 				var folders = $('.folder.opened');
 				if (!folders.length) return;
@@ -221,7 +219,7 @@ return {
 			}
 		},
 		openFolders: {
-			title: _T('Open folders'),
+			title: 'Open folders',
 			fn: function(e) {
 				var folders = $('.folder:not(.opened)');
 				if (!folders.length) return;
@@ -233,7 +231,7 @@ return {
 			}
 		},
 		toggleFolder: {
-			title: _T('Toggle folder'),
+			title: 'Toggle folder',
 			fn: function(e) {
 				e = e || {};
 				var cs = require('views/feedList').selectedItems;
@@ -243,7 +241,7 @@ return {
 			}
 		},
 		showArticles: {
-			title: _T('Show articles'),
+			title: 'Show articles',
 			fn: function(e) {
 				e = e || {};
 				var t = e.target || {};
@@ -282,7 +280,7 @@ return {
 			}
 		},
 		showAndFocusArticles: {
-			title: _T('Show and focus articles'),
+			title: 'Show and focus articles',
 			fn: function(e) {
 				e = e || {};
 				var cs = require('views/feedList').selectedItems;
@@ -308,10 +306,10 @@ return {
 				var list = require('views/articleList');
 				if (list.currentData.feeds.length) {
 					list.currentData.feeds.forEach(function(id) {
-						bg.loader.downloadSingleFeed(bg.sources.get(id));
+						bg.loader.downloadFeeds([bg.sources.get(id)]);
 					});
 				} else {
-					bg.loader.downloadAllFeeds(true); // true = force
+					bg.loader.downloadFeeds(bg.sources.toArray(), true); // true = force
 				}
 			}
 		},
@@ -378,13 +376,13 @@ return {
 			}
 		},
 		focusSearch: {
-			title: _T('Focus Search'),
+			title: 'Focus Search',
 			fn: function() {
 				$('input[type=search]').focus();
 			}
 		},
 		focus: {
-			title: _T('Focus Articles'),
+			title: 'Focus Articles',
 			fn: function() {
 				app.setFocus('articles');
 			}
@@ -396,7 +394,7 @@ return {
 				var articleList = app.articles.articleList;
 				if (!articleList.selectedItems || !articleList.selectedItems.length) return;
 				if (articleList.selectedItems.length > 10 && bg.settings.get('askOnOpening')) {
-					if (!confirm(_T('OPEN_TEN_WARN_A').replace('%s', articleList.selectedItems.length)))
+					if (!confirm(_T('OPEN_TEN_WARN').replace('%s', articleList.selectedItems.length)))
 						return;
 				}
 				articleList.selectedItems.forEach(function(item) {
@@ -405,7 +403,7 @@ return {
 			}
 		},
 		oneFullArticle: {
-			title: _T('One full article'),
+			title: 'One full article',
 			fn: function(e) {
 				e = e || {};
 				var articleList = app.articles.articleList;
@@ -480,7 +478,7 @@ return {
 			}
 		},
 		selectAll: {
-			title: _T('Select All'),
+			title: 'Select All',
 			fn: function() {
 				var articleList = require('views/articleList');
 				articleList.$el.find('.selected').removeClass('selected');
@@ -508,7 +506,7 @@ return {
 			}
 		},
 		spaceThrough: {
-			title: _T('Space Through'),
+			title: 'Space Through',
 			fn: function() {
 				var articleList = require('views/articleList');
 				if (!articleList.selectedItems || !articleList.selectedItems.length) return;
@@ -516,28 +514,28 @@ return {
 			}
 		},
 		pageUp: {
-			title: _T('Page up'),
+			title: 'Page up',
 			fn: function() {
 				var el = require('views/articleList').el;
 				el.scrollByPages(-1);
 			}
 		},
 		pageDown: {
-			title: _T('Page down'),
+			title: 'Page down',
 			fn: function() {
 				var el = require('views/articleList').el;
 				el.scrollByPages(1);
 			}
 		},
 		scrollToBottom: {
-			title: _T('Scroll to bottom'),
+			title: 'Scroll to bottom',
 			fn: function() {
 				var el = require('views/articleList').el;
 				el.scrollTop = el.scrollHeight;
 			}
 		},
 		scrollToTop: {
-			title: _T('Scroll to top'),
+			title: 'Scroll to top',
 			fn: function() {
 				var el = require('views/articleList').el;
 				el.scrollTop = 0;
@@ -549,10 +547,9 @@ return {
 			fn: function() {
 				var contentView = require('views/contentView');
 				var articleList = require('views/articleList');
-				if (!articleList.selectedItems.length) {
-					app.actions.execute('content:download');
-					return;
-				}
+				if (!articleList.selectedItems.length)
+					return app.actions.execute('content:download');
+
 				var tpl = contentView.downloadTemplate;
 
 				var list = {};
@@ -588,11 +585,11 @@ return {
 				reader.onload = function() {
 					window.open(this.result.replace('data:text/html;', 'data:text/html;charset=utf-8;'));
 				};
-				/*var url = URL.createObjectURL(blob);
+				/*
+				var url = URL.createObjectURL(blob);
 				window.open(url);
-				setTimeout(function() {
-					URL.revokeObjectURL(url);
-				}, 30000);*/
+				setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
+				*/
 			}
 		},
 		print: {
@@ -650,39 +647,39 @@ return {
 			}
 		},
 		focus: {
-			title: _T('Focus Article'),
+			title: 'Focus Article',
 			fn: function() {
 				app.setFocus('content');
 			}
 		},
 		focusSandbox: {
-			title: _T('Focus Article'),
+			title: 'Focus Article',
 			fn: function() {
 				app.content.sandbox.el.focus();
 			}
 		},
 		scrollDown: {
-			title: _T('Scroll down'),
+			title: 'Scroll down',
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				cw.scrollBy(0, 40);
 			}
 		},
 		scrollUp: {
-			title: _T('Scroll up'),
+			title: 'Scroll up',
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				cw.scrollBy(0, -40);
 			}
 		},
 		spaceThrough: {
-			title: _T('Space trough'),
+			title: 'Space trough',
 			fn: function() {
 				require('views/contentView').handleSpace();
 			}
 		},
 		pageUp: {
-			title: _T('Page up'),
+			title: 'Page up',
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				var d = $('iframe').get(0).contentWindow.document;
@@ -690,7 +687,7 @@ return {
 			}
 		},
 		pageDown: {
-			title: _T('Page down'),
+			title: 'Page down',
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				var d = $('iframe').get(0).contentWindow.document;
@@ -698,7 +695,7 @@ return {
 			}
 		},
 		scrollToBottom: {
-			title: _T('Scroll to bottom'),
+			title: 'Scroll to bottom',
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				var d = $('iframe').get(0).contentWindow.document;
@@ -706,7 +703,7 @@ return {
 			}
 		},
 		scrollToTop: {
-			title: _T('Scroll to top'),
+			title: 'Scroll to top',
 			fn: function() {
 				var cw = $('iframe').get(0).contentWindow;
 				cw.scrollTo(0, 0);
