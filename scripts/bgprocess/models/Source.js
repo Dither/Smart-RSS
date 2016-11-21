@@ -13,12 +13,11 @@ define(['backbone'], function (BB) {
 	var Source = BB.Model.extend({
 		defaults: {
 			title: '',
-			favicon: '',
-			url: 'about:blank',
+			url: '0.0.0.0',
 			base: '',
 			updateEvery: 180, // in minutes
 			lastUpdate: 0,
-			count: 0, // unread
+			count: 0, // # unread
 			countAll: 0,
 			username: '',
 			password: '',
@@ -39,24 +38,16 @@ define(['backbone'], function (BB) {
 			if (str.indexOf('enc:') != 0) return str;
 
 			var dec = '';
-			for (var i=4; i<str.length; i++) {
-				dec += String.fromCharCode(str.charCodeAt(i) - 13);
-			}
+			for (var i=4; i<str.length; i++) dec += String.fromCharCode(str.charCodeAt(i) - 13);
 			return dec;
 		},
-		setPass: function(str) {
-			if (!str) {
-				this.save('password', '');
-				return;
-			}
 
+		setPass: function(str) {
+			if (!str) return this.save('password', '');
 			var enc = 'enc:';
-			for (var i=0; i<str.length; i++) {
-				enc += String.fromCharCode(str.charCodeAt(i) + 13);
-			}
+			for (var i=0; i<str.length; i++) enc += String.fromCharCode(str.charCodeAt(i) + 13);
 			this.set('password', enc);
 		}
-
 	});
 
 	return Source;

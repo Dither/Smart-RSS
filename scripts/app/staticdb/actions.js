@@ -94,10 +94,10 @@ return {
 				if (!s.length) return;
 
 				s.forEach(function(source) {
-					source.set('favicon', '');
-					bg.items.where({ sourceID: source.get('id') }).forEach(function(item) {
-						if (item.get('pinned') !== true)
-							item.destroy();
+					var sID = source.get('id');
+					bg.favicons.where({ sourceID: sID }).forEach(function(item){ item.destroy(); });
+					bg.items.where({ sourceID: sID }).forEach(function(item) {
+						if (item.get('pinned') !== true) item.destroy();
 					});
 				});
 

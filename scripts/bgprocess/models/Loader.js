@@ -38,14 +38,15 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 
 		sourcesArr = flattenTree(sourcesArr).filter(function(src) {
 			if (src instanceof Source) {
-				var url = src.get('url');
+				var url = src.get('url'), sID = src.get('id');
 				if (/^about:/i.test(url)) return false;
 				if (loader.currentSource === src ||
 				    loader.sourcesToLoad.indexOf(src) >= 0)
 					return false;
-				if (!src.get('favicon')) {
+				if (!favicons.where({ sourceID: sID }).length) {
 					new toDataURI.favicon(url, function(_url) {
-						src.set('favicon', _url);
+						favicons.create({data: _url, sourceID: sID});
+						favicons.trigger('update', { ok: true });
 					});
 				}
 				if (!force) {

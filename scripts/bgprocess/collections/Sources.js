@@ -2,7 +2,7 @@
  * @module BgProcess
  * @submodule collections/Sources
  */
-define(['backbone', 'models/Source', 'preps/indexeddb'], function (BB, Source) {
+define(['backbone', 'models/Source', 'backboneDB'], function (BB, Source) {
 
 	/**
 	 * Collection of feed modules
@@ -12,7 +12,7 @@ define(['backbone', 'models/Source', 'preps/indexeddb'], function (BB, Source) {
 	 */
 	var Sources = BB.Collection.extend({
 		model: Source,
-		localStorage: new Backbone.LocalStorage('sources-backbone'),
+		browserStorage: new Backbone.BrowserStorage('sources-backbone'),
 		comparator: function(a, b) {
 			var t1 = (a.get('title') || '').trim().toLowerCase();
 			var t2 = (b.get('title') || '').trim().toLowerCase();

@@ -2,7 +2,7 @@
  * @module BgProcess
  * @submodule collections/Items
  */
-define(['backbone', 'models/Item', 'preps/indexeddb'], function (BB, Item) {
+define(['backbone', 'models/Item', 'preps/storage'], function (BB, Item) {
 
 	function getS(val) {
 		return String(val).toLowerCase();

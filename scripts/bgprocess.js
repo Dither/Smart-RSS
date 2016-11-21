@@ -16,7 +16,7 @@ require.config({
 		jquery: '../libs/jquery.min',
 		underscore: '../libs/underscore.min',
 		backbone: '../libs/backbone.min',
-		backboneDB: '../libs/backbone.indexDB',
+		backboneDB: '../libs/backbone.dbStore',
 		readability: '../libs/readability',
 		text: '../text',
 		domReady: '../domReady',
@@ -36,20 +36,34 @@ require.config({
  */
 
 browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
- 	if (message.action === 'get-tab-id') {
- 		sendResponse({
- 			action: 'response-tab-id',
- 			value: sender.tab.id
- 		});
- 	}
+	if (message.action === 'get-tab-id')
+		sendResponse({ action: 'response-tab-id', value: sender.tab.id });
 });
 
 browser.runtime.onConnect.addListener(function(port) {
- 	port.onDisconnect.addListener(function(port) {
- 		if (sources && port)
- 			sources.trigger('clear-events', port.sender.tab.id);
- 	});
+	port.onDisconnect.addListener(function(_port) {
+		if (sources && _port)
+			sources.trigger('clear-events', _port.sender.tab.id);
+	});
 });
+
+function dumpStore(type) {
+	chrome.storage[type || 'sync'].get(function(data) { window.aaa = data;
+		console.log(data, 'Length:', JSON.stringify(data).length);
+	});
+}
+
+function closeRSS(callback) {
+	var url = browser.runtime.getURL('reader.html');
+	browser.tabs.query({ /*url: url*/ }, function(tabs) {
+		for (var i = tabs.length; i-- ;) {
+			if (tabs[i].url === url) {
+				browser.tabs.remove(tabs[i].id);
+			}
+		}
+		callback();
+	});
+}
 
 requirejs(['bg'], function(bg) {
 	// bg started

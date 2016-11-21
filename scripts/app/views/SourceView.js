@@ -66,10 +66,14 @@ function(BB, TopView, contextMenus) {
 
 			this.setTitle(this.model.get('count'), this.model.get('countAll'));
 
-			this.$el.html(this.template(this.model.toJSON()));
+			var sID = this.model.get('id'),
+				favicon = '', favicons = bg.favicons.where({ sourceID: sID });
+
+			if (favicons.length) favicon = favicons[0].get('data');
+			this.$el.html(this.template(_.extend(this.model.toJSON(), {favicon: favicon})));
 			this.renderInterval = null;
 
-			if (bg.sourceToFocus == this.model.get('id')) {
+			if (bg.sourceToFocus === sID) {
 				setTimeout(function() {
 					app.trigger('focus-feed', bg.sourceToFocus);
 					bg.sourceToFocus = null;

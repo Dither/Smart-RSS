@@ -147,6 +147,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 			folders: bg.folders.toJSON(),
 			sources: bg.sources.toJSON(),
 			items: bg.items.toJSON(),
+			favicons: bg.favicons.toJSON(),
 		};
 
 		$('#smart-exported').attr('href', '#');
@@ -257,7 +258,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 						bg.loader.downloadFeeds(bg.sources.toArray(), true);
 					});
 				} else if (e.data.action == 'message'){
-					$('#smart-imported').html(e.data.value);
+					if (e.data.value == 1) $('#smart-imported').html(_T('IMPORT_WRITING'));
 				}
 			};
 
@@ -268,17 +269,24 @@ browser.runtime.getBackgroundPage(function(bg) {
 					text: _T('IMPORT_ERROR') + e.message,
 					confirmButton: _T("OK")
 				});
-			}
+			};
+
+			var f = data.folders;
+			var s = data.sources;
+			browser.storage.sync.get('folders-backbone', function(data) {
+				if (!data['sources-backbone']) data['folders-backbone'] = {};
+				for (var i=0, j=f.length; i<j; i++) data['folders-backbone'][f[i].id] = f[i];
+				browser.storage.sync.set(data);
+			});
+
+			browser.storage.sync.get('sources-backbone', function(data) {
+				if (!data['sources-backbone']) data['sources-backbone'] = {};
+				for (var i=0, j=s.length; i<j; i++) data['sources-backbone'][s[i].id] = s[i];
+				browser.storage.sync.set(data);
+			});
 		}
 
-		var url = browser.runtime.getURL('reader.html');
-		browser.tabs.query({ /*url: url*/ }, function(tabs) {
-			for (var i = tabs.length; i-- ;) {
-				if (tabs[i].url === url) {
-					browser.tabs.remove(tabs[i].id);
-				}
-			}
-
+		bg.closeRSS(function() {
 			// wait for clear events to happen
 			setTimeout(function() {
 				reader.readAsText(file);
@@ -341,6 +349,8 @@ browser.runtime.getBackgroundPage(function(bg) {
 			confirm: function() {
 				browser.alarms.clearAll();
 				bg.indexedDB.deleteDatabase('backbone-indexeddb');
+				//browser.storage.local.clear();
+				browser.storage.sync.clear();
 				localStorage.clear();
 				browser.runtime.reload();
 				location.reload();

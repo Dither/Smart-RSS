@@ -5,9 +5,9 @@ define([
 	'jquery',
 	'modules/Animation', 'models/Settings', 'models/Info', 'models/Source',
 	'collections/Sources', 'collections/Items', 'collections/Folders', 'models/Loader', 'collections/Logs',
-	'models/Folder', 'models/Item', 'collections/Toolbars'
+	'models/Folder', 'models/Item', 'collections/Toolbars', 'collections/Favicons'
 ],
-function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader, Logs, Folder, Item, Toolbars) {
+function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader, Logs, Folder, Item, Toolbars, Favicons) {
 
 	/**
 	 * Update animations
@@ -37,6 +37,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	window.sources = new Sources();
 	window.items = new Items();
 	window.folders = new Folders();
+	window.favicons = new Favicons();
 
 	/**
 	 * This is used for when new feed is subsribed and smart rss tab is opened to focus the newly added feed
@@ -80,6 +81,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		deferreds.push(  sources.fetch({ silent: true }) );
 		deferreds.push(    items.fetch({ silent: true }) );
 		deferreds.push( toolbars.fetch({ silent: true }) );
+		deferreds.push( favicons.fetch({ silent: true }) );
 		deferreds.push( settingsDef = settings.fetch({ silent: true }) );
 
 		fetchOne(deferreds, allDef);

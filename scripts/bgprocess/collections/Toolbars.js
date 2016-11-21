@@ -2,10 +2,8 @@
  * @module BgProcess
  * @submodule collections/Toolbars
  */
-define([
-	'backbone', 'models/Toolbar', 'staticdb/defaultToolbarItems', 'preps/indexeddb'
-],
-function (BB, Toolbar, defaultToolbarItems) {
+define(['backbone', 'models/Toolbar', 'staticdb/defaultToolBar', 'backboneDB'],
+function (BB, Toolbar, defaultToolbar) {
 
 	function getDataByRegion(data, region) {
 		if (!Array.isArray(data)) return null;
@@ -26,23 +24,19 @@ function (BB, Toolbar, defaultToolbarItems) {
 	 */
 	var Toolbars = BB.Collection.extend({
 		model: Toolbar,
-		localStorage: new Backbone.LocalStorage('toolbars-backbone'),
+		browserStorage: new Backbone.BrowserStorage('toolbars-backbone'),
 		parse: function(data) {
-			if (!data.length) return defaultToolbarItems;
+			if (!data.length) return defaultToolbar;
 
-			parsedData = defaultToolbarItems;
+			parsedData = defaultToolbar;
 			if (!Array.isArray(parsedData)) return [];
 
 			for (var i=0; i<parsedData.length; i++) {
-
 				var fromdb = getDataByRegion(data, parsedData[i].region);
 				if (!fromdb || typeof fromdb != 'object') continue;
-
-				if (fromdb.version && fromdb.version >= parsedData[i].version) {
-					parsedData[i] = fromdb;
-				}
+				if (fromdb.version && fromdb.version >= parsedData[i].version) parsedData[i] = fromdb;
 			}
-			
+
 			return parsedData;
 		}
 	});
