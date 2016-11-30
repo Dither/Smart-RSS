@@ -24,7 +24,6 @@ function (BB, Toolbar, defaultToolbar) {
 	 */
 	var Toolbars = BB.Collection.extend({
 		model: Toolbar,
-		browserStorage: new Backbone.BrowserStorage('toolbars-backbone'),
 		parse: function(data) {
 			if (!data.length) return defaultToolbar;
 
@@ -38,7 +37,8 @@ function (BB, Toolbar, defaultToolbar) {
 			}
 
 			return parsedData;
-		}
+		},
+		browserStorage: new BB.BrowserStorage('toolbars-backbone', 'region', 'local')
 	});
 
 	return Toolbars;

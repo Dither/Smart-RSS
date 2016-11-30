@@ -1,6 +1,6 @@
 if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = chrome;
 
-var _T = function () {
+_T = function () {
 	//console.log(arguments);
 	try {
 		return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
@@ -14,6 +14,8 @@ require.config({
 	waitSeconds: 0,
 	paths: {
 		jquery: '../libs/jquery.min',
+		jqueryConfirm: '../libs/jquery.confirm',
+		jqueryModal: '../libs/jquery.modal',
 		underscore: '../libs/underscore.min',
 		punycode: '../libs/punycode',
 		backbone: '../libs/backbone.min',
@@ -25,6 +27,7 @@ require.config({
 	},
 	shim: {
 		jquery: { exports: '$' },
+		jqueryConfirm: { deps: ['jquery', 'jqueryModal'] },
 		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },
 		underscore: { exports: '_' }/*,
 		mocha: { exports: 'mocha' }*/

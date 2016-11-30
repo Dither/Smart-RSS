@@ -1,4 +1,4 @@
-define(['jquery', 'underscore', 'helpers/stripTags', 'controllers/comm'], function($, _, stripTags, comm) {
+define(['jquery', 'underscore', 'helpers/stripTags', 'controllers/comm', 'jqueryConfirm'], function($, _, stripTags, comm) {
 
 return {
 	global: {
@@ -88,37 +88,44 @@ return {
 				bg.loader.abortDownloading();
 				window.stop();
 
-				if (!confirm(_T('REFETCH_WARNING'))) return;
+				$.confirm({
+					text: _T('REFETCH_WARNING'),
+					confirm: function() {
+						var s = require('views/feedList').getSelectedFeeds();
+						if (!s.length) return;
 
-				var s = require('views/feedList').getSelectedFeeds();
-				if (!s.length) return;
+						s.forEach(function(source) {
+							var sID = source.get('id');
+							bg.favicons.where({ sourceID: sID }).forEach(function(item){ item.destroy(); });
+							bg.items.where({ sourceID: sID }).forEach(function(item) {
+								if (item.get('pinned') !== true) item.destroy();
+							});
+						});
 
-				s.forEach(function(source) {
-					var sID = source.get('id');
-					bg.favicons.where({ sourceID: sID }).forEach(function(item){ item.destroy(); });
-					bg.items.where({ sourceID: sID }).forEach(function(item) {
-						if (item.get('pinned') !== true) item.destroy();
-					});
+						app.actions.execute('feeds:update');
+					}
 				});
-
-				app.actions.execute('feeds:update');
 			}
 		},
 		delete: {
 			icon: 'delete.png',
 			title: _T('DELETE'),
 			fn: function() {
-				if (!confirm(_T('REALLY_DELETE'))) return;
+				$.confirm({
+					text: _T('REALLY_DELETE'),
+					confirm: function() {
+						var feeds = require('views/feedList').getSelectedFeeds();
+						var folders = require('views/feedList').getSelectedFolders();
 
-				var feeds = require('views/feedList').getSelectedFeeds();
-				var folders = require('views/feedList').getSelectedFolders();
+						feeds.forEach(function(feed) {
+							bg.favicons.where({ sourceID: feed.id }).forEach(function(item){ item.destroy(); });
+							feed.destroy();
+						});
 
-				feeds.forEach(function(feed) {
-					feed.destroy();
-				});
-
-				folders.forEach(function(folder) {
-					folder.destroy();
+						folders.forEach(function(folder) {
+							folder.destroy();
+						});
+					}
 				});
 			}
 		},
@@ -146,46 +153,55 @@ return {
 			icon: 'add.png',
 			title: _T('ADD_RSS_SOURCE'),
 			fn: function() {
-				var url = (prompt(_T('RSS_FEED_URL')) || '').trim();
-				if (!url)  return;
+				$.prompt({
+					text: _T('RSS_FEED_URL'),
+					confirm: function(btn, url) {
+						if (!url)  return;
 
-				var folderID = 0;
-				var list = require('views/feedList');
-				if (list.selectedItems.length && list.selectedItems[0].$el.hasClass('folder')) {
-					var fid = list.selectedItems[0].model.get('id');
-					// make sure source is not added to folder which is not in db
-					if (bg.folders.get(fid)) {
-						folderID = fid;
+						var folderID = 0;
+						var list = require('views/feedList');
+						if (list.selectedItems.length && list.selectedItems[0].$el.hasClass('folder')) {
+							var fid = list.selectedItems[0].model.get('id');
+							// make sure source is not added to folder which is not in db
+							if (bg.folders.get(fid)) {
+								folderID = fid;
+							}
+						}
+
+						url = app.fixURL(url);
+						var duplicate = bg.sources.findWhere({ url: url });
+
+						if (!duplicate) {
+							var newFeed = bg.sources.create({
+								title: url,
+								url: url,
+								updateEvery: 180,
+								fulltextEnable: 0,
+								folderID: folderID
+							}, { wait: true });
+							app.trigger('focus-feed', newFeed.get('id'));
+						} else {
+							app.trigger('focus-feed', duplicate.get('id'));
+						}
 					}
-				}
+				});
 
-				url = app.fixURL(url);
-				var duplicate = bg.sources.findWhere({ url: url });
-
-				if (!duplicate) {
-					var newFeed = bg.sources.create({
-						title: url,
-						url: url,
-						updateEvery: 180,
-						fulltextEnable: 0,
-						folderID: folderID
-					}, { wait: true });
-					app.trigger('focus-feed', newFeed.get('id'));
-				} else {
-					app.trigger('focus-feed', duplicate.get('id'));
-				}
 			}
 		},
 		addFolder: {
 			icon: 'add_folder.png',
 			title: _T('NEW_FOLDER'),
 			fn: function() {
-				var title = (prompt(_T('FOLDER_NAME') + ': ') || '').trim();
-				if (!title) return;
+				$.prompt({
+					text: _T('FOLDER_NAME') + ': ',
+					confirm: function(btn, title) {
+						if (!title) return;
 
-				bg.folders.create({
-					title: title
-				}, { wait: true });
+						bg.folders.create({
+							title: title
+						}, { wait: true });
+					}
+				});
 			}
 		},
 		focus: {
@@ -394,12 +410,19 @@ return {
 				var articleList = app.articles.articleList;
 				if (!articleList.selectedItems || !articleList.selectedItems.length) return;
 				if (articleList.selectedItems.length > 10 && bg.settings.get('askOnOpening')) {
-					if (!confirm(_T('OPEN_TEN_WARN').replace('%s', articleList.selectedItems.length)))
-						return;
+					$.confirm({
+						text: _T('OPEN_TEN_WARN').replace('%s', articleList.selectedItems.length),
+						confirm: function() {
+							articleList.selectedItems.forEach(function(item) {
+								browser.tabs.create({ url: stripTags(item.model.get('url')), active: !e.shiftKey });
+							});
+						}
+					});
+				} else {
+					articleList.selectedItems.forEach(function(item) {
+						browser.tabs.create({ url: stripTags(item.model.get('url')), active: !e.shiftKey });
+					});
 				}
-				articleList.selectedItems.forEach(function(item) {
-					browser.tabs.create({ url: stripTags(item.model.get('url')), active: !e.shiftKey });
-				});
 			}
 		},
 		oneFullArticle: {
@@ -463,13 +486,16 @@ return {
 						}
 					});
 				} else if (articleList.currentData.name === 'all-feeds') {
-					if (confirm(_T('MARK_ALL_QUESTION'))) {
-						bg.items.forEach(function(item) {
-							if (item.get('unread') === true) {
-								item.save({ unread: false, visited: true });
-							}
-						});
-					}
+					$.confirm({
+						text: _T('MARK_ALL_QUESTION'),
+						confirm: function() {
+							bg.items.forEach(function(item) {
+								if (item.get('unread') === true) {
+									item.save({ unread: false, visited: true });
+								}
+							});
+						}
+					});
 				} else if (articleList.currentData.filter) {
 					bg.items.where(articleList.specialFilter).forEach(function(item) {
 						item.save({ unread: false, visited: true });
@@ -623,19 +649,32 @@ return {
 				askRmPinned = bg.settings.get('askRmPinned')
 				if (e.shiftKey) {
 					if (contentView.model.get('pinned') && askRmPinned && askRmPinned != 'none') {
-						if (!confirm(_T('PIN_QUESTION').replace('%s', contentView.model.escape('title')))) return;
+						$.confirm({
+							text: _T('PIN_QUESTION').replace('%s', contentView.model.escape('title')),
+							confirm: function() {
+								contentView.model.markAsDeleted();
+							}
+						});
+					} else {
+						contentView.model.markAsDeleted();
 					}
-
-					contentView.model.markAsDeleted();
 				} else {
 					if (contentView.model.get('pinned') && askRmPinned === 'all') {
-						if (!confirm(_T('PIN_QUESTION').replace('%s', contentView.model.escape('title')))) return;
+						$.confirm({
+							text: _T('PIN_QUESTION').replace('%s', contentView.model.escape('title')),
+							confirm: function() {
+								contentView.model.save({
+									trashed: true,
+									visited: true
+								});
+							}
+						});
+					} else {
+						contentView.model.save({
+							trashed: true,
+							visited: true
+						});
 					}
-
-					contentView.model.save({
-						trashed: true,
-						visited: true
-					});
 				}
 			}
 		},

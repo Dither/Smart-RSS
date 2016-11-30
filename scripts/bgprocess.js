@@ -1,6 +1,6 @@
 if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = chrome;
 
-var _T = function () {
+_T = function () {
 	//console.log(arguments);
 	try {
 		return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
@@ -16,7 +16,10 @@ require.config({
 		jquery: '../libs/jquery.min',
 		underscore: '../libs/underscore.min',
 		backbone: '../libs/backbone.min',
-		backboneDB: '../libs/backbone.dbStore',
+		digest: '../libs/digest',
+		guid: '../libs/guid',
+		promIDB: '../libs/promIDB',
+		backboneDB: '../libs/backbone.db',
 		readability: '../libs/readability',
 		text: '../text',
 		domReady: '../domReady',
@@ -24,9 +27,9 @@ require.config({
 	},
 	shim: {
 		jquery: { exports: '$' },
-		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },
-		backboneDB: { deps: ['backbone'] },
 		underscore: { exports: '_' },
+		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },
+		backboneDB: { deps: ['guid', 'backbone', 'promIDB'] },
 		readability: { exports: 'Readability' }
 	}
 });

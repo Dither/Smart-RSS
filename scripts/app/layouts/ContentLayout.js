@@ -35,6 +35,8 @@ function ($, Layout, ToolbarView, contentView, SandboxView, OverlayView, LogView
 				this.attach('log', new LogView() );
 				this.attach('overlay', new OverlayView() );
 
+				app.trigger('content-layout-ready');
+
 				this.listenTo(comm, 'hide-overlays', this.hideOverlay);
 			});
 

@@ -148,6 +148,12 @@
 	"EXPORT": { "message": "Сохранить" },
 	"IMPORT_GROUP": { "message": "Импорт" },
 	"IMPORT": { "message": "Загрузить" },
+	"SYNC": { "message": "Синхронизация" },
+	"SYNC_ALL": { "message": "Синхронизировать данные расширения:" },
+	"SYNC_DATA_OUT": { "message": "Отправить" },
+	"SYNC_DATA_IN": { "message": "Получить" },
+	"SYNC_DATA_AUTO": { "message": "Авто" },
+	"SYNC_DATA_MANUAL": { "message": "Вручную" },
 	"CLEAR": { "message": "Сброс данных" },
 	"CLEAR_ALL": { "message": "Удалить ВСЕ данные расширения:" },
 	"CLEAR_DATA": { "message": "!!Сброс!!" },
@@ -197,6 +203,7 @@
 	"TITLE_USER_SOUND": { "message": "Выберите звуковой файл." },
 	"TITLE_SMART": { "message": "SMART - собственный формат расширения, позволяющий сохранить/восстановить как рассылки, так и сами новости." },
 	"TITLE_OPML": { "message": "OPML - формат списка рассылок, совместимый с Opera 12." },
+	"TITLE_SYNC_DATA": { "message": "Опция синхронизации данных раширения между браузерами." },
 	"TITLE_CLEAR_ALL": { "message": "Данное действие удалит все рассылки вместе с сохранёнными новостями." },
 
 	"SELECT_AUDIO": { "message": "Пожалуйста, выберите аудио-файл!" },
@@ -213,5 +220,6 @@
 
 	"NO_TITLE": { "message": "Без заголовка" },
 	"NO_AUTHOR": { "message": "Без автора" },
-	"OPEN_TEN_WARN": { "message": "Вы точно хотите открыть %s новостей?" }
+	"OPEN_TEN_WARN": { "message": "Вы точно хотите открыть %s новостей?" },
+	"NO_CONTENT": { "message": "&nbsp;" }
 }

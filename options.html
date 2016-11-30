@@ -6,8 +6,8 @@
 	<link rel="stylesheet" type="text/css" href="styles/options.css">
 	<link rel="stylesheet" type="text/css" href="styles/modals.css">
 	<script src="scripts/libs/jquery.min.js"></script>
-	<script src="scripts/libs/jquery.confirm.js"></script>
 	<script src="scripts/libs/jquery.modal.js"></script>
+	<script src="scripts/libs/jquery.confirm.js"></script>
 	<script src="scripts/options/options.js"></script>
 </head>
 <body>
@@ -223,6 +223,20 @@
 			<span class="selectLabel import-opml">OPML:</span>
 			<input type="file" id="import-opml" accept=".opml,|*/*">
 			<span id="opml-imported"></span>
+		</label>
+	</div>
+</section>
+
+<section class="hidden">
+	<h3 class="section-header sync"></h3>
+	<div class="settings-row learn-more" title="TITLE_SYNC_DATA">
+		<label class="web-content-select-label">
+			<span class="selectLabel sync-all"></span>
+			<button id="sync-data-out"></button>
+			<button id="sync-data-in"></button>
+			<button id="sync-data-auto"></button>
+			<button id="sync-data-manual" class="hidden" disabled></button>
+			<span id="data-synced"></span>
 		</label>
 	</div>
 </section>

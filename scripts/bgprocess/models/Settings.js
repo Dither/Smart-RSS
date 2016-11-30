@@ -61,7 +61,7 @@ define(['backbone', 'backboneDB'], function (BB) {
 		 * @type Backbone.BrowserStorage
 		 * @default *settings-backbone*
 		 */
-		browserStorage: new Backbone.BrowserStorage('settings-backbone')
+		browserStorage: new BB.BrowserStorage('settings-backbone', 'id', 'local')
 	});
 
 	return Settings;

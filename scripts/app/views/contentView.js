@@ -27,13 +27,13 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		/**
 		 * Content view template
 		 * @property template
-		 * @default ./templates/header.html
+		 * @default ./templates/header.txt
 		 * @type Function
 		 */
 		template: _.template(Locale.translateHTML(tplHeader)),
 
 		/**
-		 * Template for downlaoding an article
+		 * Template for downloading an article
 		 * @property downloadTemplate
 		 * @default ./templates/download.html
 		 * @type Function
@@ -55,9 +55,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 */
 		handlePinClick: function(e) {
 			$(e.currentTarget).toggleClass('pinned');
-			this.model.save({
-				pinned: $(e.currentTarget).hasClass('pinned')
-			});
+			this.model.save({ pinned: $(e.currentTarget).hasClass('pinned') });
 		},
 
 		/**
@@ -76,16 +74,22 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 * @triggered when content view is attached to DOM
 		 */
 		handleAttached: function() {
-			app.on('select:article-list', function(data) {
-				this.handleNewSelected(bg.items.findWhere({ id: data.value }));
-			}, this);
+			app.on('content-layout-ready', function() {
+				app.on('select:article-list', function(data) {
+					this.handleNewSelected(bg.items.findWhere({ id: data.value }));
+				}, this);
 
-			app.on('space-pressed', this.handleSpace, this);
+				app.on('space-pressed', this.handleSpace, this);
 
-			app.on('no-items:article-list', function() {
-				if (this.renderID) clearTimeout(this.renderID);
-				this.model = null;
-				this.hide();
+				app.on('no-items:article-list', function() {
+					clearTimeout(this.renderID);
+					this.model = null;
+					this.hide();
+				}, this);
+
+				this.sandbox = app.content.sandbox;
+				this.frame = this.sandbox.el;
+				this.handleScroll(this.frame);
 			}, this);
 		},
 
@@ -95,19 +99,60 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 * @triggered when space is pressed in middle column
 		 */
 		handleSpace: function() {
-			var cw = $('iframe').get(0).contentWindow;
-			var d = $('iframe').get(0).contentWindow.document;
-			if (d.documentElement.clientHeight + $(d.body).scrollTop() >= d.body.offsetHeight ) {
-				app.trigger('give-me-next');
+			if (!this.enableSpaceProcessing) return;
+			var cw = this.frame.contentWindow;
+			var d = cw.document.scrollingElement;
+			if (cw.document.documentElement.clientHeight + d.scrollTop >= d.offsetHeight ) {
+				app.actions.execute('articles:markAndNextUnread');
 			} else {
-				cw.scrollBy(0, d.documentElement.clientHeight * 0.85);
+				cw.scrollBy(0, cw.document.documentElement.clientHeight * 0.85);
 			}
 		},
 
 		/**
-		 * Unbinds all listeners to bg process
+		 * Next unread article or previous article
+		 * @method handleScroll
+		 * @triggered when scrolled down after scrollbar reached the end or up on beginning of content
+		 */
+		handleScroll: function(doc) {
+			var that = this,
+				ddead = 700; // TODO: move to settings // height of the deadzone after scroll-end
+
+			doc.addEventListener("wheel", function onwheel(event) {
+				if (!that.enableScrollPocessing) return;
+
+				var dc = doc.contentDocument,
+					d = dc.scrollingElement,
+					scrolly = event.deltaY, // delta of current scroll
+					dy = dc.defaultView.scrollY, // entirety of current scroll
+					dbottom = Math.max(0, d.offsetHeight - (dc.documentElement.clientHeight + d.scrollTop)); // distance to the page's bottom
+
+				switch (event.deltaMode) {
+				  case 1:
+					scrolly *= 40; // scrolled in line units
+					break;
+				  case 2:
+					scrolly *= 800; // scrolled in page units
+					break;
+				}
+
+				//console.log('dbottom',dbottom,'delta',that.delta, 'dy',dy, 'scrolly',scrolly);
+
+				if ((dbottom === 0) || (dy === 0)) that.delta += scrolly;
+				if (((dy === 0 && that.delta > 0) || (dbottom === 0 && that.delta < 0)) && (dy !== dbottom)) {
+					that.delta = 0;
+				} else if (dy <= 0 && that.delta < -ddead) {
+					app.actions.execute('articles:selectPrevious');;
+				} else if (dbottom <= 0 && that.delta > ddead) {
+					app.actions.execute('articles:markAndNextUnread');
+				}
+			}, false);
+		},
+
+		/**
+		 * Unbinds all listeners to background process
 		 * @method handleClearEvents
-		 * @triggered when tab is closed/refershed
+		 * @triggered when tab is closed/refreshed
 		 * @param id {Integer} id of the closed tab
 		 */
 		handleClearEvents: function(id) {
@@ -130,7 +175,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		},
 
 		/**
-		 * Gets formated date (according to settings) from given unix time
+		 * Gets formated date (according to settings) from given Unix-time
 		 * @method getFormatedDate
 		 * @param unixtime {Number}
 		 */
@@ -150,6 +195,38 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		renderID: null,
 
 		/**
+		 * Identificator of asynchronous processing delay function.
+		 * @property scrollID
+		 * @default null
+		 * @type Integer
+		 */
+		scrollID: null,
+
+		/**
+		 * Current scroll delta.
+		 * @property delta
+		 * @default 0
+		 * @type Integer
+		 */
+		delta: 0,
+
+		/**
+		 * Flag to enable scroll processing.
+		 * @property enableScrollPocessing
+		 * @default false
+		 * @type Boolean
+		 */
+		enableScrollPocessing: false,
+
+		/**
+		 * Flag to enable space processing.
+		 * @property enableScrollPocessing
+		 * @default false
+		 * @type Boolean
+		 */
+		enableSpaceProcessing: false,
+
+		/**
 		 * Delay of asynchronous render in ms.
 		 * @property renderDelay
 		 * @default 100
@@ -164,12 +241,13 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 * @chainable
 		 */
 		render: function() {
+			this.enableScrollPocessing = false;
+			this.enableSpaceProcessing = false;
+			clearTimeout(this.scrollID);
 			clearTimeout(this.renderID);
 
 			this.renderID = setTimeout(function(that) {
-				if (!that || !that.model) return;
-
-				that.show();
+				if (!that || that.isModelDeleted(that.model)) return that.hide();
 
 				var data = Object.create(that.model.attributes);
 				data.date = that.getFormatedDate(that.model.get('date'));
@@ -178,37 +256,50 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 				data.url = escapeHtml(data.url);
 				data.titleIsLink = bg.settings.get('titleIsLink');
 
-				var source = that.model.getSource(),
-					content = that.model.get('content'),
-					sandbox = app.content.sandbox,
-					frame = sandbox.el;
-
 				that.$el.html(that.template(data));
 
 				var _render = function() {
-					if (!frame || !that) return;
+					if (!that || !that.frame/* || that.isModelDeleted(that.model)*/) return;
 
-					frame.contentWindow.scrollTo(0, 0);
+					that.frame.contentWindow.scrollTo(0, 0);
 
 					var _url = that.model.get('url'),
-						_base = frame.contentDocument.querySelector('base');
+						_source = that.model.getSource(),
+						_base = that.frame.contentDocument.querySelector('base');
 
-					if (source && source.get('fulltextEnable'))
+					if (_source && _source.get('fulltextEnable'))
 						_base.href = (_url.match(/^https?:\/\/\S+$/i) || [])[0] || '#';
 					else
-						_base.href = source ? source.get('base') || source.get('url') : '#';
+						_base.href = _source ? _source.get('base') || _source.get('url') : '#';
 
-					frame.contentDocument.querySelector('#smart-rss-content').innerHTML = content;
-					frame.contentDocument.querySelector('#smart-rss-url').href = _url;
-					frame.contentDocument.documentElement.style.fontSize = bg.settings.get('articleFontSize') + '%';
-					frame.contentDocument.querySelector('body').removeAttribute('style');
+					that.frame.contentDocument.querySelector('#smart-rss-content').innerHTML = that.model.get('content');
+					that.frame.contentDocument.querySelector('#smart-rss-url').href = _url;
+					that.frame.contentDocument.documentElement.style.fontSize = bg.settings.get('articleFontSize') + '%';
+
+					that.delta = 0;
+					// allows content to render before processing height-requesting events
+					that.scrollID = setTimeout(function() {
+						that.enableScrollPocessing = true;
+						that.enableSpaceProcessing = true;
+					}, 500);
+
+					that.show();
 				};
 
-				if (sandbox.loaded) _render();
-				else sandbox.on('load', _render);
+				if (that.sandbox.loaded) _render();
+				else that.sandbox.on('load', _render);
 			}, this.renderDelay, this);
 
 			return this;
+		},
+
+		/**
+		 * Returns true if model is deleted
+		 * @method isModelDeleted
+		 * @param model {Item} The article model
+		 */
+		isModelDeleted: function(model) {
+			return !model || model.get('deleted');
 		},
 
 		/**
@@ -217,9 +308,14 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 * @param model {Item} The new article model
 		 */
 		handleNewSelected: function(model) {
-			if (!model) return this.hide();
-			if (model === this.model) return;
-			this.model = model;
+			if (this.isModelDeleted(model)) {
+				this.hide();
+				return;
+			}
+
+			if (model == this.model) return;
+			else this.model = model;
+
 			this.render();
 		},
 

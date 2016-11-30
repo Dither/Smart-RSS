@@ -6,8 +6,7 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  * ======================================================================== */
 
-
-+function ($) {
+(function ($) {
   'use strict';
 
   // MODAL CLASS DEFINITION
@@ -336,4 +335,4 @@
     Plugin.call($target, option, this)
   })
 
-}(jQuery);
+})(jQuery);

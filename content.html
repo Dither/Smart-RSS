@@ -7,7 +7,7 @@
 	<style>
 html { font-size: 100%;}
 a { text-decoration: none; color: #55b; }
-body { padding: 20px 30px; margin: 0; font-family: "helvetica neue", "helvetica-neue", "helvetica", "arial", sans-serif; font-size: 0.9rem; overflow: scroll-y; overflow-x: hidden; line-height: 1.5rem; word-wrap: break-word; }
+body { padding: 20px 30px; margin: 0; font-family: "helvetica neue", "helvetica-neue", "helvetica", "arial", sans-serif; font-size: 0.9rem; overflow-y: scroll; overflow-x: hidden; line-height: 1.5rem; word-wrap: break-word; }
 body * { max-width: 100% !important; word-wrap: break-word; }
 html { background-color: transparent; }
 footer { padding-top: 20px }
@@ -50,7 +50,7 @@ footer a:hover { text-decoration: underline; }
 @media print {  iframe, video, footer { display: none !important; }}
 	</style>
 </head>
-<body style="visibility:hidden;">
+<body>
 	<section id="smart-rss-content"></section>
 	<div style="clear: both"></div>
 	<footer><a href="<%- url %>" id="smart-rss-url">{{FULL_ARTICLE}}</a></footer>

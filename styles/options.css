@@ -90,14 +90,16 @@ input[type=number] {
     padding: 1px 3px;
 }
 
-.twitter {
-    display: block;
-    margin-top: 25px;
-}
-
-button {
+button, input[type=file] *{
+    -moz-appearance: none;
+    -webkit-appearance: none;
     padding: 2px 12px;
     margin-right: 5px;
+    min-width: 6.3em;
+    min-height: 30px;
+    background: transparent;
+    color: rgb(51, 51, 51);
+    border: 1px solid rgb(193, 193, 193);
 }
 
 input[type=checkbox] {
@@ -143,3 +145,11 @@ input[type=checkbox] {
 .version:before { content: '__MSG_VERSION__'; }
 .bug-reps:before { content: '__MSG_BUG_REPS__'; }
 .found-bug:before { content: '__MSG_FOUND_BUG__'; }
+
+
+.sync:before { content: '__MSG_SYNC__'; }
+.sync-all:before { content: '__MSG_SYNC_ALL__'; }
+#sync-data-out:before { content: '__MSG_SYNC_DATA_OUT__'; }
+#sync-data-in:before { content: '__MSG_SYNC_DATA_IN__'; }
+#sync-data-auto:before { content: '__MSG_SYNC_DATA_AUTO__'; }
+#sync-data-manual:before { content: '__MSG_SYNC_DATA_MANUAL__'; }

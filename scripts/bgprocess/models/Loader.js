@@ -2,8 +2,8 @@
  * @module BgProcess
  * @submodule models/Loader
  */
-define(['backbone', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation', 'modules/toDataURI'],
-function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
+define(['backbone', 'underscore', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation', 'modules/toDataURI'],
+function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 
 	function markAutoRemovals(src) {
 		var removalInMs = (parseInt(src.get('autoremove'), 10) || 0) * 24 * 60 * 60 * 1000;
@@ -29,28 +29,27 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 		}, []);
 	}
 
-	function numDownloading() {
-		return loader.sourcesToLoad.length;
-	}
-
 	function downloadFeeds(sourcesArr, force) {
 		if (!sourcesArr || sourcesArr.length === 0 || !Array.isArray(sourcesArr)) return;
+		var oldLen = loader.sourcesToLoad.length;
 
 		sourcesArr = flattenTree(sourcesArr).filter(function(src) {
 			if (src instanceof Source) {
-				var url = src.get('url'), sID = src.get('id');
-				if (/^about:/i.test(url)) return false;
-				if (loader.currentSource === src ||
-				    loader.sourcesToLoad.indexOf(src) >= 0)
-					return false;
+				var url = src.get('url'),
+					sID = src.get('id');
+
+				if (/^(?:http:\/\/)?0\.0\.0\.0/i.test(url)) return false; // ignore default models
+				if (loader.currentSource == src || loader.sourcesToLoad.indexOf(src) >= 0) return false;
 				if (!favicons.where({ sourceID: sID }).length) {
-					new toDataURI.favicon(url, function(_url) {
+					toDataURI.favicon(url).then(function(_url) {
 						favicons.create({data: _url, sourceID: sID});
 						favicons.trigger('update', { ok: true });
-					});
+					}, function(err){ console.log(err); });
 				}
 				if (!force) {
-					var every = src.get('updateEvery'), last = src.get('lastUpdate');
+					var every = src.get('updateEvery'),
+						last = src.get('lastUpdate');
+
 					if (!every) return false;
 					if (!last) return true;
 					if (last > Date.now() - every * 60 * 1000) return false;
@@ -60,72 +59,108 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 			return false;
 		});
 
-		var oldLen = numDownloading();
-		if (sourcesArr.length) loader.sourcesToLoad = loader.sourcesToLoad.concat(sourcesArr);
-		downloadStarted(oldLen > 0 && numDownloading() > oldLen, numDownloading() - oldLen);
+		if (sourcesArr.length) loader.sourcesToLoad = _.union(loader.sourcesToLoad, sourcesArr);
+
+		loader.requestPromise.then(function() {
+			onDownloadStarted(loader.sourcesToLoad.length - oldLen, oldLen);
+		}, function() {
+			onDownloadStarted(loader.sourcesToLoad.length - oldLen, oldLen);
+		});
 	}
 
-	function downloadStarted(isAdded, numAdded) {
-		if (!isAdded) {
-			loader.hasNew = false;
-			loader.numberNew = 0;
+	function onDownloadStarted(numAdded, oldLen) {
+		if (numAdded === 0) return;
 
-			animation.start();
-			loader.set('loading', true);
-		}
+		loader.set('aborted', false);
 		loader.set('numSources', loader.get('numSources') + numAdded);
-		downloadFeedByURL();
-	}
 
-	function playNotificationSound() {
-		var audio, use = settings.get('useSound');
+		if (loader.get('loading') === true) return;
 
-		if (!use || use === ':user') audio = new Audio(settings.get('defaultSound'));
-		else if (use === ':none') audio = false;
-		else audio = new Audio('/sounds/' + use + '.ogg');
-
-		if (audio) {
-			audio.volume = parseFloat(settings.get('soundVolume'));
-			audio.play();
-		}
-	}
-
-	function downloadStopped() {
-		if (loader.hasNew && settings.get('soundNotifications'))
-			playNotificationSound();
-
-		loader.set('numSources', 0);
-		loader.set('numLoaded', 0);
-		loader.set('loading', false);
-		loader.currentSource = null;
-		loader.currentRequest = null;
 		loader.hasNew = false;
 		loader.numberNew = 0;
-		animation.stop();
+		loader.set('loading', true);
+		animation.start();
+
+		getFeed();
 	}
 
-	function onFeedCompleted(src, upd) {
-		loader.set('numLoaded', loader.get('numLoaded') + 1);
-		// reset alarm to make sure next call isn't too soon + to make sure alarm acutaly exists (it doesn't after import)
-		if (src) {
-			src.trigger('reset-alarm', src);
-			src.set('isLoading', false);
-			src.trigger('update', { ok: upd });
+	function getContent(item, src) {
+		return new Promise(function(resolve, reject) {
+			if (!src || !item) return reject(); // rejections shouldn't happen unless it's this kind of bad
+			if (loader.get('aborted')) return resolve();
+
+			var existingItem = items.get(item.id);
+
+			if (src.get('fulltextEnable')) {
+				if (!item.url) return resolve();
+
+				$.ajax({
+					url: item.url,
+					timeout: (settings.get('htmlTimeout') || 6000),
+					dataType: 'html'
+				}).done(function(htm) {
+					if (!src) return reject();
+					if (loader.get('aborted') || (existingItem && existingItem.get('deleted') === true)) return resolve();
+
+					if (!existingItem) {
+						ContentExtractor.parse(htm, src.get('id'), item.url).then(function(content) {
+							if (content && content.length) {
+								item.content = content;
+								loader.hasNew = true;
+								items.create(item, { sort: false });
+								items.trigger('render-screen'); // render as they go because otherwise it's too slow
+								loader.numberNew++;
+							}
+							resolve();
+						}).catch(function() { resolve() }); // ignoring failed extractions
+					} else {
+						resolve(); // don't update existing items on content change
+					}
+				}).fail(function() {
+					resolve()
+				}); // ignoring failed downloads
+			} else {
+				if (!existingItem) {
+					loader.hasNew = true;
+					items.create(item, { sort: false });
+					loader.numberNew++;
+				} else if (existingItem.get('deleted') === false &&
+					existingItem.get('content') !== item.content) {
+					existingItem.save({ content: item.content }); // update existing items on content change
+				}
+				resolve();
+			}
+		});
+	}
+
+
+	function processItems(array, parser, src) {
+		var N = loader.get('numParallel') || 5,
+			prev = Promise.resolve();
+
+		/* N-items batch downloads */
+		for (var next, i = 0, length = array.length; i < length; i = i + N) {
+			next = function(here) {
+				return function() {
+					return Promise.all(array.slice(here, here + N).map(function(item) {
+						return parser(item, src);
+					}));
+				}
+			};
+			prev = prev.then(next(i));
 		}
-		downloadFeedByURL();
+		return prev;
 	}
 
-	function onDataLoaded(parsedData, sID){
-		var timeout = settings.get('htmlTimeout') || 7000,
-			fullText = loader.currentSource.get('fulltextEnable'),
-			// remove old deleted content
-			deleted = items.where({ sourceID: sID, deleted: true });
+	function onDataLoaded(parsedData, sourceToLoad){
+		if (!sourceToLoad || !parsedData || !parsedData.length) return onDataProcessed(false, sourceToLoad);
 
+		// if any fetched items are marked as deleted, filter them out
+		var deleted = items.where({ sourceID: sourceToLoad.get('id'), deleted: true });
 		parsedData = parsedData.filter(function(item) {
 			var i, notfound = true;
 			for (i = deleted.length; i--;) {
 				if(item.id !== deleted[i].id) continue;
-				// if any fetched items are in deleted, filter them out
 				//console.log('@deleted', deleted[i].id);
 				notfound = false;
 				deleted.splice(i, 1);
@@ -134,70 +169,27 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 			return notfound;
 		});
 
-		// remove all deleted items not found in the current feed
+		// remove all deleted items (stale) not found in the current feed
 		deleted.forEach(function(item){ item.destroy(); });
 
-		var incompleteItems = parsedData.length;
-		parsedData.forEach(function(item) {
-			if (!loader.currentSource) return;
+		if (!parsedData.length) return onDataProcessed(false, sourceToLoad);
 
-			var existingItem = items.get(item.id);
-
-			if (fullText) {
-				if (!item.url) {
-					if (--incompleteItems <= 0) onDataReady();
-					return;
+		loader.requestPromise.then(function() { return processItems(parsedData, getContent, sourceToLoad); }).then(
+				function() {
+					onDataProcessed(true, sourceToLoad);
+				}, function() {
+					console.log('[models/Loader] Error processing feed items', sourceToLoad.get('url'));
+					onDataProcessed(true, sourceToLoad);
 				}
+			);
+	}
 
-				var xhr = $.ajax({
-					url: item.url,
-					timeout: timeout,
-					dataType: 'html'
-				}).done(function(htm) {
-					if (!loader.currentSource) return onDataReady();
-					// Don't refetch existing items
-					if (!existingItem)
-						new ContentExtractor.parse(htm, sID, item.url, function(content){
-							// TODO: do we need a lock here?
-							if (content && content.length)
-								item.content = content;
-
-							loader.hasNew = true;
-							items.create(item, { sort: false });
-							loader.numberNew++;
-
-							if (--incompleteItems <= 0) onDataReady();
-						});
-					else if (--incompleteItems <= 0) onDataReady();
-				}).fail(function() {
-					if (!loader.currentSource) return onDataReady();
-					if (--incompleteItems <= 0) onDataReady();
-				}).always(function() {});
-			} else {
-				if (!existingItem) {
-					loader.hasNew = true;
-					items.create(item, { sort: false });
-					loader.numberNew++;
-				} else if (existingItem.get('deleted') === false &&
-						   existingItem.get('content') !== item.content) {
-					existingItem.save({ content: item.content });
-				}
-			}
-		});
-
-		if (!fullText || !parsedData.length) onDataReady();
-	};
-
-	function onDataReady() {
-		var sourceToLoad = loader.currentSource;
+	function onDataProcessed(success, sourceToLoad) {
 		if (!sourceToLoad) return onFeedCompleted(null, false);
 
-		items.sort({ silent: true });
-		if (loader.hasNew) items.trigger('render-screen');
-
-		var sID = sourceToLoad.get('id');
-		var countAll = items.where({ sourceID: sID, trashed: false }).length;
-		var count = items.where({ sourceID: sID, unread: true, trashed: false }).length;
+		var sID = sourceToLoad.get('id'),
+			countAll = items.where({ sourceID: sID, trashed: false }).length,
+			count = items.where({ sourceID: sID, unread: true, trashed: false }).length;
 
 		sourceToLoad.save({
 			'count': count,
@@ -211,24 +203,23 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 		});
 
 		onFeedCompleted(sourceToLoad, true);
-	};
+	}
 
-	function downloadFeedByURL() {
-		if (!numDownloading()) {
+	function getFeed() {
+		if (!loader.sourcesToLoad.length) {
 			var sourceIDs = sources.pluck('id'),
-				foundSome = false;
-
-			// if downloading finished while source was deleted
-			items.toArray().forEach(function(item) {
-				if (sourceIDs.indexOf(item.get('sourceID')) === -1) {
-					console.log('Deleting item because of missing source', item.get('sourceID'));
-					item.destroy();
-					foundSome = true;
-				}
-			});
+				foundSome = !items.toArray().every(function(item) {
+					// if downloading finished while the source was deleted
+					if (sourceIDs.indexOf(item.get('sourceID')) === -1) {
+						console.log('[models/Loader] Deleting item because of missing source', item.get('sourceID'));
+						item.destroy();
+						return false;
+					}
+					return true;
+				});
 
 			if (foundSome) info.autoSetData();
-			downloadStopped();
+			onDownloadStopped();
 			return;
 		}
 
@@ -238,7 +229,7 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 
 		var options = {
 				url: sourceToLoad.get('url'),
-				timeout: settings.get('rssTimeout') || 5000,
+				timeout: settings.get('rssTimeout') || 10000,
 				dataType: 'xml',
 				beforeSend: function(xhr) {
 					xhr.setRequestHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
@@ -254,25 +245,71 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 
 		if (settings.get('showSpinner')) sourceToLoad.set('isLoading', true);
 
-		//console.log('AJAX called: ' + sourceToLoad.get('url'));
-		loader.currentRequest = $.ajax(options)
-			.done(function(data, status) {
-				if (!loader.currentSource) return onFeedCompleted(sourceToLoad, false);
-				new RSSParser.parse(data, sourceToLoad.get('id'), onDataLoaded);
-				//console.log('Done called:', sourceToLoad.get('url'), status);
-
-			}).fail(function() {
+		loader.requestPromise = loader.requestPromise.then(function () { return loader.requestHandle = $.ajax(options); });
+		loader.requestPromise.then(function(data, status) {
+				return RSSParser.parse(data, sourceToLoad.get('id')).then(function(items, sID) {
+					onDataLoaded(items, sourceToLoad);
+				}, function() {
+					console.log('[models/Loader] Feed parsing failed', options.url);
+					onFeedCompleted(sourceToLoad, false);
+				});
+			}).catch(function() {
+				console.log('[models/Loader] Feed retreiving failed', options.url);
 				onFeedCompleted(sourceToLoad, false);
-				//console.log('Fail called:', sourceToLoad.get('url'));
 			});
+	}
+
+	function onFeedCompleted(src, upd) {
+		items.sort({ silent: true });
+		if (loader.hasNew) items.trigger('render-screen');
+		loader.set('numLoaded', loader.get('numLoaded') + 1);
+		// reset alarm to make sure next call isn't too soon
+		//  + to make sure alarm acutaly exists (it doesn't after import)
+		if (src) {
+			src.trigger('reset-alarm', src);
+			src.set('isLoading', false);
+			src.trigger('update', { ok: upd });
+		}
+		getFeed();
+	}
+
+	function playNotificationSound() {
+		var audio, use = settings.get('useSound');
+
+		if (!use || use === ':user') audio = new Audio(settings.get('defaultSound'));
+		else if (use === ':none') audio = false;
+		else audio = new Audio('/sounds/' + use + '.ogg');
+
+		if (audio) {
+			audio.volume = parseFloat(settings.get('soundVolume'));
+			audio.play();
+		}
+	}
+
+	function onDownloadStopped() {
+		var stop = function(){
+			if (loader.hasNew && settings.get('soundNotifications'))
+				playNotificationSound();
+			loader.set('numSources', 0);
+			loader.set('numLoaded', 0);
+			loader.set('loading', false);
+			loader.currentSource = null;
+			loader.requestHandle = null;
+			loader.hasNew = false;
+			loader.numberNew = 0;
+			loader.set('aborted', false)
+			animation.stop();
+			loader.requestPromise = Promise.resolve();
+		};
+		loader.requestPromise.then(stop, stop);
 	}
 
 	function abortDownloading() {
 		loader.currentSource = null;
-		if (loader.currentRequest)
-			loader.currentRequest.abort();
+		loader.set('aborted', true);
+		if (loader.requestHandle) loader.requestHandle.abort();
 		loader.sourcesToLoad = [];
-		downloadStopped();
+		onDownloadStopped();
 	}
 
 	/**
@@ -283,16 +320,18 @@ function (BB, RSSParser, ContentExtractor, animation, toDataURI) {
 	 */
 	var Loader = Backbone.Model.extend({
 		defaults: {
-			numSources: 0,
-			numLoaded: 0,
-			loading: false
+			numParallel: 10, // number of parallel HTTP sources to retreive
+			numSources: 0, // number of queued feeds
+			numLoaded: 0, // number of loaded feed items
+			loading: false, // flag with loading status
+			aborted: false // flag to abort HTTP request retreivals
 		},
-		currentRequest: null,
-		currentSource: null,
-		hasNew: false,
-		numberNew: 0,
-		sourcesToLoad: [],
-		numDownloading: numDownloading,
+		requestPromise: Promise.resolve(), // general request sequence handle
+		requestHandle: null, // $.ajax handle to abort RSS request
+		currentSource: null, // current feed's model
+		hasNew: false, // flag if feed has new items
+		numberNew: 0, // number of new feed items
+		sourcesToLoad: [], // array of feed models for procesing
 		abortDownloading: abortDownloading,
 		downloadFeeds: downloadFeeds,
 		playNotificationSound: playNotificationSound

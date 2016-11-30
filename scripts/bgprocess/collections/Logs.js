@@ -10,10 +10,9 @@ define(['backbone', 'models/Log'], function (BB, Log) {
 	 * @constructor
 	 * @extends Backbone.Collection
 	 */
-	var Logs = Backbone.Collection.extend({
+	var Logs = BB.Collection.extend({
 		model: Log,
 		initialze: function() {
-
 		},
 		startLogging: function() {
 			window.onerror = function(a, b, c) {

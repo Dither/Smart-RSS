@@ -15,4 +15,4 @@ For technical/bug reports add [issues on GitHub](../../issues).
 License
 -------
 
-The source code is licensed under [MIT License](https://opensource.org/licenses/MIT). 
+The source code is licensed under [MIT License](LICENSE.md). 

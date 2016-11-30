@@ -1,7 +1,6 @@
 /**
  * @module App
  */
-
 define([
 	'controllers/comm',
 	'layouts/Layout', 'punycode', 'jquery', 'domReady!', 'collections/Actions', 'layouts/FeedsLayout', 'layouts/ArticlesLayout',

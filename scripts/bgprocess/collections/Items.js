@@ -17,7 +17,6 @@ define(['backbone', 'models/Item', 'preps/storage'], function (BB, Item) {
 	var Items = BB.Collection.extend({
 		model: Item,
 		batch: false,
-		localStorage: new Backbone.LocalStorage('items-backbone'),
 		comparator: function(a, b, sorting) {
 			var val;
 			sortBy = sorting || settings.get('sortBy');
@@ -43,7 +42,8 @@ define(['backbone', 'models/Item', 'preps/storage'], function (BB, Item) {
 			this.listenTo(settings, 'change:sortOrder2', this.sort);
 			this.listenTo(settings, 'change:sortBy', this.sort);
 			this.listenTo(settings, 'change:sortBy2', this.sort);
-		}
+		},
+		localStorage: new BB.LocalStorage('items-backbone', 'id', 'indexed')
 	});
 
 	return Items;

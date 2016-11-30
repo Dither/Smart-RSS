@@ -12,10 +12,7 @@ function(BB, TopView, contextMenus) {
 		initialize: function(opt, list) {
 			this.list = list;
 			this.el.setAttribute('draggable', 'true');
-			this.model.on('change', this.render, this);
-			this.model.on('destroy', this.handleModelDestroy, this);
-			this.model.on('change:title', this.handleChangeTitle, this);
-			bg.sources.on('clear-events', this.handleClearEvents, this);
+			this.setEvents();
 			this.el.dataset.id = this.model.get('id');
 			this.el.view = this;
 		},
@@ -24,11 +21,19 @@ function(BB, TopView, contextMenus) {
 				this.clearEvents();
 			}
 		},
+		setEvents: function() {
+			this.model.on('change', this.render, this);
+			this.model.on('destroy', this.handleModelDestroy, this);
+			this.model.on('change:title', this.handleChangeTitle, this);
+			bg.sources.on('clear-events', this.handleClearEvents, this);
+			bg.favicons.on('change', this.render, this);
+		},
 		clearEvents: function() {
 			this.model.off('change', this.render, this);
 			this.model.off('destroy', this.handleModelDestroy, this);
 			this.model.off('change:title', this.handleChangeTitle, this);
 			bg.sources.off('clear-events', this.handleClearEvents, this);
+			bg.favicons.off('change', this.render, this);
 		},
 		showContextMenu: function(e) {
 			if (!this.$el.hasClass('selected')) {
@@ -70,6 +75,7 @@ function(BB, TopView, contextMenus) {
 				favicon = '', favicons = bg.favicons.where({ sourceID: sID });
 
 			if (favicons.length) favicon = favicons[0].get('data');
+
 			this.$el.html(this.template(_.extend(this.model.toJSON(), {favicon: favicon})));
 			this.renderInterval = null;
 

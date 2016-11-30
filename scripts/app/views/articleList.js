@@ -190,7 +190,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 			this.on('attach', this.handleAttached, this);
 			this.on('pick', this.handlePick, this);
 			this.$el.on('scroll', this.handleScroll.bind(this));
-
 		},
 
 		/**
@@ -228,13 +227,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 				if (data.action == 'new-select') {
 					this.handleNewSelected(data);
 				}
-			}, this);
-
-			app.on('give-me-next', function() {
-				if (this.selectedItems[0] && this.selectedItems[0].model.get('unread') == true) {
-					this.selectedItems[0].model.save({ unread: false });
-				}
-				this.selectNext({ selectUnread: true });
 			}, this);
 
 			if (bg.sourceToFocus) {
@@ -348,7 +340,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @triggered when sort setting is changed
 		 */
 		handleSort: function() {
-			$('#input-search').val('');
+			$('.input-search').val('');
 			this.handleNewSelected(this.currentData);
 
 		},
@@ -664,13 +656,15 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		removeItem: function(view) {
 			askRmPinned = bg.settings.get('askRmPinned')
 			if (view.model.get('pinned') && askRmPinned == 'all') {
-				var conf = confirm(_T('PIN_QUESTION_A').replace('%s', view.model.escape('title')));
-				if (!conf) {
-					return;
-				}
+				$.confirm({
+					text: _T('PIN_QUESTION_A').replace('%s', view.model.escape('title')),
+					confirm: function() {
+						view.model.save({ trashed: true, visited: true });
+					}
+				});
+			} else {
+				view.model.save({ trashed: true, visited: true });
 			}
-			view.model.save({ trashed: true, visited: true });
-			//this.destroyItem(view);
 		},
 
 		/**
@@ -681,13 +675,15 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		removeItemCompletely: function(view) {
 			askRmPinned = bg.settings.get('askRmPinned')
 			if (view.model.get('pinned') && askRmPinned && askRmPinned != 'none') {
-				var conf = confirm(_T('PIN_QUESTION_A') + view.model.escape('title') + _T('PIN_QUESTION_B'));
-				if (!conf) {
-					return;
-				}
+				$.confirm({
+					text: _T('PIN_QUESTION_A') + view.model.escape('title') + _T('PIN_QUESTION_B'),
+					confirm: function() {
+						view.model.markAsDeleted();
+					}
+				});
+			} else {
+				view.model.markAsDeleted();
 			}
-			view.model.markAsDeleted();
-			//this.destroyItem(view);
 		},
 
 		/**

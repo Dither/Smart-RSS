@@ -1,12 +1,11 @@
-define([ 'backbone', 'views/ContextMenu', 'views/feedList' ],
-function(BB, ContextMenu) {
+define(['jquery', 'backbone', 'views/ContextMenu', 'views/feedList' ],
+function($, BB, ContextMenu) {
 	var sourceContextMenu = new ContextMenu([
 		{
 			title: _T('UPDATE'),
 			icon: 'reload.png',
 			action: function() {
 				app.actions.execute('feeds:update');
-				//bg.downloadSingleFeed(sourceContextMenu.currentSource);
 			}
 		},
 		{
@@ -58,11 +57,14 @@ function(BB, ContextMenu) {
 			title: _T('EMPTY_TRASH'),
 			icon: 'delete.png',
 			action: function() {
-				if (confirm(_T('REALLY_EMPTY_TRASH'))) {
-					bg.items.where({ trashed: true, deleted: false }).forEach(function(item) {
-						item.markAsDeleted();
-					});
-				}
+				$.confirm({
+					text: _T('REALLY_EMPTY_TRASH'),
+					confirm: function() {
+						bg.items.where({ trashed: true, deleted: false }).forEach(function(item) {
+							item.markAsDeleted();
+						});
+					}
+				});
 			}
 		}
 	]);
@@ -79,23 +81,29 @@ function(BB, ContextMenu) {
 			title: _T('MARK_ALL_AS_READ'),
 			icon: 'read.png',
 			action: function() {
-				if (confirm(_T('MARK_ALL_QUESTION'))) {
-					bg.items.forEach(function(item) {
-						item.save({ unread: false, visited: true });
-					});
-				}
+				$.confirm({
+					text: _T('MARK_ALL_QUESTION'),
+					confirm: function() {
+						bg.items.forEach(function(item) {
+							item.save({ unread: false, visited: true });
+						});
+					}
+				});
 			}
 		},
 		{
 			title: _T('DELETE_ALL_ARTICLES'),
 			icon: 'delete.png',
 			action: function() {
-				if (confirm(_T('DELETE_ALL_Q'))) {
-					bg.items.forEach(function(item) {
-						if (item.get('deleted') === true) return;
-						item.markAsDeleted();
-					});
-				}
+				$.confirm({
+					text: _T('DELETE_ALL_Q'),
+					confirm: function() {
+						bg.items.forEach(function(item) {
+							if (item.get('deleted') === true) return;
+							item.markAsDeleted();
+						});
+					}
+				});
 			}
 		}
 	]);
@@ -133,10 +141,13 @@ function(BB, ContextMenu) {
 			title: _T('RENAME'),
 			action: function() {
 				var feedList = require('views/feedList');
-				var newTitle = prompt(_T('FOLDER_NAME') + ': ', feedList.selectedItems[0].model.get('title'));
-				if (!newTitle) return;
-
-				feedList.selectedItems[0].model.save({ title: newTitle });
+				$.prompt({
+					title: feedList.selectedItems[0].model.get('title'),
+					text: _T('FOLDER_NAME') + ': ',
+					confirm: function() {
+						feedList.selectedItems[0].model.save({ title: newTitle });
+					}
+				});
 			}
 		}*/
 	]);

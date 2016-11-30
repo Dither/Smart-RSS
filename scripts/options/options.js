@@ -2,6 +2,15 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') browser = c
 
 var FILE_SIZE_LARGE = 1000000;
 
+ var _T = function () {
+	//console.log(arguments);
+	try {
+		return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
+	} catch (e) {
+		return arguments[0] || '';
+	}
+}
+
 function utf8_to_b64( str ) {
 	return btoa(unescape(encodeURIComponent(str)));
 }
@@ -43,15 +52,6 @@ function decodeHTML(str) {
 
 JSON.safeParse = function(str) {
 	try { return JSON.parse(str); } catch(e) { return null; }
-}
-
-var _T = function () {
-	//console.log(arguments);
-	try {
-		return browser.i18n.getMessage.apply(null, arguments) || arguments[0] || '';
-	} catch (e) {
-		return arguments[0] || '';
-	}
 }
 
 function localizeNodes() {
@@ -273,16 +273,16 @@ browser.runtime.getBackgroundPage(function(bg) {
 
 			var f = data.folders;
 			var s = data.sources;
-			browser.storage.sync.get('folders-backbone', function(data) {
+			browser.storage.local.get('folders-backbone', function(data) {
 				if (!data['sources-backbone']) data['folders-backbone'] = {};
 				for (var i=0, j=f.length; i<j; i++) data['folders-backbone'][f[i].id] = f[i];
-				browser.storage.sync.set(data);
+				browser.storage.local.set(data);
 			});
 
-			browser.storage.sync.get('sources-backbone', function(data) {
+			browser.storage.local.get('sources-backbone', function(data) {
 				if (!data['sources-backbone']) data['sources-backbone'] = {};
 				for (var i=0, j=s.length; i<j; i++) data['sources-backbone'][s[i].id] = s[i];
-				browser.storage.sync.set(data);
+				browser.storage.local.set(data);
 			});
 		}
 
@@ -349,7 +349,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 			confirm: function() {
 				browser.alarms.clearAll();
 				bg.indexedDB.deleteDatabase('backbone-indexeddb');
-				//browser.storage.local.clear();
+				browser.storage.local.clear();
 				browser.storage.sync.clear();
 				localStorage.clear();
 				browser.runtime.reload();

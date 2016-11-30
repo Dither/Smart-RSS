@@ -172,7 +172,7 @@ input[type=search] {
 	-webkit-border-radius: 5px;
 	border-radius: 5px;
 }
-input[type=search]:not(:focus):not(:valid) {
+input[type=search]:not(:focus) {
 	background: url("/images/search.png") no-repeat right center #fff;
 }
 

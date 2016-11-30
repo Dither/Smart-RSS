@@ -152,6 +152,12 @@
 	"EXPORT": { "message": "Save" },
 	"IMPORT_GROUP": { "message": "Importing" },
 	"IMPORT": { "message": "Load" },
+	"SYNC": { "message": "Synchronization" },
+	"SYNC_ALL": { "message": "Synchronize extension data:" },
+	"SYNC_DATA_OUT": { "message": "Get" },
+	"SYNC_DATA_IN": { "message": "Set" },
+	"SYNC_DATA_AUTO": { "message": "Auto" },
+	"SYNC_DATA_MANUAL": { "message": "Manual" },
 	"CLEAR": { "message": "Clear data" },
 	"CLEAR_ALL": { "message": "Remove ALL extension data:" },
 	"CLEAR_DATA": { "message": "!!Clear!!" },
@@ -200,7 +206,9 @@
 	"TITLE_ENABLE_SOUND": { "message": "If enabled, browser will make a sound when new articles are downloaded." },
 	"TITLE_USER_SOUND": { "message": "Select sound file to be played." },
 	"TITLE_SMART": { "message": "SMART is a special format which exports/imports both, feeds and feeds's articles." },
+	"TITLE_SMART_EXPORT": { "message": "Use SMART to export all feeds and articles." },
 	"TITLE_OPML": { "message": "You can use OPML format to export/import feeds Smart RSS <=> Opera 12." },
+	"TITLE_SYNC_DATA": { "message": "This will synchronize yours settings across browsers." },
 	"TITLE_CLEAR_ALL": { "message": "This will remove all yours feeds and articles and settings." },
 
 	"SELECT_AUDIO": { "message": "Please select audio file!" },
@@ -215,5 +223,6 @@
 	"IMPORT_ERROR": { "message": "Importing error: " },
 	"REMOVE_ALL_DATA": { "message": "Do you really want to remove all extension data?" },
 
-	"OPEN_TEN_WARN": { "message": "Do you really want to open %s articles?" }
+	"OPEN_TEN_WARN": { "message": "Do you really want to open %s articles?" },
+    "NO_CONTENT": { "message": "&nbsp;" }
 }

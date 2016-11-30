@@ -122,10 +122,8 @@ define(['backbone', 'jquery', 'underscore', 'views/SourceView', 'views/FolderVie
 		 * @param event {Event} Mouse or key event
 		 */
 		handlePick: function(view, e) {
-			if (e.type == 'mousedown' && e.which == 1) {
-				//view.showSourceItems(e);
-				app.actions.execute('feeds:showAndFocusArticles', e);
-			}
+			if (e.type !== 'mousedown' || e.which !== 1) return;
+			app.actions.execute('feeds:showAndFocusArticles', e);
 		},
 
 		/**
@@ -135,7 +133,6 @@ define(['backbone', 'jquery', 'underscore', 'views/SourceView', 'views/FolderVie
 		 * @param event {Event} Mouse event
 		 */
 		handleMouseDown: function(e) {
-			//e.currentTarget.view.handleMouseDown(e);
 			this.handleSelectableMouseDown(e);
 		},
 
