@@ -34,7 +34,6 @@ define(['backbone'], function (BB) {
 				unread: false,
 				pinned: false,
 				date: 0,
-				dateCreated: 0,
 				url: '',
 				content: '',
 				author: '',

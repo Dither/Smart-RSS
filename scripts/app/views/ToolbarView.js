@@ -10,8 +10,10 @@ function (BB, ToolbarItems, $, ToolbarItemsFactory, _) {
 		events: {
 			'click .button': 'handleButtonClick',
 			'input input[type=search]': 'handleButtonClick',
-			/**** replace with "drop" to implement dnd between toolbars ****/
+			'dragstart': 'handleDragStart',
 			'dragend': 'handleDragEnd',
+			'drop': 'handleDragOver',
+			'dragenter': 'handleDragOver',
 			'dragover': 'handleDragOver'
 		},
 		initialize: function() {
@@ -95,8 +97,6 @@ function (BB, ToolbarItems, $, ToolbarItemsFactory, _) {
 			return this;
 		},
 
-
-
 		/**
 		 * Called for every Toolbar action when ToolbarView is initalized
 		 * @method createToolbarItem
@@ -109,10 +109,12 @@ function (BB, ToolbarItems, $, ToolbarItemsFactory, _) {
 			}
 			this.items.add({ actionName: action, type: 'button' });
 		},
+
 		handleButtonClick: function(e) {
 			var button = e.currentTarget.view.model;
 			app.actions.execute(button.get('actionName'), e);
 		},
+
 		render: function() {
 			return this;
 		},
@@ -148,7 +150,7 @@ function (BB, ToolbarItems, $, ToolbarItemsFactory, _) {
 				// if the toolbarItem is hidden (e.g. undelete button)
 				if (r.left == 0) return false;
 
-				if (r.left + r.width/2 > e.originalEvent.clientX) {
+				if (r.left + r.width/2 > (e.originalEvent.clientX || e.originalEvent.screenX)) {
 					if (item.view.el == t) return true;
 
 					$(t).insertBefore(item.view.$el);
@@ -178,6 +180,7 @@ function (BB, ToolbarItems, $, ToolbarItemsFactory, _) {
 				return action;
 			}, this);
 
+			this.model.set('region', this.el.parentNode.getAttribute('name'));
 			this.model.set('actions', list);
 			this.model.save();
 			this.doNotRegenerate = false;
@@ -185,15 +188,26 @@ function (BB, ToolbarItems, $, ToolbarItemsFactory, _) {
 
 		/**
 		 * Shows all hidden items during drag
-		 * @triggered when user drags item over to the toolbar (which happens immidiatelly)
 		 * @method handleDragStart
+		 * @triggered on drag start
+		 * @param e {DragEvent}
+		 */
+		handleDragStart: function(e) {
+			if (!e.shiftKey) return false;
+			e.originalEvent.dataTransfer.setData('text/plain', '#'); // FF needs this
+			this.hiddenItems.forEach(function(item) {
+				$(item).show();
+			});
+		},
+
+		/**
+		 * Prevents default event handling.
+		 * @triggered when user drags item over to the toolbar (which happens immidiatelly)
+		 * @method handleDragOver
 		 */
 		handleDragOver: function(e) {
 			e.preventDefault();
 			e.stopPropagation();
-			this.hiddenItems.forEach(function(item) {
-				$(item).show();
-			});
 		}
 	});
 

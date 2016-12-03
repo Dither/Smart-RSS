@@ -23,8 +23,8 @@
 	 */
 	function promIDB(options) {
 		if (typeof options !== 'object') return Promise.reject('[promIDB] Access not configured!');
-		this.store_name = options.storeName || 'key-value';
-		this.db = new Promise(function(resolve, reject) {
+		this._store = options.storeName || 'key-value';
+		this._db = new Promise(function(resolve, reject) {
 			var openreq = indexedDB.open(options.dbName || 'keyvalue-store', options.dbVersion || 1);
 
 			openreq.onerror = function() {
@@ -32,12 +32,11 @@
 			};
 
 			openreq.onupgradeneeded = function() {
-				// First time setup: create an empty object store
+				// Database version upgrade
 				var upgrader = null;
-				if (typeof options.upgradeFn === 'function') upgrader = options.upgradeFn();
+				if (typeof options.upgradeFn === 'function') upgrader = options.upgradeFn(openreq.result);
 				if (typeof upgrader === 'function') return upgrader(openreq.result);
-				else if (upgrader) return upgrader;
-				//openreq.result.createObjectStore(store_name, (options.keyPath ? { keyPath: options.keyPath } : undefined));
+				//openreq.result.createObjectStore(this._store, (options.keyPath ? { keyPath: options.keyPath } : undefined));
 			};
 
 			openreq.onsuccess = function() {
@@ -48,19 +47,19 @@
 	}
 
 	promIDB.prototype = {
-		getDB: function() { return this.db },
+		getDB: function() { return this._db },
 		withStore: function(type, callback) {
 			var that = this;
-			return this.db.then(function(db) {
+			return this._db.then(function(db) {
 				return new Promise(function(resolve, reject) {
-					var transaction = db.transaction(that.store_name, type || 'readwrite');
+					var transaction = db.transaction(that._store, type || 'readwrite');
 					transaction.oncomplete = function() {
 						resolve();
 					};
 					transaction.onerror = function() {
 						reject(transaction.error);
 					};
-					callback(transaction.objectStore(that.store_name));
+					callback(transaction.objectStore(that._store));
 				});
 			});
 		},

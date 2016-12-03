@@ -24,7 +24,7 @@ define(['backbone', 'backboneDB'], function (BB) {
 		defaults: {
 			id: 'settings-id',
 			lang: getLangFromNavigator(),
-			articleFontSize: '100',
+			articleFontSize: 100,
 			askOnOpening: true,
 			askRmPinned: 'trashed',
 			badgeMode: 'disabled',
@@ -38,6 +38,7 @@ define(['backbone', 'backboneDB'], function (BB) {
 			icon: 'orange',
 			layout: 'horizontal', // or vertical
 			lines: 'auto', // one-line, two-lines
+			moveByScrolled: 800,
 			panelToggled: true,
 			posA: 250,
 			posB: 270,
@@ -52,16 +53,16 @@ define(['backbone', 'backboneDB'], function (BB) {
 			soundVolume: 1, // min: 0, max: 1.0
 			thickFrameBorders: false,
 			titleIsLink: true,
-			uiFontSize: '100',
+			uiFontSize: 100,
 			useSound: ':user'
 		},
 
 		/**
-		 * @property browserStorage
-		 * @type Backbone.BrowserStorage
+		 * @property storage
+		 * @type Backbone.CustomStorage
 		 * @default *settings-backbone*
 		 */
-		browserStorage: new BB.BrowserStorage('settings-backbone', 'id', 'local')
+		storage: new BB.CustomStorage('settings-backbone', 'id', 'local')
 	});
 
 	return Settings;

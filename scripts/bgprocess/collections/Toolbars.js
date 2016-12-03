@@ -9,8 +9,8 @@ function (BB, Toolbar, defaultToolbar) {
 		if (!Array.isArray(data)) return null;
 
 		for (var i=0; i<data.length; i++) {
-			if (typeof data[i] != 'object') continue;
-			if (data[i].region == region) return data[i];
+			if (typeof data[i] !== 'object') continue;
+			if (data[i].region === region) return data[i];
 		}
 
 		return null;
@@ -38,7 +38,7 @@ function (BB, Toolbar, defaultToolbar) {
 
 			return parsedData;
 		},
-		browserStorage: new BB.BrowserStorage('toolbars-backbone', 'region', 'local')
+		storage: new BB.CustomStorage('toolbars-backbone', 'region', 'local')
 	});
 
 	return Toolbars;

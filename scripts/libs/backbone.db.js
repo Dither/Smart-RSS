@@ -1,7 +1,7 @@
 /**
- * Backbone IndexedDB and storage.[local|sync] adapter.
+ * Backbone IndexedDB and storage.local/storage.sync adapter.
  *
- * Version 2.0.0
+ * Version 1.0.0
  */
 
 (function(root, factory) {
@@ -33,26 +33,29 @@ function failure(e) {
 /**
  * Class for IndexedDB access.
  *
- * @class      LocalStorage
+ * @class      IndexedStorage
  * @param      {string}  name    Database key name
  * @param      {string}  keypath   Property of index
- * @param      {string}  type    Database type (ignored)
+ * @param      {string}  type    Database type 'indexed'
  */
-Backbone.LocalStorage = function(name, keypath, type) {
-	if (!name || !keypath) throw '[LocalStorage] No parameters for storage.'
+function IndexedStorage(name, keypath, type, version, upgradefn) {
+	if (!name || !keypath) throw '[IndexedStorage] No parameters for storage.'
 	var that = this;
+	this.type = type;
+	this.ready = false;
     this.idb = new promIDB({
             dbName: 'backbone-indexeddb',
             storeName: name,
             keyPath: keypath,
-            dbVersion: Backbone.LocalStorage.version,
-            upgradeFn: function() { return Backbone.LocalStorage.prepare ? Backbone.LocalStorage.prepare.bind(that) : null; }
+            dbVersion: version,
+            upgradeFn: upgradefn
         });
     this.prom = this.idb.getDB();
-    this.prom.catch(function(e) { throw '[LocalStorage] IndexedDB failed us: ' + JSON.stringify(e); });
+    this.prom.then(function() { that.ready = true; });
+    this.prom.catch(function(e) { throw '[IndexedStorage] IndexedDB failed us: ' + e.name; });
 };
 
-_.extend(Backbone.LocalStorage.prototype, {
+_.extend(IndexedStorage.prototype, {
 	/**
 	 * Integer database versions ups on any breaking change.
 	 *
@@ -216,7 +219,6 @@ _.extend(Wrapper.prototype, {
 });
 
 
-
 /**
  * Class for browser.storage access.
  *
@@ -225,15 +227,15 @@ _.extend(Wrapper.prototype, {
  * @param      {string}  keypath   Property of index
  * @param      {string}  type    Database type 'sync' or 'local'
  */
-Backbone.BrowserStorage = function(name, keypath, type) {
+ function BrowserStorage(name, keypath, type) {
 	_.bindAll.apply(_, [this].concat(_.functions(this)));
 
 	if (!name || !keypath) throw '[BrowserStorage] No parameters for storage.'
 	this.name = name;
 	this.kpath = keypath;
-	this.type = Backbone.BrowserStorage.defaultType;
+	this.type = BrowserStorage.defaultType;
 	if (typeof type !== 'undefined')
-		this.type = (type === 'local') ? type : 'sync';
+		this.type = (type === 'sync') ? type : 'local';
 	this.store = new Wrapper(this.type);
 
 	var that = this;
@@ -245,16 +247,16 @@ Backbone.BrowserStorage = function(name, keypath, type) {
 	});
 }
 
-Backbone.BrowserStorage.Wrapper = Wrapper;
+BrowserStorage.Wrapper = Wrapper;
 
-_.extend(Backbone.BrowserStorage.prototype, {
+_.extend(BrowserStorage.prototype, {
 
 	/**
 	 * Default storage type.
 	 *
 	 * @type      {string} [sync|local]
 	 */
-	defaultType: 'sync',
+	defaultType: 'local',
 
 	/**
 	 * Creates entry
@@ -265,8 +267,8 @@ _.extend(Backbone.BrowserStorage.prototype, {
 	 */
 	create: function(model, cb) {
 		if (!model.id) {
-			model[this.kpath] = guid();
-			model.set(model.idAttribute, model[this.kpath]);
+			model.id = guid();
+			model.set(model.idAttribute, model.id);
 		}
 		return this.update(model, cb);
 	},
@@ -280,8 +282,8 @@ _.extend(Backbone.BrowserStorage.prototype, {
 	 */
 	update: function(model, cb) {
 		var that = this;
-		return this.store.get(this.name).then(function(data){
-			var id = model[that.kpath];
+		return this.store.get(that.name).then(function(data){
+			var id = model.id;
 			data[that.name][id] = model.toJSON();
 			delete (data[that.name][id])[that.kpath]; // perserve storage space
 			return that.store.set(data, cb);
@@ -297,8 +299,8 @@ _.extend(Backbone.BrowserStorage.prototype, {
 	 */
 	find: function(model, cb) {
 		var that = this;
-		return this.store.get(this.name).then(function(data){
-			var id = model[that.kpath];
+		return this.store.get(that.name).then(function(data){
+			var id = model.id;
 			if (!data[that.name] || !id || !data[that.name][id]) return cb([]);
 			var stored_model = data[that.name][id];
 			stored_model[that.kpath] = id;
@@ -314,7 +316,7 @@ _.extend(Backbone.BrowserStorage.prototype, {
 	 */
 	findAll: function(cb) {
 		var that = this;
-		return this.store.get(this.name).then(function(data){
+		return this.store.get(that.name).then(function(data){
 			if (Object.keys(data).length === 0 || !data[that.name]) return cb([]);
 			var items = Object.keys(data[that.name]).map(function(val){
 				var stored_model = data[that.name][val];
@@ -336,7 +338,7 @@ _.extend(Backbone.BrowserStorage.prototype, {
 		var that = this;
 		if (model.isNew()) return;
 		return this.store.get(this.name).then(function(data){
-			delete data[that.name][model[that.kpath]];
+			delete data[that.name][model.id];
 			return that.store.set(data, cb);
 		});
 	},
@@ -413,10 +415,11 @@ function callbackHandler(options, resp, errorMessage) {
  * @param      {string}  method   Type of operation
  * @param      {Backbone.Model}    model    The model
  * @param      {Object}    options  The options
- * @param      {LocalStorage|LocalStorage}    store    The storage type class
+ * @param      {IndexedStorage|IndexedStorage}    store    The storage type class
  */
 function switchAction(method, model, options, store) {
-	var errorMessage, cbh = callbackHandler.bind(this, options);
+	var errorMessage,
+		cbh = callbackHandler.bind(this, options);
 	try {
 		switch (method) {
 			case 'read':
@@ -439,46 +442,12 @@ function switchAction(method, model, options, store) {
 		if (error.code === 22) errorMessage = 'Private Browsing is unsupported!';
 		else errorMessage = error.message;
 
-		console.log('Storage ERR: ' + errorMessage);
+		console.log('Storage error: ' + errorMessage);
 		cbh(null, errorMessage);
 	}
 }
 
-Backbone.LocalStorage.sync = Backbone.localSync = function(method, model, options) {
-	var that = this;
-	var store = model.localStorage || model.collection.localStorage;
-	options = options || {};
-	var syncDfd = options.syncDfd || (Backbone.$.Deferred && Backbone.$.Deferred()); // If $ is having Deferred - use it.
-	options.syncDfd = syncDfd;
-	store.prom.then(function() { switchAction(method, model, options, store); });
-	return syncDfd && syncDfd.promise();
-};
-
-Backbone.BrowserStorage.sync = Backbone.browserSync = function(method, model, options) {
-	var that = this;
-	var store = model.browserStorage || model.collection.browserStorage;
-	options = options || {};
-	var errorMessage, syncDfd = options.syncDfd || (Backbone.$.Deferred && Backbone.$.Deferred()); // If $ is having Deferred - use it.
-	options.syncDfd = syncDfd;
-	switchAction(method, model, options, store);
-	return syncDfd && syncDfd.promise();
-};
-
 Backbone.ajaxSync = Backbone.sync;
-
-/**
- * Detects synchronization method.
- *
- * @param      {Backbone.Model}  model   The model
- * @return     {Function}                The synchronize method.
- */
-Backbone.getSyncMethod = function(model) {
-	if (model.browserStorage || (model.collection && model.collection.browserStorage))
-		return Backbone.browserSync;
-	else if (model.localStorage || (model.collection && model.collection.localStorage))
-		return Backbone.localSync;
-	return Backbone.ajaxSync;
-};
 
 /**
  * Gets synchronization method.
@@ -489,8 +458,46 @@ Backbone.getSyncMethod = function(model) {
  * @return     {Function}          Synchronization method
  */
 Backbone.sync = function(method, model, options) {
-	return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
+	var that = this,
+		store = (model.storage || model.collection.storage).current;
+	options = options || {};
+	var syncDfd = options.syncDfd || (Backbone.$.Deferred && Backbone.$.Deferred()); // If $ is having Deferred - use it.
+	options.syncDfd = syncDfd;
+
+	switch (store.type) {
+		case 'local':
+		case 'sync':
+			switchAction(method, model, options, store);
+			break;
+		case 'indexed':
+			if (store.ready)
+				switchAction(method, model, options, store);
+			else
+				syncDfd = syncDfd.always(store.prom.then(function() {
+					switchAction(method, model, options, store);
+				}));
+			break;
+		default:
+			return;//Backbone.ajaxSync(method, model, options);
+	}
+
+	return syncDfd && syncDfd.promise();
 };
 
-return true; // We override Backbone things don't need to export anything
+
+Backbone.CustomStorage = function(name, keypath, type) {
+	this.current = null;
+	switch (type) {
+		case 'local':
+		case 'sync':
+			this.current = new BrowserStorage(name, keypath, type);
+			break;
+		case 'indexed':
+			this.current = new IndexedStorage(name, keypath, type, Backbone.CustomStorage.version, Backbone.CustomStorage.prepare);
+			break;
+		default:
+	}
+};
+
+return Backbone.CustomStorage;
 }));

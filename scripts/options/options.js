@@ -82,7 +82,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 		$('select[id], input[type=number], input[type=range], input[type=range]').each(function(i, item) {
 			$(item).val(bg.settings.get(item.id));
 			if (item.type == 'number') {
-				$(item).on('input', handleChange);
+				$(item).on('input', handleChangeNumber);
 			} else {
 				$(item).change(handleChange);
 			}
@@ -91,6 +91,18 @@ browser.runtime.getBackgroundPage(function(bg) {
 		$('input[type=checkbox]').each(function(i, item) {
 			$(item).get(0).checked = !!bg.settings.get(item.id);
 			$(item).change(handleCheck);
+		});
+
+		$('button[id^="open-dialog-"').each(function(i, item) {
+			var realDialog = function (id) {
+				return function() {
+					real_dlg = document.getElementById(id);
+					real_dlg.value = '';
+					real_dlg.click();
+				};
+			};
+
+			$(item).click(realDialog(item.id.replace('open-dialog-','')));
 		});
 
 		$('#useSound').change(function() {
@@ -104,6 +116,11 @@ browser.runtime.getBackgroundPage(function(bg) {
 		$('#import-smart').change(handleImportSmart);
 		$('#import-opml').change(handleImportOPML);
 	});
+
+	function handleChangeNumber(e) {
+		var t = e.target;
+		bg.settings.save(t.id, parseInt(t.value, 10) || 0);
+	}
 
 	function handleChange(e) {
 		var t = e.target;

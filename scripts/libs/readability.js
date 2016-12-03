@@ -106,11 +106,19 @@ Element.prototype = {
 
 		return ret + '>' + this.getInnerHTML() + '</' + this.name + '>';
 	},
+	replaceSpecial: function(string){
+		return string
+            .replace('&', '&amp;')
+            .replace('"', '&quot;')
+            .replace("'", '&apos;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')
+            .replace('\r?\n', '<br>');
+	},
 	getInnerHTML: function(){
-		var nodes = this.children, ret = '';
-
+		var nodes = this.children, ret = '', ispre = (this.name === 'pre');
 		for (var i = 0, j = nodes.length; i < j; i++){
-			if (typeof nodes[i] === 'string') ret += nodes[i];
+			if (typeof nodes[i] === 'string') { ret += ispre ? this.replaceSpecial(nodes[i]) : nodes[i]; }
 			else ret += nodes[i].getOuterHTML();
 		}
 		return ret;
@@ -215,7 +223,7 @@ var tagCounts = {
 	re_pages = /pag(?:e|ing|inat)/i,
 	re_pagenum = /p[ag]{0,2}(?:e|er|inator|ing|ination)?[=\/]\d{1,2}/i,
 
-	re_safe = /hentry|(?:instapaper|article).body|markdown|\bfulltext/,
+	re_safe = /hentry|(?:instapaper|article).?body|typora|markdown|\bfulltext/,
 	re_final = /first|last/i,
 
 	re_hidden = /display\s*:\s*none|visibility\s*:\s*hidden/i,

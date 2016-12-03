@@ -74,6 +74,7 @@
 	"MORE": { "message": "Дополнительно" },
 	"SETTINGS": { "message": "Настройки" },
 	"EMPTY_TRASH": { "message": "Очистить корзину" },
+	"RSS_FEED": { "message": "RSS рассылка" },
 	"RSS_FEED_URL": { "message": "Адрес RSS-рассылки:" },
 	"OPTIONS": { "message": "Опции" },
 	"UPDATING_FEEDS": { "message": "Обновление рассылок" },
@@ -118,8 +119,6 @@
 	"REFETCH": { "message": "Перезагрузить" },
 	"REFETCH_WARNING": { "message": "Все элементы из выделенных рассылок будут удалены. Продолжить?" },
 
-	"EMBEDS": { "message": "внедрённый ролик" },
-
 	"LOCALIZATION": { "message": "Локализация" },
 	"DATE_FORMAT": { "message": "Формат даты:" },
 	"TIME_FORMAT": { "message": "Формат времени:" },
@@ -129,6 +128,7 @@
 	"THICK_FRAME": { "message": "Границы большей толщины:" },
 	"ARTICLE_FONT_SIZE": { "message": "Высота шрифта:" },
 	"UI_FONT_SIZE": { "message": "Высота шрифта интерфейса:" },
+	"MOVE_BY_SCROLLED": { "message": "Навигация доп. скроллом:" },
 	"SHOW_UPD_SPINNER": { "message": "Анимация при обновлении:" },
 	"BEHAVIOUR": { "message": "Поведение" },
 	"AUTO_READ": { "message": "Авто-отмечать прочтённым:" },
@@ -158,8 +158,8 @@
 	"CLEAR_ALL": { "message": "Удалить ВСЕ данные расширения:" },
 	"CLEAR_DATA": { "message": "!!Сброс!!" },
 	"VERSION": { "message": "Версия" },
-	"BUG_REPS": { "message": "Багрепорты и отзывы" },
-	"FOUND_BUG": { "message": "Если вы желаете оставить отзыв, обнаружили ошибку или просто хотите следить за развитием расширения, переходите по ссылке:" },
+	"BUG_REPS": { "message": "Инфо" },
+	"FOUND_BUG": { "message": "Если обнаружилась ошибка, можно отчитаться о ней на github." },
 
 	"OPTION_NORMAL": { "message": "Обычный" },
 	"OPTION_ISO": { "message": "ISO" },
@@ -218,8 +218,9 @@
 	"IMPORT_ERROR": { "message": "Ошибка загрузки: " },
 	"REMOVE_ALL_DATA": { "message": "Вы уверены, что хотите удалить все данные?" },
 
+	"OPEN_TEN_WARN": { "message": "Вы точно хотите открыть %s новостей?" },
 	"NO_TITLE": { "message": "Без заголовка" },
 	"NO_AUTHOR": { "message": "Без автора" },
-	"OPEN_TEN_WARN": { "message": "Вы точно хотите открыть %s новостей?" },
-	"NO_CONTENT": { "message": "&nbsp;" }
+	"NO_CONTENT": { "message": "&nbsp;" },
+    "EMBEDDED_MEDIA": { "message": "[внедрённый медиа-объект]" }
 }

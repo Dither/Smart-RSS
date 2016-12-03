@@ -89,7 +89,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 
 				this.sandbox = app.content.sandbox;
 				this.frame = this.sandbox.el;
-				this.handleScroll(this.frame);
+				//this.handleScroll(this.frame); // BUG: Firefox ignores the handler here, Chromium - isn't
 			}, this);
 		},
 
@@ -100,57 +100,66 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		 */
 		handleSpace: function() {
 			if (!this.enableSpaceProcessing) return;
-			var cw = this.frame.contentWindow;
-			var d = cw.document.scrollingElement;
-			if (cw.document.documentElement.clientHeight + d.scrollTop >= d.offsetHeight ) {
+			var cw = this.frame.contentWindow,
+				ch = cw.document.documentElement.clientHeight,
+				d = cw.document.scrollingElement;
+			if (ch + d.scrollTop >= d.offsetHeight ) {
 				app.actions.execute('articles:markAndNextUnread');
 			} else {
-				cw.scrollBy(0, cw.document.documentElement.clientHeight * 0.85);
+				cw.scrollBy(0, ch * 0.8);
 			}
 		},
 
 		/**
-		 * Next unread article or previous article
-		 * @method handleScroll
-		 * @triggered when scrolled down after scrollbar reached the end or up on beginning of content
+		 * Next page in article or next unread article
+		 * @method handleEndScroll
+		 * @triggered when scrolled after scrollbar reached the end or beginning
 		 */
 		handleScroll: function(doc) {
 			var that = this,
-				ddead = 700; // TODO: move to settings // height of the deadzone after scroll-end
+				dz = parseInt(bg.settings.get('moveByScrolled'), 10); // height of the deadzone
 
-			doc.addEventListener("wheel", function onwheel(event) {
+			if (dz === 0) return;
+			dz = dz || 800;
+
+			var onwheeled = function(event) {
 				if (!that.enableScrollPocessing) return;
 
 				var dc = doc.contentDocument,
-					d = dc.scrollingElement,
+					d = dc.scrollingElement || doc.contentDocument,
 					scrolly = event.deltaY, // delta of current scroll
-					dy = dc.defaultView.scrollY, // entirety of current scroll
-					dbottom = Math.max(0, d.offsetHeight - (dc.documentElement.clientHeight + d.scrollTop)); // distance to the page's bottom
+					dy = dc.defaultView.scrollY, // height of scroll
+					dbottom = d.offsetHeight - dc.documentElement.clientHeight - d.scrollTop; // distance to the page's bottom
 
 				switch (event.deltaMode) {
 				  case 1:
-					scrolly *= 40; // scrolled in line units
+					scrolly *= 30; // delta in line units
 					break;
 				  case 2:
-					scrolly *= 800; // scrolled in page units
+					scrolly *= 300; // delta in page units
 					break;
 				}
 
-				//console.log('dbottom',dbottom,'delta',that.delta, 'dy',dy, 'scrolly',scrolly);
+				if ((dbottom <= 0) || (dy === 0)) that.delta += scrolly;
+				if ((dbottom <= 0 && that.delta < 0 && scrolly > 0) || (dy === 0 && that.delta > 0 && scrolly < 0)) that.delta = 0;
 
-				if ((dbottom === 0) || (dy === 0)) that.delta += scrolly;
-				if (((dy === 0 && that.delta > 0) || (dbottom === 0 && that.delta < 0)) && (dy !== dbottom)) {
-					that.delta = 0;
-				} else if (dy <= 0 && that.delta < -ddead) {
-					app.actions.execute('articles:selectPrevious');;
-				} else if (dbottom <= 0 && that.delta > ddead) {
+				//console.log('dbottom',dbottom, 'delta',that.delta, 'dy',dy, 'scrolly',scrolly);
+
+				if (dbottom <= 0 && that.delta > dz) {  // lower deadzone callback
+				    that.delta = 0;
 					app.actions.execute('articles:markAndNextUnread');
+				} else if (dy === 0 && that.delta < -dz) { // upper deadzone callback
+					that.delta = 0;
+					app.actions.execute('articles:selectPrevious');
 				}
-			}, false);
+			}
+
+			//doc.addEventListener("wheel", onwheeled, false);
+			doc.contentDocument.onwheel = onwheeled;
 		},
 
 		/**
-		 * Unbinds all listeners to background process
+		 * Unbinds all listeners to bg process
 		 * @method handleClearEvents
 		 * @triggered when tab is closed/refreshed
 		 * @param id {Integer} id of the closed tab
@@ -175,7 +184,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		},
 
 		/**
-		 * Gets formated date (according to settings) from given Unix-time
+		 * Gets formated date (according to settings) from given Unix time
 		 * @method getFormatedDate
 		 * @param unixtime {Number}
 		 */
@@ -276,14 +285,14 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 					that.frame.contentDocument.querySelector('#smart-rss-url').href = _url;
 					that.frame.contentDocument.documentElement.style.fontSize = bg.settings.get('articleFontSize') + '%';
 
-					that.delta = 0;
 					// allows content to render before processing height-requesting events
 					that.scrollID = setTimeout(function() {
 						that.enableScrollPocessing = true;
 						that.enableSpaceProcessing = true;
-					}, 500);
+					}, 700);
 
 					that.show();
+					that.handleScroll(that.frame);
 				};
 
 				if (that.sandbox.loaded) _render();

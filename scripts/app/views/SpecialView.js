@@ -11,7 +11,7 @@ function($, _, TopView, tplSpecial) {
 		},*/
 		showContextMenu: function(e) {
 			if (!this.contextMenu) return;
-			
+
 			if (!this.$el.hasClass('selected')) {
 				app.feeds.feedList.select(this, e);
 			}
@@ -71,6 +71,6 @@ function($, _, TopView, tplSpecial) {
 			return this;
 		}
 	});
-	
+
 	return SpecialView;
 });

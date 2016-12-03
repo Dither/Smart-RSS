@@ -28,8 +28,8 @@ function(BB, $, _, tplProperties, Locale) {
 
 			var updateEvery, autoremove, fulltextEnable;
 			function saveValue(prop, arr) {
-				var val = parseFloat($('#prop-'+param.toHyphenFormat()).val());
-				if (val && val >= 0) {
+				var val = parseInt($('#prop-' + prop.toHyphenFormat()).val(), 10);
+				if (!isNaN(val) && val >= 0) {
 					arr.forEach(function(source) {
 						var obj = {};
 						obj[prop] = val;
@@ -108,9 +108,8 @@ function(BB, $, _, tplProperties, Locale) {
 				/**
 				 * Test if all selected feeds has the same properteies or if they are mixed
 				 */
-
 				function setDiffers(param) {
-					params['first_' + param] = listOfSources[0].get(param) || null;
+					params['first_' + param] = listOfSources[0].get(param);
 					params['differs_' + param] = listOfSources.some(function(c) {
 						if (params['first_' + param] != c.get(param)) return true;
 					});
@@ -120,32 +119,30 @@ function(BB, $, _, tplProperties, Locale) {
 					setDiffers('updateEvery');
 					setDiffers('autoremove');
 					setDiffers('fulltextEnable');
-					setDiffers('fulltextPosition');
+					//setDiffers('fulltextPosition');
 				}
 
 				/**
 				 * Create HTML
 				 */
-
 				this.$el.html(this.template( isFolder ? _.extend(params, this.current.attributes) : params ));
 
 				/**
-				 * Set <select>s's values
+				 * Set <select>s's difference values
 				 */
-
 				function setDiffValue(param) {
-					var v = params['differs_'+param],
-						el = $('#prop-'+param.toHyphenFormat());
+					var v = params['differs_' + param],
+						el = $('#prop-' + param.toHyphenFormat());
 
 					if (!v && el) {
-						el.val(params['first_'+param]);
+						el.val(params['first_' + param]);
 					}
 				}
 
 				setDiffValue('updateEvery');
 				setDiffValue('autoremove');
 				setDiffValue('fulltextEnable');
-				setDiffValue('fulltextAuto');
+				//setDiffValue('fulltextPosition');
 			}
 
 			return this;

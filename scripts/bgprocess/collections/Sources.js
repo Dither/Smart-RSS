@@ -17,7 +17,7 @@ define(['backbone', 'models/Source', 'backboneDB'], function (BB, Source) {
 			var t2 = (b.get('title') || '').trim().toLowerCase();
 			return t1 < t2  ? -1 : 1;
 		},
-		browserStorage: new BB.BrowserStorage('sources-backbone', 'id', 'local')
+		storage: new BB.CustomStorage('sources-backbone', 'id', 'local')
 	});
 
 	return Sources;

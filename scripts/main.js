@@ -27,7 +27,8 @@ require.config({
 	},
 	shim: {
 		jquery: { exports: '$' },
-		jqueryConfirm: { deps: ['jquery', 'jqueryModal'] },
+		jqueryModal: { deps: ['jquery'] },
+		jqueryConfirm: { deps: ['jqueryModal'] },
 		backbone: { deps: ['underscore', 'jquery'], exports: 'Backbone' },
 		underscore: { exports: '_' }/*,
 		mocha: { exports: 'mocha' }*/
@@ -39,7 +40,10 @@ var tabID = -1;
 function init(message) {
 	if (message.started) {
 		browser.runtime.onMessage.removeListener(init);
-		requirejs(['app'], function(app) { app.start(); });
+		requirejs(['app'], function(app) {
+			bg.downloadAllFeeds();
+			app.start();
+		});
 	}
 }
 

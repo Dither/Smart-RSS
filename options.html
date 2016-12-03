@@ -65,6 +65,13 @@
 		</label>
 	</div>
 
+	<div class="settings-row learn-more" title="TITLE_SHOW_UPD_SPINNER">
+		<label class="web-content-select-label">
+			<span class="selectLabel show-upd-spinner"></span>
+			<input type="checkbox" id="showSpinner" />
+		</label>
+	</div>
+
 	<div class="settings-row learn-more">
 		<label class="web-content-select-label">
 			<span class="selectLabel article-font-size"></span>
@@ -79,40 +86,39 @@
 		</label>
 	</div>
 
-	<div class="settings-row learn-more" title="TITLE_SHOW_UPD_SPINNER">
-		<label class="web-content-select-label">
-			<span class="selectLabel show-upd-spinner"></span>
-			<input type="checkbox" id="showSpinner" />
-		</label>
-	</div>
 </section>
 
 <section>
 	<h3 class="section-header behaviour"></h3>
+
 	<div class="settings-row learn-more" title="TITLE_AUTO_READ">
 		<label class="web-content-select-label">
 			<span class="selectLabel auto-read"></span>
 			<input type="checkbox" id="readOnVisit" />
 		</label>
 	</div>
+
 	<div class="settings-row learn-more" title="TITLE_ON_TEN_TABS">
 		<label class="web-content-select-label">
 			<span class="selectLabel on-ten-tabs"></span>
 			<input type="checkbox" id="askOnOpening" />
 		</label>
 	</div>
+
 	<div class="settings-row learn-more" title="TITLE_PANEL_TOGGLE">
 		<label class="web-content-select-label">
 			<span class="selectLabel panel-toggle"></span>
 			<input type="checkbox" id="enablePanelToggle" />
 		</label>
 	</div>
+
 	<div class="settings-row learn-more" title="TITLE_ALWAYS_FULL_DATE">
 		<label class="web-content-select-label">
 			<span class="selectLabel always-full-date"></span>
 			<input type="checkbox" id="fullDate" />
 		</label>
 	</div>
+
 	<div class="settings-row learn-more" title="TITLE_CIRCULAR_NAV">
 		<label class="web-content-select-label">
 			<span class="selectLabel circular-nav"></span>
@@ -124,6 +130,13 @@
 		<label class="web-content-select-label">
 			<span class="selectLabel title-link"></span>
 			<input type="checkbox" id="titleIsLink" />
+		</label>
+	</div>
+
+	<div class="settings-row learn-more">
+		<label class="web-content-select-label">
+			<span class="selectLabel move-by-scrolled"></span>
+			<input type="number" id="moveByScrolled" min="0" max="3000" step="100" />px
 		</label>
 	</div>
 
@@ -196,14 +209,14 @@
 	<div class="settings-row learn-more" title="TITLE_SMART_EXPORT">
 		<label class="web-content-select-label">
 			<span class="selectLabel export-smart">SMART:</span>
-			<button id="export-smart" class="export"></button>
+			<button id="export-smart" class="btn export"></button>
 			<a href="" id="smart-exported"></a>
 		</label>
 	</div>
 	<div class="settings-row learn-more" title="TITLE_OPML">
 		<label class="web-content-select-label">
 			<span class="selectLabel export-opml">OPML:</span>
-			<button id="export-opml" class="export"></button>
+			<button id="export-opml" class="btn export"></button>
 			<a href="" id="opml-exported"></a>
 		</label>
 	</div>
@@ -214,6 +227,7 @@
 	<div class="settings-row learn-more" title="TITLE_SMART_IMPORT">
 		<label class="web-content-select-label">
 			<span class="selectLabel import-smart">SMART:</span>
+			<button class="btn" id="open-dialog-import-smart"></button>
 			<input type="file" id="import-smart" accept=".smart,|*/*">
 			<span id="smart-imported"></span>
 		</label>
@@ -221,6 +235,7 @@
 	<div class="settings-row learn-more" title="TITLE_OPML">
 		<label class="web-content-select-label">
 			<span class="selectLabel import-opml">OPML:</span>
+			<button class="btn" id="open-dialog-import-opml"></button>
 			<input type="file" id="import-opml" accept=".opml,|*/*">
 			<span id="opml-imported"></span>
 		</label>
@@ -232,10 +247,10 @@
 	<div class="settings-row learn-more" title="TITLE_SYNC_DATA">
 		<label class="web-content-select-label">
 			<span class="selectLabel sync-all"></span>
-			<button id="sync-data-out"></button>
-			<button id="sync-data-in"></button>
-			<button id="sync-data-auto"></button>
-			<button id="sync-data-manual" class="hidden" disabled></button>
+			<button class="btn" id="sync-data-out"></button>
+			<button class="btn" id="sync-data-in"></button>
+			<button class="btn" id="sync-data-auto"></button>
+			<button class="btn" id="sync-data-manual" class="hidden" disabled></button>
 			<span id="data-synced"></span>
 		</label>
 	</div>
@@ -246,7 +261,7 @@
 	<div class="settings-row learn-more" title="TITLE_CLEAR_ALL">
 		<label class="web-content-select-label">
 			<span class="selectLabel clear-all"></span>
-			<button id="clear-data"></button>
+			<button class="btn" id="clear-data"></button>
 			<span id="data-cleared"></span>
 		</label>
 	</div>
@@ -259,8 +274,7 @@
 
 <section>
 	<h3 class="section-header bug-reps"></h3>
-	<p><span class="found-bug"></span>
-	<a href="http://blog.martinkadlec.eu/post/501-smart-rss-final-v10">Martin Kadlec (BS-Harou)</a>.</p>
+	<p><span class="found-bug"></span><br /></p>
 </section>
 </body>
 </html>

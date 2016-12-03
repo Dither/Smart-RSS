@@ -5,7 +5,7 @@
 	"description": "RSS feeds reader similar to Opera 12's internal.",
 	"default_locale": "en_GB",
 	"developer": {
-		"name": "BS-Harou (Martin Kadlec), DitherSky"
+		"name": "Martin Kadlec, DitherSky"
 	},
 	"background": {
 		"page": "index.html"

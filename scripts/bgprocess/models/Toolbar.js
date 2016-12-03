@@ -27,7 +27,7 @@ define(['backbone'], function (BB) {
 			position: 'top',
 
 			/**
-			 * List of actions. Each action = one button/search on toolbar 
+			 * List of actions. Each action = one button/search on toolbar
 			 * @attribute actions
 			 * @type Array
 			 * @default []
@@ -47,7 +47,7 @@ define(['backbone'], function (BB) {
 		 * @method initialize
 		 */
 		initialize: function() {
-			// ...
+			this.idAttribute = 'region';
 		}
 	});
 

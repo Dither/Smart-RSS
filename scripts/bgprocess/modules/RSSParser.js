@@ -12,11 +12,11 @@ define(['digest'], function (hash) {
  */
 function parseRSS(xml, sourceID) {
 	return new Promise(function(resolve, reject) {
-		if (!xml || !(xml instanceof XMLDocument)) return reject(sourceID);
+		if (!xml || !(xml instanceof XMLDocument)) return reject('not an XMLDocument');
 
 		var nodes = xml.querySelectorAll('item');
 		if (!nodes.length) nodes = xml.querySelectorAll('entry');
-		if (!nodes.length) reject(sourceID);
+		if (!nodes.length) reject('no entries found');
 
 		var title = getFeedTitle(xml);
 		var source = sources.findWhere({ id: sourceID });
@@ -26,21 +26,48 @@ function parseRSS(xml, sourceID) {
 		/**
 		 * TTL check
 		 */
-		var ttl = xml.querySelector('channel > ttl, feed > ttl, rss > ttl');
-		if (ttl && source.get('lastUpdate') == 0) {
-			ttl = parseInt(ttl.textContent, 10);
-			var vals = [360, 720, 1440, 10080];
-			if (ttl > 10080) {
-				source.save({ updateEvery: 10080 });
-			} else if (ttl > 180) {
-				for (var i=0; i<vals.length; i++) {
-					if (ttl <= vals[i]) {
+		if (source.get('lastUpdate') === 0) {
+			var ttl = xml.querySelector('channel > ttl, feed > ttl, rss > ttl');
+			if (ttl) ttl = parseInt(ttl.textContent, 10);
+			if (!ttl || isNaN(ttl)) {
+				// as per specification: http://purl.org/rss/1.0/modules/syndication/
+				ttl = xml.querySelector('*|updatePeriod');
+				if (ttl) {
+					var freq = xml.querySelector('*|updateFrequency');
+					freq = freq ? (parseInt(freq.textContent, 10) || 1) : 1;
+					switch (ttl.textContent) {
+						case 'hourly':
+							ttl = 60;
+							break;
+						case 'monthly':
+							ttl = 43800;
+							break;
+						case 'yearly':
+							ttl = 525600;
+							break;
+						case 'weekly':
+							ttl = 10080;
+							break;
+						case 'daily':
+						default:
+							ttl = 1440;
+					}
+					ttl = ttl / freq;
+				}
+			}
+			ttl =  ttl || 180;
+			var vals = [5, 15, 30, 60, 120, 180, 360, 720, 1440, 10080];
+			if (ttl > 0) {
+				for (var i = vals.length; i--;) {
+					if (ttl >= vals[i]) {
 						ttl = vals[i];
 						break;
 					}
 				}
-				source.save({ updateEvery: ttl });
+			} else {
+				ttl = 180;
 			}
+			source.save({ updateEvery: ttl });
 		}
 		/* END: ttl check */
 
@@ -75,7 +102,7 @@ function parseRSS(xml, sourceID) {
 				});
 		})).then(function(){
 			resolve(entries, sourceID);
-		});
+		}).catch(reject);
 	});
 }
 
@@ -92,7 +119,7 @@ function rssGetLink(node) {
 
 	if (!link) {
 		if (!link) link = node.querySelector('link[type="text/html"]');
-		if (!link || link.prefix == 'atom') link = node.querySelector('link'); // prefer non atom links over atom links
+		if (!link || link.prefix == 'atom') link = node.querySelector('link'); // prefer non-atom over atom links
 		if (!link) link = node.querySelector('link[type="text/html"]');
 		if (!link) link = node.querySelector('link');
 	}
@@ -115,7 +142,7 @@ function getFeedTitle(xml) {
 	if (!title || !(title.textContent).trim())
 		title = xml.querySelector('channel > link, feed > link, rss > link');
 
-	return title && title.textContent ? title.textContent.trim() || _T('rss feed') : _T('rss feed');
+	return title && title.textContent ? (title.textContent.trim() || _T('RSS_FEED')) : _T('RSS_FEED');
 }
 
 function replaceUTCAbbr(str) {
@@ -161,11 +188,21 @@ function rssGetAuthor(node, title) {
 		return creator;
 	}
 
-	return _T('no author');
+	return _T('NO_AUTHOR');
 }
 
 function rssGetTitle(node) {
-	return node.querySelector('title') ? node.querySelector('title').textContent : '&lt;'+_T('no title')+'&gt;';
+	return node.querySelector('title') ? node.querySelector('title').textContent : '&lt;'+_T('NO_TITLE')+'&gt;';
+}
+
+function rssGetMedia(node) {
+	var type = null, thumb = null, media = null;
+	media = node.querySelector('enclosure, [rel="enclosure"], [rel="video_src"]'); /*, *|video, *|audio, *|content // media:content
+	type = node.querySelector('*|type, [rel="media:type"], [name="video_type"]');
+	if (type) media.setAttribute('type', type.getAttribute('url') || type.getAttribute('href') || type.getAttribute('content'));
+	thumb = node.querySelector('*|thumbnail, [rel="media:thumbnail"], [rel="image_src"]');
+	if (thumb) media.setAttribute('thumbnail', thumb.getAttribute('url') || thumb.getAttribute('href'));*/
+	return media;
 }
 
 function nodesToText(doc, filter) {
@@ -203,7 +240,7 @@ function removeNodes(doc, names, replaces) {
 
 	for (var i = 0, r = doc.querySelectorAll(replaces), l = r.length; i < l; i++) {
 		if (r[i].src) {
-			r[i].outerHTML = '<a href="'+r[i].src+'">' + _T('[embedded media]') + '</a>';
+			r[i].outerHTML = '<a href="'+r[i].src+'">' + _T('EMBEDDED_MEDIA') + '</a>';
 		} else if (r[i].parentNode) {
 			r[i].parentNode.removeChild(r[i]);
 		}
@@ -234,12 +271,12 @@ function createXML(source) {
 
 function rssGetContent(node, filter) {
 	var content = '',
-		desc = node.querySelector('encoded'),
-		to_remove = 'script, style, noscript, link, param, meta',
+		desc = null,
+		to_remove = 'script, style, noscript, link, param, meta, [href*="javascript:"]',
 		to_replace = 'object, iframe',
 		r_default = '&nbsp;';
 
-	if (desc) content = desc.textContent;
+	if (desc = node.querySelector('encoded')) content = desc.textContent;
 	if (!content && (desc = node.querySelector('description'))) content = desc.textContent;
 	if (!content && (desc = node.querySelector('content')) && ~desc.innerHTML.indexOf('<')) content = desc.innerHTML;
 	if (!content && (desc = node.querySelector('content'))) content = desc.textContent; // prefer content over summary
@@ -256,9 +293,27 @@ function rssGetContent(node, filter) {
 		}
 		if (!xmldoc) return r_default;
 
+		// podcast support
+		var enclosed = '', media = rssGetMedia(node);
+		if (media) {
+			var type = media.getAttribute('type')
+				src = media.getAttribute('url') || media.getAttribute('href');
+			if (src && /video|audio/i.test(type) || /\.(?:ogg|mp4|webm|wav|aac|opus|mp3|flac|wav|ogm|fla)/i.test(src)) {
+				enclosed = xmldoc.createElement(/video/i.test(type) ? 'video' : 'audio');
+				if (type) enclosed.type = type;
+				enclosed.id = 'podcast';
+				//enclosed.thumbnail = media.getAttribute('thumbnail');
+				enclosed.setAttribute('controls', '');
+				//enclosed.setAttribute('autoplay', '');
+				enclosed.setAttribute('preload', 'none');
+				enclosed.setAttribute('src', src);
+				enclosed = enclosed.outerHTML;
+			}
+		}
+
 		var rnode = xmldoc.querySelector('body') || xmldoc.childNodes[0];
 		if (rnode) removeNodes(rnode, to_remove, to_replace);
-		if (rnode && (content = nodesToText(rnode, filter))) return content;
+		if (rnode && (content = nodesToText(rnode, filter))) return enclosed + content;
 
 		return r_default;
 	}

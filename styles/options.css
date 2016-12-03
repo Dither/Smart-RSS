@@ -1,114 +1,115 @@
 body {
-    /*background-color: rgb(237, 237, 237);*/
-    font: menu;
-    margin: 0;
-    box-sizing: border-box;
-    padding: 0 30px;
-    min-height: 800px;
+	/*background-color: rgb(237, 237, 237);*/
+	font: menu;
+	margin: 0;
+	box-sizing: border-box;
+	padding: 0 30px;
+	min-height: 800px;
 }
 
 span.selectLabel {
-    display: inline-block;
-    display: inline-block;
-    min-width: 250px;
-    max-width: 300px;
+	display: inline-block;
+	display: inline-block;
+	min-width: 250px;
+	max-width: 300px;
 }
 
 _:-moz-tree-row(hover), body {
-    padding: 5px 20px!important;
+	padding: 5px 20px!important;
 }
 
 section {
-    margin: 0 auto;
-    width: 600px;
+	margin: 0 auto;
+	width: 600px;
 }
 
 section:last-child {
-    margin-bottom: 20px;
+	margin-bottom: 20px;
 }
 
 a {
-    color: rgb(17, 85, 204);
+	color: rgb(17, 85, 204);
 }
 
 .section-header {
-    color: rgb(95, 95, 95);
-    display: flex;
-    font-size: 1.17rem;
-    font-weight: normal;
-    line-height: 2rem;
-    margin: 20px 0 12px 0;
+	color: rgb(95, 95, 95);
+	display: flex;
+	font-size: 1.17rem;
+	font-weight: normal;
+	line-height: 2rem;
+	margin: 20px 0 12px 0;
 }
 
 .section-header::after {
-    background-image: linear-gradient(rgb(190, 190, 190), transparent 1px);
-    background-position: left 55%;
-    background-repeat: no-repeat;
-    background-size: 100% 1px;
-    content: '';
-    flex: auto;
+	background-image: linear-gradient(rgb(190, 190, 190), transparent 1px);
+	background-position: left 55%;
+	background-repeat: no-repeat;
+	background-size: 100% 1px;
+	content: '';
+	flex: auto;
 }
 
 section div {
-    margin: 5px 20px;
+	margin: 5px 20px;
 }
 
 .sub-navigation-option {
-    margin-left: 25px;
+	margin-left: 25px;
 }
 
 .hidden {
-    display: none!important;
+	display: none!important;
 }
 
 .checkbox span,
 input[type=button],
 input[type=checkbox] {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 .valspan {
-    vertical-align: middle;
-    font-size: 0.8rem;
-    color: #666;
+	vertical-align: middle;
+	font-size: 0.8rem;
+	color: #666;
 }
 
 .valspan input[type=range] {
-    padding: 0;
-    margin: 0;
-    vertical-align: middle;
+	padding: 0;
+	margin: 0;
+	vertical-align: middle;
 }
 
 select {
-    cursor: pointer;
-    min-width: 110px;
+	cursor: pointer;
+	min-width: 110px;
 }
 
 input[type=number] {
-    min-width: 110px;
-    box-sizing: border-box;
-    padding: 1px 3px;
+	min-width: 110px;
+	box-sizing: border-box;
+	padding: 1px 3px;
+	margin-right: 0.3rem;
 }
 
-button, input[type=file] *{
-    -moz-appearance: none;
-    -webkit-appearance: none;
-    padding: 2px 12px;
-    margin-right: 5px;
-    min-width: 6.3em;
-    min-height: 30px;
-    background: transparent;
-    color: rgb(51, 51, 51);
-    border: 1px solid rgb(193, 193, 193);
+button {
+	padding: 2px 12px;
+	margin-right: 5px;
+	min-width: 6.3em;
+}
+
+input[type=file] {
+	height: 0;
+	visibility: hidden;
+	width: 0;
 }
 
 input[type=checkbox] {
-    vertical-align: sub;
+	vertical-align: sub;
 }
 
 *:before {
-    padding-right: 5px;
-    font: menu;
+	padding-right: 5px;
+	font: menu;
 }
 
 .localization:before { content: '__MSG_LOCALIZATION__'; }
@@ -120,6 +121,7 @@ input[type=checkbox] {
 .thick-frame:before { content: '__MSG_THICK_FRAME__'; }
 .article-font-size:before { content: '__MSG_ARTICLE_FONT_SIZE__'; }
 .ui-font-size:before { content: '__MSG_UI_FONT_SIZE__'; }
+.move-by-scrolled:before { content: '__MSG_MOVE_BY_SCROLLED__'; }
 .show-upd-spinner:before { content: '__MSG_SHOW_UPD_SPINNER__'; }
 .behaviour:before { content: '__MSG_BEHAVIOUR__'; }
 .auto-read:before { content: '__MSG_AUTO_READ__'; }
@@ -145,11 +147,11 @@ input[type=checkbox] {
 .version:before { content: '__MSG_VERSION__'; }
 .bug-reps:before { content: '__MSG_BUG_REPS__'; }
 .found-bug:before { content: '__MSG_FOUND_BUG__'; }
-
-
 .sync:before { content: '__MSG_SYNC__'; }
 .sync-all:before { content: '__MSG_SYNC_ALL__'; }
 #sync-data-out:before { content: '__MSG_SYNC_DATA_OUT__'; }
 #sync-data-in:before { content: '__MSG_SYNC_DATA_IN__'; }
 #sync-data-auto:before { content: '__MSG_SYNC_DATA_AUTO__'; }
 #sync-data-manual:before { content: '__MSG_SYNC_DATA_MANUAL__'; }
+#open-dialog-import-opml:before { content: '__MSG_IMPORT__'; }
+#open-dialog-import-smart:before { content: '__MSG_IMPORT__'; }

@@ -193,7 +193,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		},
 
 		/**
-		 * Sends msg to show selected article
+		 * Sends message to show selected article
 		 * @method handlePick
 		 * @triggered when one article is selected
 		 * @param view {views/ItemView}
@@ -305,7 +305,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		/**
 		 * Unbinds all listeners to bg process
 		 * @method handleClearEvents
-		 * @triggered when tab is closed/refershed
+		 * @triggered when tab is closed/refreshed
 		 * @param id {Integer} id of the closed tab
 		 */
 		handleClearEvents: function(id) {
@@ -335,7 +335,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		},
 
 		/**
-		 * Clears searchbox and sorts the list
+		 * Clears search-box and sorts the list
 		 * @method handleSort
 		 * @triggered when sort setting is changed
 		 */
@@ -346,7 +346,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		},
 
 		/**
-		 * Adds or removes neccesary one-line/twoline classes for given lines settings
+		 * Adds or removes necessary one-line/two-line classes for given lines settings
 		 * @method handleChangeLines
 		 * @triggered when lines setting is changed
 		 * @param settings {Settings} bg.Settings
@@ -460,7 +460,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 				view = new ItemView({ model: item }, this);
 				view.render().$el.insertBefore($(after));
 
-				// weee, this is definitelly not working 100% right :D or is it?
+				// TOFIX: is this not working right?
 				var indexElement = after.view instanceof ItemView ? after : after.nextElementSibling;
 				var index = indexElement ? this.views.indexOf(indexElement.view) : -1;
 				if (index == -1) index = this.reuseIndex;
@@ -510,7 +510,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		},
 
 		/**
-		 * Removes everything from lists and adds new collectino of articles
+		 * Removes everything from lists and adds new collection of articles
 		 * @method setItemHeight
 		 * @param items {Backbone.Collection} bg.Items
 		 */
@@ -525,9 +525,8 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 			this.$el.find('.selected').removeClass('.selected');
 			this.$el.find('.last-selected').removeClass('.last-selected');
 			this.selectPivot = null;
+			if (!items.length) app.trigger('no-items:' + this.el.id);
 			/* --- */
-
-			//var st = Date.now();
 
 			this.setItemHeight();
 			this.reuseIndex = 0;
@@ -543,12 +542,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 
 			this.redraw();
 
-			if ($('input[type=search]').val()) {
-				app.actions.execute('articles:search');
-			}
-
-			//console.warn(Date.now() - st);
-
+			if ($('input[type=search]').val().trim()) app.actions.execute('articles:search');
 		},
 
 		/**
@@ -558,8 +552,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		clearOnSelect: function() {
 			// if prev selected was trash, hide undelete buttons
 			if (this.currentData.name == 'trash') {
-				/*$('[data-action="articles:update"]').css('display', 'block');
-				$('[data-action="articles:undelete"]').css('display', 'none');*/
 				app.articles.toolbar.showItems('articles:update');
 				app.articles.toolbar.hideItems('articles:undelete');
 				$('#context-undelete').css('display', 'none');
@@ -583,12 +575,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 			this.clearOnSelect();
 			this.currentData = data;
 
-			var searchIn = null;
-			if (data.filter) {
-				searchIn = bg.items.where(data.filter);
-			} else {
-				searchIn = bg.items.where({ trashed: false });
-			}
+			var searchIn = bg.items.where(data.filter ? data.filter : { trashed: false });
 
 			// if newly selected is trash
 			if (this.currentData.name == 'trash') {
@@ -642,9 +629,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @param view {views/ItemView} Undeleted article view
 		 */
 		undeleteItem: function(view) {
-			view.model.save({
-				'trashed': false
-			});
+			view.model.save({ trashed: false });
 			this.destroyItem(view);
 		},
 
@@ -785,7 +770,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 				if (!opt.onlyToRead || item.model.get('unread') == true) {
 					item.model.save({ unread: val, visited: true });
 				}
-
 			}, this);
 		}
 	});

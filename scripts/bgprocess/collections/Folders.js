@@ -18,7 +18,7 @@ define(['backbone', 'models/Folder', 'backboneDB'], function (BB, Folder) {
 			//if (t1 === t2) return 0;
 			return t1 < t2  ? -1 : 1;
 		},
-		browserStorage: new BB.BrowserStorage('folders-backbone', 'id', 'local')
+		storage: new BB.CustomStorage('folders-backbone', 'id', 'local')
 	});
 
 	return Folders;

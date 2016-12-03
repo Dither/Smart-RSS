@@ -43,7 +43,7 @@ define(['backbone', 'models/Item', 'preps/storage'], function (BB, Item) {
 			this.listenTo(settings, 'change:sortBy', this.sort);
 			this.listenTo(settings, 'change:sortBy2', this.sort);
 		},
-		localStorage: new BB.LocalStorage('items-backbone', 'id', 'indexed')
+		storage: new BB.CustomStorage('items-backbone', 'id', 'indexed')
 	});
 
 	return Items;

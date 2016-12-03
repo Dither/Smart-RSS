@@ -40,10 +40,9 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	window.favicons = new Favicons();
 
 	/**
-	 * This is used for when new feed is subsribed and smart rss tab is opened to focus the newly added feed
+	 * This is used to focus the newly added feed when the reader opened for it
 	 */
 	window.sourceToFocus = null;
-
 	window.toolbars = new Toolbars();
 
 	/**
@@ -137,9 +136,9 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 			if (sourceID) {
 				var source = sources.findWhere({ id: sourceID });
 				if (source) {
-					setTimeout(function(source) { loader.downloadFeeds([source]); }, window.defaultDownloadTimeout);
+					downloadAllFeeds();
 				} else {
-					console.log('No source with ID: ' + sourceID);
+					console.log('[Smart RSS] Alarm called but no source with ID:', sourceID);
 					browser.alarms.clear(alarm.name);
 				}
 			}
@@ -162,9 +161,9 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		info.setEvents(sources);
 
 		/**
-		 * Init
+		 * Extension init
 		 */
-		setTimeout(function() { loader.downloadFeeds(sources.toArray()) }, window.defaultDownloadTimeout);
+		downloadAllFeeds();
 		appStarted = true;
 		browser.runtime.sendMessage({started: true});
 		/**
@@ -188,6 +187,10 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		if (!message.hasOwnProperty('action')) return;
 		if (message.action === 'new-rss' && message.value) onExternalLink(message.value);
 	});
+
+	window.downloadAllFeeds = function() {
+		setTimeout(function() { loader.downloadFeeds(sources.toArray()) }, window.defaultDownloadTimeout);
+	}
 
 	function onExternalLink(url) {
 		url = url.replace(/^feed:/i, 'http:');
@@ -216,7 +219,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 
 	function getContentType(arr) {
 		for (var i=0; i < arr.length; i++) {
-			if (arr[i].name.toLowerCase() == 'content-type') {
+			if (arr[i].name.toLowerCase() === 'content-type') {
 				arr = arr[i].value.split(';');
 				return arr[0];
 			}
@@ -244,7 +247,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		}, function(tabs) {
 			var matchedTab = null; //tabs[0]
 
-			// Firefox hack because `moz-extension://` url query won't work
+			// Firefox hack because `moz-extension://` url query doesn't work
 			if (tabs && tabs.length) {
 				for (var i = tabs.length; i--; ) {
 					if (tabs[i].url === url) {
@@ -253,6 +256,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 					}
 				}
 			}
+
 			if (matchedTab) {
 				if (matchedTab.active && closeIfActive) {
 					browser.tabs.remove(matchedTab.id);
