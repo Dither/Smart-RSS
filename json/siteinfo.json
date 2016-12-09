@@ -2,5 +2,14 @@
 {
     "url": "^https://twitter\\.com/",
     "pageElement": ".js-tweet-text-container"
+},
+{
+    "url": "^https?://[\\w-_]+\\.reddit\\.com/",
+    "filters": [
+    {"o": "gi", "s": "[\\s\\S]+<a href=\"(https?://[^\"]+\\.(?:jpg|png|webp|gif))v?\">\\[link\\]</a>[\\s\\S]+","r": "<img src=\"$1\">"},
+    {"o": "gi", "s": "[\\s\\S]+<a href=\"(https?://i\\.reddituploads\\.com/[^\"]+)\">\\[link\\]</a>[\\s\\S]+","r": "<img src=\"$1\">"},
+    {"o": "gi", "s": "[\\s\\S]+<a href=\"https?://www\\.youtube\\.com/[^\"]+v=([^=\"&]+)(?:[^\"]+)?\">\\[link\\]</a>[\\s\\S]+","r": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/$1\" frameborder=\"0\"></iframe>"},
+    {"o": "gi", "s": "[\\s\\S]+<a href=\"https?://gfycat.com/([^\"]+)\">\\[link\\]</a>[\\s\\S]+","r": "<iframe src=\"https://gfycat.com/ifr/$1\" frameborder=\"0\"></iframe>"}
+    ]
 }
 ]

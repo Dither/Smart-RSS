@@ -117,14 +117,18 @@ return {
 						var feeds = require('views/feedList').getSelectedFeeds();
 						var folders = require('views/feedList').getSelectedFolders();
 
-						feeds.forEach(function(feed) {
-							bg.favicons.where({ sourceID: feed.id }).forEach(function(item){ item.destroy(); });
-							feed.destroy();
-						});
-
 						folders.forEach(function(folder) {
 							folder.destroy();
 						});
+
+						feeds.forEach(function(feed) {
+							feed.destroy();
+							var favicons = bg.favicons.where({ sourceID: feed.id });
+							if (favicons && favicons.length)
+								favicons.forEach(function(item){ item.destroy(); })
+						});
+
+						app.trigger('no-items:article-list');
 					}
 				});
 			}
@@ -158,14 +162,12 @@ return {
 					confirm: function(btn, url) {
 						if (!url)  return;
 
-						var folderID = 0;
+						var folderID = '';
 						var list = require('views/feedList');
 						if (list.selectedItems.length && list.selectedItems[0].$el.hasClass('folder')) {
 							var fid = list.selectedItems[0].model.get('id');
 							// make sure source is not added to folder which is not in db
-							if (bg.folders.get(fid)) {
-								folderID = fid;
-							}
+							if (bg.folders.get(fid)) folderID = fid;
 						}
 
 						url = app.fixURL(url);
@@ -178,14 +180,17 @@ return {
 								updateEvery: 180,
 								fulltextEnable: 0,
 								folderID: folderID
-							}, { wait: true });
-							app.trigger('focus-feed', newFeed.get('id'));
+							}, {
+								wait: true,
+								success: function(c, s) {
+									app.trigger('focus-feed', s.id);
+								}
+							});
 						} else {
 							app.trigger('focus-feed', duplicate.get('id'));
 						}
 					}
 				});
-
 			}
 		},
 		addFolder: {
@@ -195,11 +200,8 @@ return {
 				$.prompt({
 					text: _T('FOLDER_NAME') + ': ',
 					confirm: function(btn, title) {
-						if (!title) return;
-
-						bg.folders.create({
-							title: title
-						}, { wait: true });
+						if (!title || !title.trim()) return;
+						bg.folders.create({ title: title }, { wait: true });
 					}
 				});
 			}

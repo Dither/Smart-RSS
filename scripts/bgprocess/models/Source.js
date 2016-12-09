@@ -2,10 +2,10 @@
  * @module BgProcess
  * @submodule models/Source
  */
-define(['backbone'], function (BB) {
+define(['backbone', 'underscore'], function (BB, _) {
 
 	/**
-	 * Feed module
+	 * Feed source module
 	 * @class Source
 	 * @constructor
 	 * @extends Backbone.Model
@@ -28,9 +28,23 @@ define(['backbone'], function (BB) {
 			autoremove: 0 // in days
 		},
 
+		dynamic: ['isLoading'],
+
 		initialize: function() {
-			// in case user quits browser when the source is being updated
-			this.set('isLoading', false);
+		},
+
+		// omit some attributes from saving
+		save: function(key, val, options) {
+			var attrs;
+			if (key == null || typeof key === 'object') { attrs = key; options = val; }
+			else { (attrs = {})[key] = val; }
+
+			attrs || (attrs = _.clone(this.attributes));
+			if (attrs && (!options || !options.wait) && !this.set(_.pick(attrs, this.dynamic), options))
+				return false;
+			attrs = _.omit(attrs, this.dynamic);
+
+			return BB.Model.prototype.save.call(this, attrs, options);
 		},
 
 		getPass: function() {

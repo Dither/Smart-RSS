@@ -449,18 +449,9 @@ define(['backbone', 'jquery', 'underscore', 'views/SourceView', 'views/FolderVie
 		 * @param arr {Array} List of selected items
 		 */
 		getSelectedFeeds: function(arr) {
-			var si = arr || _.pluck(this.selectedItems, 'model');
-			var rt = [];
-			for (var i=0; i<si.length; i++) {
-				if (si[i] instanceof bg.Source) {
-					rt.push(si[i]);
-				} else if (si[i] instanceof bg.Folder) {
-					var folderFeeds = bg.sources.where({ folderID: si[i].id });
-					rt.push.apply(rt, this.getSelectedFeeds(folderFeeds));
-				}
-			}
-
-			return _.unique(rt);
+			var si = arr || _.pluck(this.selectedItems, 'model'),
+				rt = bg.flatSources(si);
+			return rt; // _.unique(rt); // why unique? do sources/folders duplicate somehow?
 		},
 
 		/**
@@ -469,16 +460,8 @@ define(['backbone', 'jquery', 'underscore', 'views/SourceView', 'views/FolderVie
 		 * @param arr {Array} List of selected items
 		 */
 		getSelectedFolders: function(arr) {
-			var si = arr || _.pluck(this.selectedItems, 'model');
-			var rt = [];
-			for (var i=0; i<si.length; i++) {
-				if (si[i] instanceof bg.Folder) {
-					rt.push(si[i]);
-					/*var folderFeeds = bg.sources.where({ folderID: si[i].id });
-					rt.push.apply(rt, this.getSelectedFeeds(folderFeeds));*/
-				}
-			}
-
+			var si = arr || _.pluck(this.selectedItems, 'model'),
+				rt = bg.flatFolders(si);
 			return rt;
 		}
 	});

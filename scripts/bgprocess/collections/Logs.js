@@ -2,7 +2,7 @@
  * @module BgProcess
  * @submodule collections/Logs
  */
-define(['backbone', 'models/Log'], function (BB, Log) {
+define(['backbone'], function (BB) {
 
 	/**
 	 * Collection of error log modules
@@ -11,13 +11,19 @@ define(['backbone', 'models/Log'], function (BB, Log) {
 	 * @extends Backbone.Collection
 	 */
 	var Logs = BB.Collection.extend({
-		model: Log,
+		model: BB.Model.extend({
+			defaults: {
+				message: '<no message>'
+			}
+		}),
 		initialze: function() {
 		},
 		startLogging: function() {
 			window.onerror = function(a, b, c) {
-				var file = b.replace(/\w+\-extension:\/\/[^\/]+\//, '');
-				var msg = a.toString() + ' (Line: ' + c.toString() + ', File: ' + file + ')';
+				var path = /\w+-extension:\/\/[^\/]+\//,
+					file = b.replace(path, ''),
+					msg = '[' + file + ']' + a.toString() + (c && (' @' + c.toString()));
+
 				logs.add({
 					message: msg
 				});

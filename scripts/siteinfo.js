@@ -25,6 +25,7 @@ try {
 	}
 */
 function getSiteinfo(url) {
+	if (!siteinfo) return [];
 	var nodes = [];
 	for (var nodes = [], i = 0, len = siteinfo.length; i < len; i++) {
 		try {

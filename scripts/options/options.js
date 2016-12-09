@@ -159,6 +159,11 @@ browser.runtime.getBackgroundPage(function(bg) {
 		reader.readAsDataURL(file);
 	}
 
+	function readableTime() {
+		var now = new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000);
+		return now.toISOString().replace(/\.\d+Z$/, '').replace(/:/g, '-').replace('T', '_');
+	}
+
 	function handleExportSmart() {
 		var data = {
 			folders: bg.folders.toJSON(),
@@ -174,7 +179,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 		setTimeout(function() {
 			var expr = new Blob([JSON.stringify(data)]);
 			$('#smart-exported').attr('href', URL.createObjectURL(expr));
-			$('#smart-exported').attr('download', 'exported-rss.smart');
+			$('#smart-exported').attr('download', 'exported-rss-' + readableTime() + '.smart');
 			$('#smart-exported').html(_T('CLICK_TO_DOWNLOAD'));
 		}, 200);
 	}
@@ -221,8 +226,6 @@ browser.runtime.getBackgroundPage(function(bg) {
 			});
 
 			bg.sources.forEach(function(source) {
-				//middle += '\n\t<outline text="' + escapeHtml(source.get('title')) + '" title="' + escapeHtml(source.get('title')) + '" type="rss" xmlUrl="' + escapeHtml(source.get('url')) + '" />';
-
 				if (source.get('folderID')) {
 					var folder = body.querySelector('[id="' + source.get('folderID') + '"]');
 					if (folder) {
@@ -246,7 +249,7 @@ browser.runtime.getBackgroundPage(function(bg) {
 
 			var expr = new Blob([ (new XMLSerializer()).serializeToString(doc) ]);
 			$('#opml-exported').attr('href', URL.createObjectURL(expr));
-			$('#opml-exported').attr('download', 'exported-rss.opml');
+			$('#opml-exported').attr('download', 'exported-rss-' + readableTime() + '.opml');
 			$('#opml-exported').html(_T('CLICK_TO_DOWNLOAD'));
 		}, 200);
 	}
@@ -264,16 +267,31 @@ browser.runtime.getBackgroundPage(function(bg) {
 
 			$('#smart-imported').html(_T('WAIT_IMPORTING'));
 
+			var setStorage = function(type, name, items) {
+				return new Promise(function(resolve, reject) {
+					return browser.storage[type].get(name, function(store) {
+						if (!store[name]) store[name] = {};
+						for (var i=0, j=items.length; i<j; i++) store[name][items[i].id] = items[i];
+						browser.storage[type].set(store, resolve);
+					});
+				});
+			};
+
 			var worker = new Worker('scripts/options/worker.js');
 			worker.onmessage = function(e) {
 				if (e.data.action == 'finished'){
 					$('#smart-imported').html(_T('LOADING_TO_MEMORY'));
 
-					bg.fetchAll().always(function() {
-						bg.info.autoSetData();
-						$('#smart-imported').html(_T('IMPORT_COMPLETE'));
-						bg.loader.downloadFeeds(bg.sources.toArray(), true);
+					setStorage('local', 'folders-backbone', data.folders).then(function() {
+						setStorage('local', 'sources-backbone', data.sources).then(function() {
+							bg.fetchAll().always(function() {
+								bg.info.autoSetData();
+								$('#smart-imported').html(_T('IMPORT_COMPLETE'));
+								bg.downloadAllFeeds(true);
+							});
+						});
 					});
+
 				} else if (e.data.action == 'message'){
 					if (e.data.value == 1) $('#smart-imported').html(_T('IMPORT_WRITING'));
 				}
@@ -287,20 +305,6 @@ browser.runtime.getBackgroundPage(function(bg) {
 					confirmButton: _T("OK")
 				});
 			};
-
-			var f = data.folders;
-			var s = data.sources;
-			browser.storage.local.get('folders-backbone', function(data) {
-				if (!data['sources-backbone']) data['folders-backbone'] = {};
-				for (var i=0, j=f.length; i<j; i++) data['folders-backbone'][f[i].id] = f[i];
-				browser.storage.local.set(data);
-			});
-
-			browser.storage.local.get('sources-backbone', function(data) {
-				if (!data['sources-backbone']) data['sources-backbone'] = {};
-				for (var i=0, j=s.length; i<j; i++) data['sources-backbone'][s[i].id] = s[i];
-				browser.storage.local.set(data);
-			});
 		}
 
 		bg.closeRSS(function() {
@@ -325,35 +329,42 @@ browser.runtime.getBackgroundPage(function(bg) {
 
 			var feeds = doc.querySelectorAll('body > outline[text], body > outline[title]');
 			for (var i=0; i<feeds.length; i++) {
-				if ( !feeds[i].hasAttribute('xmlUrl') ) {
+				if (!feeds[i].hasAttribute('xmlUrl')) {
+
 					var subfeeds = feeds[i].querySelectorAll('outline[xmlUrl]');
 					var folderTitle = decodeHTML(feeds[i].getAttribute('title') || feeds[i].getAttribute('text'));
-					var duplicite = bg.folders.findWhere({ title: folderTitle });
-					var folder = duplicite || bg.folders.create({ title: folderTitle }, { wait: true });
-
-					for (var n=0; n<subfeeds.length; n++) {
-						if ( bg.sources.findWhere({ url: decodeHTML(subfeeds[n].getAttribute('xmlUrl')) }) ) continue;
-						bg.sources.create({
-							title: decodeHTML(subfeeds[n].getAttribute('title') || subfeeds[n].getAttribute('text')),
-							url: decodeHTML(subfeeds[n].getAttribute('xmlUrl')),
-							updateEvery: 180,
-							folderID: folder.get('id')
-						}, { wait: true });
+					var folder = bg.folders.findWhere({ title: folderTitle });
+					var addItems = function(next, resp) {
+						for (var n = subfeeds.length; n--;) {
+							if (bg.sources.findWhere({ url: decodeHTML(subfeeds[n].getAttribute('xmlUrl')) }) )
+								continue;
+							bg.sources.create({
+								title: decodeHTML(subfeeds[n].getAttribute('title') || subfeeds[n].getAttribute('text')),
+								url: decodeHTML(subfeeds[n].getAttribute('xmlUrl')),
+								updateEvery: 180,
+								folderID: resp.id
+							}, { wait: true, silent: true });
+						}
+					};
+					if (folder) {
+						addItems(null, folder);
+					} else {
+						bg.folders.create({ title: folderTitle }, { wait: true, success: addItems });
 					}
 				} else {
-					if ( bg.sources.findWhere({ url: decodeHTML(feeds[i].getAttribute('xmlUrl')) }) ) continue;
+					if (bg.sources.findWhere({ url: decodeHTML(feeds[i].getAttribute('xmlUrl')) })) continue;
 					bg.sources.create({
 						title: decodeHTML(feeds[i].getAttribute('title') || feeds[i].getAttribute('text')),
 						url: decodeHTML(feeds[i].getAttribute('xmlUrl')),
 						updateEvery: 180
-					}, { wait: true });
+					}, { wait: true, silent: true });
 				}
 			}
 
 			$('#opml-imported').html(_T('IMPORT_COMPLETE'));
 
 			setTimeout(function() {
-				bg.loader.downloadFeeds(bg.sources.toArray());
+				bg.downloadAllFeeds(true);
 			}, 200);
 		}
 

@@ -2,12 +2,12 @@
  * @module BgProcess
  */
 define([
-	'jquery',
+	'jquery', 'underscore',
 	'modules/Animation', 'models/Settings', 'models/Info', 'models/Source',
 	'collections/Sources', 'collections/Items', 'collections/Folders', 'models/Loader', 'collections/Logs',
 	'models/Folder', 'models/Item', 'collections/Toolbars', 'collections/Favicons'
 ],
-function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader, Logs, Folder, Item, Toolbars, Favicons) {
+function ($, _, animation, Settings, Info, Source, Sources, Items, Folders, Loader, Logs, Folder, Item, Toolbars, Favicons) {
 
 	/**
 	 * Update animations
@@ -51,7 +51,8 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 	window.loader = new Loader();
 	window.logs = new Logs();
 
-	window.defaultDownloadTimeout = 20000;
+	window.initDownloadTimeout = 20000;
+    window.lastDownloadAll = 0;
 
 	logs.startLogging();
 
@@ -89,8 +90,31 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		return allDef.promise();
 	}
 
+	// Get sources from more than one level of folders
+	function flatSources(treeArray) {
+		if (!treeArray || !treeArray.length) return [];
+		return treeArray.reduce(function (flatArray, model) {
+			return flatArray.concat((model instanceof Folder) ?
+						flatSources(sources.where({ folderID: model.id })) :
+						model
+					);
+		}, []);
+	}
+
+	// Get folders from more than one level of folders
+	function flatFolders(treeArray) {
+		if (!treeArray || !treeArray.length) return [];
+		return treeArray.reduce(function (flatArray, model) {
+			if (model instanceof Folder)
+				return flatArray.concat(model, flatFolders(sources.where({ folderID: model.id })));
+			return flatArray;
+		}, []);
+	}
+
 	window.fetchAll = fetchAll;
 	window.fetchOne = fetchOne;
+	window.flatSources = flatSources;
+	window.flatFolders = flatFolders;
 
 	var isFirefox = (typeof InstallTrigger !== 'undefined');
 
@@ -109,42 +133,39 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		 * Set events
 		 */
 		sources.on('add', function(source) {
-			var ttl = source.get('updateEvery');
-			if (!isNaN(ttl) && ttl > 0 && ttl < 100000) {
-				browser.alarms.create('source-' + source.get('id'), {
+			// forced downloads will automatically trigger reset-alarm
+			loader.downloadFeeds([source], true);
+		});
+
+		sources.on('change:updateEvery reset-alarm', function() {
+			browser.alarms.clearAll();
+
+			// get lowest of updateEvery and do non-forced download of all feeds
+			// with this period; loader will figure which feeds to ignore
+			var s = sources.toArray();
+			if (!s.length) return;
+
+			var ttl = _.min(s, function(source) {
+				var t = source.get('updateEvery');
+				return !isNaN(t) && t > 0 ? t : 43800;
+			}).get('updateEvery');
+
+			if (ttl > 0 && ttl < 43800) {
+				browser.alarms.create('update', {
 					delayInMinutes: ttl,
 					periodInMinutes: ttl
 				});
 			}
+		});
+
+		browser.alarms.onAlarm.addListener(function() {
+			downloadAllFeeds();
+		});
+
+		sources.on('change:url', function(source) {
 			loader.downloadFeeds([source]);
 		});
 
-		sources.on('change:updateEvery reset-alarm', function(source) {
-			var ttl = source.get('updateEvery');
-			if (!isNaN(ttl) && ttl > 0 && ttl < 100000) {
-				browser.alarms.create('source-' + source.get('id'), {
-					delayInMinutes: ttl,
-					periodInMinutes: ttl
-				});
-			} else {
-				browser.alarms.clear('source-' + source.get('id'));
-			}
-		});
-
-		browser.alarms.onAlarm.addListener(function(alarm) {
-			var sourceID = alarm.name.replace('source-', '');
-			if (sourceID) {
-				var source = sources.findWhere({ id: sourceID });
-				if (source) {
-					downloadAllFeeds();
-				} else {
-					console.log('[Smart RSS] Alarm called but no source with ID:', sourceID);
-					browser.alarms.clear(alarm.name);
-				}
-			}
-		});
-
-		sources.on('change:url', function(source) { loader.downloadFeeds([source]); });
 		sources.on('change:title', function(source) {
 			// if url was changed as well change:url listener will download the source
 			if (!source.get('title')) loader.downloadFeeds([source]);
@@ -163,19 +184,16 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		/**
 		 * Extension init
 		 */
-		downloadAllFeeds();
+		setTimeout(downloadAllFeeds, window.initDownloadTimeout);
 		appStarted = true;
 		browser.runtime.sendMessage({started: true});
+
 		/**
-		 * onclick:button -> open RSS
+		 * onclick:button (debounced) -> open RSS
 		 */
-		var pending = false;
-		browser.browserAction.onClicked.addListener(function() {
-			if (pending) return;
-			pending = true;
-			setTimeout(function() { pending = false; }, 1000);
+		browser.browserAction.onClicked.addListener(_.debounce(function() {
 			openRSS(true);
-		});
+		}, 1000, true));
 	}); //fetchAll().always
 	}); //$
 
@@ -188,21 +206,32 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		if (message.action === 'new-rss' && message.value) onExternalLink(message.value);
 	});
 
-	window.downloadAllFeeds = function() {
-		setTimeout(function() { loader.downloadFeeds(sources.toArray()) }, window.defaultDownloadTimeout);
+	window.downloadAllFeeds = function(force) {
+        var now = Date.now();
+        if (!force && (window.lastDownloadAll + 3 * 60 * 1000 > now)) return; // don't auto-fetch too often
+        window.lastDownloadAll = now;
+		loader.downloadFeeds(sources.toArray(), force);
 	}
 
-	function onExternalLink(url) {
+	var onExternalLink = _.debounce(function(url) {
 		url = url.replace(/^feed:/i, 'http:');
 
 		var duplicate = sources.findWhere({ url: url });
 		if (!duplicate) {
-			var s = sources.create({ title: url, url: url, updateEvery: 180 }, { wait: true });
-			openRSS(false, s.get('id'));
+			sources.create({
+				title: url,
+				url: url,
+				updateEvery: 180
+			}, {
+				wait: true,
+				success: function(c, s) {
+					openRSS(false, s.id);
+				}
+			});
 		} else {
 			openRSS(false, duplicate.get('id'));
 		}
-	}
+	}, 600, true);
 
 	// Capture raw feeds in Firefox and prevent embedded feed viewer.
 	// We need additional "webRequest", "webRequestBlocking", "<all_urls>" permissions only for that.
@@ -235,7 +264,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		var contentType = getContentType(details.responseHeaders);
 		if (~rssMimes.indexOf(contentType) || (~xmlMimes.indexOf(contentType) && urlParts.test(details.url))) {
 			browser.tabs.remove(details.tabId);
-			return onExternalLink(details.url.replace(/(?:data|javascript):.+/ig, ''));
+            onExternalLink(details.url.replace(/(?:data|javascript):.+/ig, ''));
 		}
 		return false;
 	}
@@ -247,7 +276,7 @@ function ($, animation, Settings, Info, Source, Sources, Items, Folders, Loader,
 		}, function(tabs) {
 			var matchedTab = null; //tabs[0]
 
-			// Firefox hack because `moz-extension://` url query doesn't work
+			// Firefox hack because `moz-extension:` url query doesn't work
 			if (tabs && tabs.length) {
 				for (var i = tabs.length; i--; ) {
 					if (tabs[i].url === url) {

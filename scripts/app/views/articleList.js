@@ -118,6 +118,14 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 */
 		reuseIndex: 0,
 
+		/**
+		 * Timeout for read event
+		 * @property reuseIndex
+		 * @default null
+		 * @type Integer
+		 */
+		readTime: null,
+
 		events: {
 			'dragstart .item': 'handleDragStart',
 			'mousedown .item': 'handleMouseDown',
@@ -204,11 +212,16 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 
 			app.trigger('select:' + this.el.id, { action: 'new-select', value: view.model.id });
 
-			if (view.model.get('unread') && bg.settings.get('readOnVisit')) {
-				view.model.save({
-					visited: true,
-					unread: false
-				});
+			var readOn = bg.settings.get('markReadS') ;
+			if (view.model.get('unread') && (readOn > -1)) {
+				clearTimeout(this.readTime);
+				this.readTime = setTimeout(function () {
+					if (!view || !view.model) return;
+					view.model.save({
+						visited: true,
+						unread: false
+					});
+				}, readOn * 1000);
 			} else if (!view.model.get('visited')) {
 				view.model.save('visited', true);
 			}
@@ -342,7 +355,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		handleSort: function() {
 			$('.input-search').val('');
 			this.handleNewSelected(this.currentData);
-
 		},
 
 		/**
@@ -642,7 +654,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 			askRmPinned = bg.settings.get('askRmPinned')
 			if (view.model.get('pinned') && askRmPinned == 'all') {
 				$.confirm({
-					text: _T('PIN_QUESTION_A').replace('%s', view.model.escape('title')),
+					text: _T('PIN_QUESTION').replace('%s', view.model.escape('title')),
 					confirm: function() {
 						view.model.save({ trashed: true, visited: true });
 					}
@@ -653,7 +665,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		},
 
 		/**
-		 * Removes item from both source and trash leaving only info it has been already fetched and deleted
+		 * Removes item from both source and trash leaving only ID and dateCreated intact
 		 * @method removeItemCompletely
 		 * @param view {views/ItemView} Removed article view
 		 */
@@ -661,7 +673,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 			askRmPinned = bg.settings.get('askRmPinned')
 			if (view.model.get('pinned') && askRmPinned && askRmPinned != 'none') {
 				$.confirm({
-					text: _T('PIN_QUESTION_A') + view.model.escape('title') + _T('PIN_QUESTION_B'),
+					text: _T('PIN_QUESTION').replace('%s', view.model.escape('title')),
 					confirm: function() {
 						view.model.markAsDeleted();
 					}
@@ -678,9 +690,7 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 		 * @param fn {Function} Function to be called on each view
 		 */
 		destroyBatch: function(arr, fn) {
-			for (var i=0, j=arr.length; i<j; i++) {
-				fn.call(this, arr[i]);
-			}
+			for (var i=0, j=arr.length; i<j; i++) fn.call(this, arr[i]);
 		},
 
 		/**
@@ -720,7 +730,6 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 					this.handleScroll();
 
 					this.trigger('items-destroyed');
-
 				}.bind(this));
 			}
 		},
@@ -775,6 +784,5 @@ function (BB, _, $, Groups, Group, GroupView, ItemView, selectable) {
 	});
 
 	ArticleListView = ArticleListView.extend(selectable);
-
 	return new ArticleListView();
 });

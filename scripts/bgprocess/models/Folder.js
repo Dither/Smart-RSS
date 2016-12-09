@@ -12,7 +12,7 @@ define(['backbone'], function (BB) {
 	 */
 	var Folder = BB.Model.extend({
 		defaults: {
-			title: '<no title>',
+			title: _T('NO_TITLE'),
 			opened: false,
 			count: 0, // unread
 			countAll: 0

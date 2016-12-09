@@ -5,6 +5,9 @@
 	"PRINT": { "message": "Печать" },
 	"SEARCH": { "message": "Поиск..." },
 	"SEARCH_TIP": { "message": "Поиск новостей. Используйте ':', чтобы искать в содержимом." },
+
+	"MIXED": { "message": "Разные" },
+	"DISABLED": { "message": "Отключено" },
 	"NEVER": { "message": "Никогда" },
 	"EVERY_5_MINUTES": { "message": "Каждые 5 минут" },
 	"EVERY_15_MINUTES": { "message": "Каждые 15 минут" },
@@ -131,7 +134,7 @@
 	"MOVE_BY_SCROLLED": { "message": "Навигация доп. скроллом:" },
 	"SHOW_UPD_SPINNER": { "message": "Анимация при обновлении:" },
 	"BEHAVIOUR": { "message": "Поведение" },
-	"AUTO_READ": { "message": "Авто-отмечать прочтённым:" },
+	"AUTO_READ": { "message": "Авто-отмечать прочтённым после:" },
 	"ON_TEN_TABS": { "message": "Спрашивать при открытии >10 окон:" },
 	"PANEL_TOGGLE": { "message": "Показывать переключатель панели:" },
 	"ALWAYS_FULL_DATE": { "message": "Отображать полную дату:" },
@@ -181,6 +184,7 @@
 	"OPTION__USER": { "message": "Пользовательский" },
 	"OPTION__NONE": { "message": "Без звука" },
 	"DEFAULT_SOUNDS": { "message": "Предустановленные" },
+	"DEFAULT_SOUND": { "message": "Файл звука" },
 	"OPTION_KNOCK": { "message": "Тук-тук-тук" },
 	"OPTION_TAPTAP": { "message": "Тап-тап" },
 	"OPTION_GLASS": { "message": "Дзынь" },
@@ -190,8 +194,8 @@
 	"TITLE_DATEFORMAT": { "message": "Обычный = ДД.ММ.ГГГГ, ISO = ГГГГ-ММ-ДД, US = ММ/ДД/ГГГГ" },
 	"TITLE_THICK_FRAME": { "message": "Делает разделитель между колонками толще." },
 	"TITLE_SHOW_UPD_SPINNER": { "message": "Заменить иконку новости анимацией во время обновления." },
-	"TITLE_AUTO_READ": { "message": "Данная опция позволяет отмечать новости прочтённым сразу после их выбора в списке." },
-	"TITLE_ON_TEN_TABS": { "message": "Когда вы выделяете более 10 новостей и нажимаете 'Источник новости' из контекстного меню." },
+	"TITLE_AUTO_READ": { "message": "Задаёт через сколько секунд отмечать новости прочтёнными (-1 = выключено)." },
+	"TITLE_ON_TEN_TABS": { "message": "Запрос, когда выделяете более 10 новостей и нажимаете 'Источник новости'." },
 	"TITLE_TIMEFORMAT": { "message": "Форматирование времени" },
 	"TITLE_APPEARANCE_ICON": { "message": "Цвет иконки на кнопке расширения при появлении свежих новостей." },
 	"TITLE_PANEL_TOGGLE": { "message": "Переключатель панели рассылок слева аналогичный Opera 12." },
@@ -222,5 +226,6 @@
 	"NO_TITLE": { "message": "Без заголовка" },
 	"NO_AUTHOR": { "message": "Без автора" },
 	"NO_CONTENT": { "message": "&nbsp;" },
-    "EMBEDDED_MEDIA": { "message": "[внедрённый медиа-объект]" }
+	"EMBEDDED_MEDIA": { "message": "[внедрённый медиа-объект]" },
+	"SEC": { "message": "сек" }
 }

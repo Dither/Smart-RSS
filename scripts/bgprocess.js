@@ -51,7 +51,7 @@ browser.runtime.onConnect.addListener(function(port) {
 });
 
 function dumpStore(type) {
-	chrome.storage[type || 'sync'].get(function(data) { window.aaa = data;
+	chrome.storage[type || 'local'].get(function(data) {
 		console.log(data, 'Length:', JSON.stringify(data).length);
 	});
 }

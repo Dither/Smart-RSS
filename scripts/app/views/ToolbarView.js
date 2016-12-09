@@ -110,10 +110,10 @@ function (BB, ToolbarItems, $, ToolbarItemsFactory, _) {
 			this.items.add({ actionName: action, type: 'button' });
 		},
 
-		handleButtonClick: function(e) {
+		handleButtonClick: _.debounce(function(e) {
 			var button = e.currentTarget.view.model;
 			app.actions.execute(button.get('actionName'), e);
-		},
+		}, 500, true),
 
 		render: function() {
 			return this;

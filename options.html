@@ -91,13 +91,6 @@
 <section>
 	<h3 class="section-header behaviour"></h3>
 
-	<div class="settings-row learn-more" title="TITLE_AUTO_READ">
-		<label class="web-content-select-label">
-			<span class="selectLabel auto-read"></span>
-			<input type="checkbox" id="readOnVisit" />
-		</label>
-	</div>
-
 	<div class="settings-row learn-more" title="TITLE_ON_TEN_TABS">
 		<label class="web-content-select-label">
 			<span class="selectLabel on-ten-tabs"></span>
@@ -130,6 +123,13 @@
 		<label class="web-content-select-label">
 			<span class="selectLabel title-link"></span>
 			<input type="checkbox" id="titleIsLink" />
+		</label>
+	</div>
+
+	<div class="settings-row learn-more" title="TITLE_AUTO_READ">
+		<label class="web-content-select-label">
+			<span class="selectLabel auto-read"></span>
+			<input type="number" id="markReadS" min="-1" max="30" step="1" /><span class="sec"></span>
 		</label>
 	</div>
 
@@ -192,7 +192,8 @@
 	<div class="settings-row learn-more" title="TITLE_USER_SOUND">
 		<label class="web-content-select-label">
 			<span class="selectLabel user-sound"></span>
-			<input type="file" id="default-sound" />
+			<button class="btn" id="open-dialog-default-sound"></button>
+			<input type="file" id="default-sound" accept=".mp3,.wav,.ogg,.aac,.flac,.opus,|*/*"/>
 		</label>
 	</div>
 

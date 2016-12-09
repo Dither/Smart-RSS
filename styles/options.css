@@ -149,9 +149,12 @@ input[type=checkbox] {
 .found-bug:before { content: '__MSG_FOUND_BUG__'; }
 .sync:before { content: '__MSG_SYNC__'; }
 .sync-all:before { content: '__MSG_SYNC_ALL__'; }
+.sec:before { content: '__MSG_SEC__'; }
 #sync-data-out:before { content: '__MSG_SYNC_DATA_OUT__'; }
 #sync-data-in:before { content: '__MSG_SYNC_DATA_IN__'; }
 #sync-data-auto:before { content: '__MSG_SYNC_DATA_AUTO__'; }
 #sync-data-manual:before { content: '__MSG_SYNC_DATA_MANUAL__'; }
 #open-dialog-import-opml:before { content: '__MSG_IMPORT__'; }
 #open-dialog-import-smart:before { content: '__MSG_IMPORT__'; }
+#open-dialog-import-smart:before { content: '__MSG_IMPORT__'; }
+#open-dialog-default-sound:before { content: '__MSG_DEFAULT_SOUND__'; }

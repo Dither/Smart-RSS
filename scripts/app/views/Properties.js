@@ -14,11 +14,8 @@ function(BB, $, _, tplProperties, Locale) {
 		},
 		handleClick: function(e) {
 			var t = e.currentTarget;
-			if (t.id == 'prop-cancel') {
-				this.hide();
-			} else if (t.id == 'prop-ok') {
-				this.saveData();
-			}
+			if (t.id === 'prop-cancel') this.hide();
+			else if (t.id === 'prop-ok') this.saveData();
 		},
 		saveData: function() {
 			if (!this.current) {
@@ -27,9 +24,9 @@ function(BB, $, _, tplProperties, Locale) {
 			}
 
 			var updateEvery, autoremove, fulltextEnable;
-			function saveValue(prop, arr) {
+			function saveValue(prop, arr, special) {
 				var val = parseInt($('#prop-' + prop.toHyphenFormat()).val(), 10);
-				if (!isNaN(val) && val >= 0) {
+				if (!isNaN(val) && (special ? val > -2 : val > -1)) {
 					arr.forEach(function(source) {
 						var obj = {};
 						obj[prop] = val;
@@ -62,11 +59,11 @@ function(BB, $, _, tplProperties, Locale) {
 				});
 
 				var sourcesInFolder = bg.sources.where({ folderID: this.current.id });
-				updateEvery = saveValue('updateEvery', sourcesInFolder);
+				updateEvery = saveValue('updateEvery', sourcesInFolder, true);
 				autoremove = saveValue('autoremove', sourcesInFolder);
 				fulltextEnable = saveValue('fulltextEnable', sourcesInFolder);
 			} else if (Array.isArray(this.current)) {
-				updateEvery = saveValue('updateEvery', this.current);
+				updateEvery = saveValue('updateEvery', this.current, true);
 				autoremove = saveValue('autoremove', this.current);
 				fulltextEnable = saveValue('fulltextEnable', this.current);
 			}

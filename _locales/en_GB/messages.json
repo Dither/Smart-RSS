@@ -8,6 +8,8 @@
 	"SEARCH": { "message": "Search for..." },
 	"SEARCH_TIP": { "message": "Search articles. Use ':' to search in content as well." },
 
+	"MIXED": { "message": "Mixed" },
+	"DISABLED": { "message": "Disabled" },
 	"NEVER": { "message": "Never" },
 	"EVERY_5_MINUTES": { "message": "Every 5 minutes" },
 	"EVERY_15_MINUTES": { "message": "Every 15 minutes" },
@@ -133,7 +135,7 @@
 	"MOVE_BY_SCROLLED": { "message": "Navigate by more scroll:" },
 	"SHOW_UPD_SPINNER": { "message": "Show spinner during update:" },
 	"BEHAVIOUR": { "message": "Behaviour" },
-	"AUTO_READ": { "message": "Automatically mark articles as read:" },
+	"AUTO_READ": { "message": "Mark article as read after:" },
 	"ON_TEN_TABS": { "message": "Ask when opening 10+ tabs:" },
 	"PANEL_TOGGLE": { "message": "Enable pannel toggle:" },
 	"ALWAYS_FULL_DATE": { "message": "Always show full date:" },
@@ -143,7 +145,7 @@
 	"BADGE": { "message": "Icon badge:" },
 	"SOUND": { "message": "Sound notifications" },
 	"ENABLE_SOUND": { "message": "Enable sound notifications:" },
-	"USE_SOUND": { "message": "Use sound:" },
+	"USE_SOUND": { "message": "Predefined sound:" },
 	"USER_SOUND": { "message": "User sound:" },
 	"VOLUME": { "message": "Volume:" },
 	"EXPORT_GROUP": { "message": "Exporting" },
@@ -183,6 +185,7 @@
 	"OPTION__USER": { "message": "User sound" },
 	"OPTION__NONE": { "message": "None" },
 	"DEFAULT_SOUNDS": { "message": "Default sounds" },
+	"DEFAULT_SOUND": { "message": "Select sound" },
 	"OPTION_KNOCK": { "message": "Knock" },
 	"OPTION_TAPTAP": { "message": "Taptap" },
 	"OPTION_GLASS": { "message": "Glass" },
@@ -192,7 +195,7 @@
 	"TITLE_DATEFORMAT": { "message": "Normal = DD.MM.YYYY, ISO = YYYY-MM-DD, US = MM/DD/YYYY" },
 	"TITLE_THICK_FRAME": { "message": "Makes the line betweens the three columns thicker." },
 	"TITLE_SHOW_UPD_SPINNER": { "message": "Replace favicon of feed with spinner animation during feed update." },
-	"TITLE_AUTO_READ": { "message": "This option will immidiately mark as read every article you visit in the right column." },
+	"TITLE_AUTO_READ": { "message": "This option sets how long to wait before marking viewed article as read (-1 = disable)." },
 	"TITLE_ON_TEN_TABS": { "message": "When you select more than 10 feeds in article list and choose 'Open article link' options from context menu." },
 	"TITLE_TIMEFORMAT": { "message": "Time format" },
 	"TITLE_APPEARANCE_ICON": { "message": "Color of icon that shows up in extension button when new articles are downloaded." },
@@ -224,6 +227,7 @@
 	"OPEN_TEN_WARN": { "message": "Do you really want to open %s articles?" },
 	"NO_TITLE": { "message": "No title" },
 	"NO_AUTHOR": { "message": "No author" },
-    "NO_CONTENT": { "message": "&nbsp;" },
-    "EMBEDDED_MEDIA": { "message": "[embedded media-object]" }
+	"NO_CONTENT": { "message": "&nbsp;" },
+	"EMBEDDED_MEDIA": { "message": "[embedded media-object]" },
+	"SEC": { "message": "sec" }
 }

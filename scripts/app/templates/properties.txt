@@ -11,8 +11,9 @@
 
 <label>{{UPDATE}}: <select id="prop-update-every">
 	<% if (typeof differs_updateEvery !== 'undefined' && differs_updateEvery === true) { %>
-		<option value="-1">&lt;mixed&gt;</option>
+		<option value="-2">&lt;{{MIXED}}&gt;</option>
 	<% } %>
+	<option value="-1">{{DISABLED}}</option>
 	<option value="0">{{NEVER}}</option>
 	<option value="5">{{EVERY_5_MINUTES}}</option>
 	<option value="15">{{EVERY_15_MINUTES}}</option>
@@ -34,7 +35,7 @@
 <% } %>
 	<label>{{AUTOREMOVE}}: <select id="prop-autoremove">
 		<% if (typeof differs_autoremove !== 'undefined' && differs_autoremove === true) { %>
-			<option value="-1">&lt;mixed&gt;</option>
+			<option value="-1">&lt;{{MIXED}}&gt;</option>
 		<% } %>
 		<option value="0">{{NEVER}}</option>
 		<option value="1">{{OLDER_THAN_DAY}}</option>
@@ -47,7 +48,7 @@
 
 	<label>{{FULLTEXT_MODE}}: <select id="prop-fulltext-enable">
 		<% if (typeof differs_fulltextEnable !== 'undefined' && differs_fulltextEnable === true) { %>
-			<option value="-1">&lt;mixed&gt;</option>
+			<option value="-1">&lt;{{MIXED}}&gt;</option>
 		<% } %>
 		<option value="0">{{NO_FULLTEXT}}</option>
 		<option value="1">{{FULLTEXT_PATTERN}}</option>

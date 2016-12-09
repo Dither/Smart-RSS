@@ -2,11 +2,11 @@
  * @module BgProcess
  * @submodule models/Loader
  */
-define(['backbone', 'underscore', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation', 'modules/toDataURI'],
-function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
+define(['backbone', 'underscore', 'modules/RSSParser','modules/ContentExtractor', 'modules/Animation', 'modules/toDataURI', 'siteinfo'],
+function (BB, _, RSSParser, ContentExtractor, animation, toDataURI, siteinfo) {
 
 	function markAutoRemovals(src) {
-		var removedelta = (parseInt(src.get('autoremove'), 10) || 0); // days
+		var removedelta = parseInt(src.get('autoremove'), 10) || 0; // days
 		if (!removedelta) return;
 		var oldest = Date.now() - removedelta * 24 * 60 * 60 * 1000; // ms
 		items.where({
@@ -22,23 +22,20 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 		});
 	}
 
-	// Support more than one level of directories
-	function flattenTree(treeArray) {
-		return treeArray.reduce(function (flatArray, model) {
-			return flatArray.concat((model instanceof Folder) ?
-						flattenTree(sources.where({ folderID: model.id })) :
-						model
-					);
-		}, []);
+	function getDate() {
+		return new Date(Date.now()).toISOString().replace(/[^T]+T/g, '').replace(/(?:[Z]|\..+)/g, '') + ':';
 	}
 
 	function downloadFeeds(sourcesArr, force) {
 		if (!sourcesArr || sourcesArr.length === 0 || !Array.isArray(sourcesArr)) return;
 		var oldLen = loader.sourcesToLoad.length;
 
-		console.log('[models/Loader] Requested', sourcesArr.length, 'downloads,', force ? 'forced' : 'non-forced');
+		console.log(getDate(),'[models/Loader] Requested', sourcesArr.length, 'downloads,', force ? 'forced' : 'non-forced');
+		// reset alarm to make sure next call isn't too soon
+		// and to make sure alarm actually exists (on feed creation)
+		if (force) sources.trigger('reset-alarm');
 
-		sourcesArr = flattenTree(sourcesArr).filter(function(src) {
+		sourcesArr = flatSources(sourcesArr).filter(function(src) {
 			if (src instanceof Source) {
 				var url = src.get('url'),
 					sID = src.get('id');
@@ -46,17 +43,21 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 				if (/^(?:http:\/\/)?0\.0\.0\.0/i.test(url)) return false; // ignore default models
 				if (loader.currentSource == src || loader.sourcesToLoad.indexOf(src) >= 0) return false;
 				if (!favicons.where({ sourceID: sID }).length) {
+					//console.log('requesting favicon for', url);
 					toDataURI.favicon(url).then(function(_url) {
 						favicons.create({data: _url, sourceID: sID});
-						favicons.trigger('update', { ok: true });
 					}, function(err){ console.log(err); });
 				}
+
 				var every = src.get('updateEvery'), last = src.get('lastUpdate');
 				//console.log('[models/Loader] Filtering', url, 'every', every, 'last', last, 'Ignore', last > Date.now() - every * 60 * 1000);
-				if (!every || every === -1) return false; // consider feeds with updateEvery = 0 as disabled
+				// feeds with updateEvery = -1 are disabled and can't be forced to update (in Update All etc.)
+				if (every < 0) return false;
 				if (!force) {
+					if (!every) return false;
 					if (!last) return true;
-					if (last > Date.now() - every * 60 * 1000) return false;
+					// decrease last to include operation and alarm delays
+					if (last - 10000 > Date.now() - every * 60 * 1000) return false;
 				}
 				return true;
 			}
@@ -64,15 +65,16 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 		});
 
 		if (sourcesArr.length) loader.sourcesToLoad = _.union(loader.sourcesToLoad, sourcesArr);
+		else return;
 
 		loader.requestPromise.then(function() {
-			onDownloadStarted(loader.sourcesToLoad.length - oldLen, oldLen);
+			onDownloadStarted(loader.sourcesToLoad.length - oldLen);
 		}, function() {
-			onDownloadStarted(loader.sourcesToLoad.length - oldLen, oldLen);
+			onDownloadStarted(loader.sourcesToLoad.length - oldLen);
 		});
 	}
 
-	function onDownloadStarted(numAdded, oldLen) {
+	function onDownloadStarted(numAdded) {
 		if (numAdded === 0) return;
 
 		loader.set('aborted', false);
@@ -85,7 +87,7 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 		loader.set('loading', true);
 		animation.start();
 
-		console.log('[models/Loader] Started', numAdded, 'downloads');
+		console.log(getDate(), '[models/Loader] Started', numAdded, 'downloads');
 		getFeed();
 	}
 
@@ -107,50 +109,58 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 		});
 	}
 
+	function addItem(toadd) {
+		loader.hasNew = true;
+		loader.numberNew++;
+		items.create(toadd, { sort: false });
+	}
+
 	function getContent(item, src) {
 		return new Promise(function(resolve, reject) {
 			if (!src || !item || loader.get('aborted')) return reject();
 
 			var existingItem = items.get(item.id),
-				blink = ContentExtractor.binary(item.url);
+				blink = ContentExtractor.binary(item.url),
+				siteinfos = siteinfo(item.url);
 
 			if (src.get('fulltextEnable') && !blink) {
-				if (!item.url) return resolve();
-
+				if (!item.url || existingItem) return resolve();  // don't update existing items on content change
 				$.ajax({
 					url: item.url,
-					timeout: (settings.get('htmlTimeout') || 6000),
+					timeout: (settings.get('htmlTimeout') || 10000),
 					dataType: 'html'
 				}).done(function(htm) {
 					if (!src || loader.get('aborted')) return reject();
-
-					if (!existingItem) {
-						ContentExtractor.parse(htm, src.get('id'), item.url).then(function(content) {
-							if (content && content.length) {
-								item.content = content;
-								loader.hasNew = true;
-								loader.numberNew++;
-								items.create(item, { sort: false });
-							}
-							resolve();
-						}).catch(function(e) {
-							console.log('[models/Loader] Error extracting content', item.url, ',', e);
-							resolve(); // ignoring failed extractions
-						});
-					} else {
-						resolve(); // don't update existing items on content change
-					}
+					ContentExtractor.parse(htm, src.get('id'), item.url, siteinfos).then(function(content) {
+						if (content && content.length) item.content = content;
+						addItem(item);
+						resolve();
+					}).catch(function(e) {
+						// filling failed extractions with the original content
+						addItem(item);
+						//console.log(getDate(), '[models/Loader] Error extracting content', item.url, e);
+						onerror('Error extracting content ' + item.url + ' ' + e, 'models/Loader', new Error().lineNumber);
+						resolve();
+					});
 				}).fail(function(e) {
-					console.log('[models/Loader] Error loading from', item.url, ',', e);
-					resolve(); // ignoring failed downloads
+					// filling failed downloads with the original content
+					addItem(item);
+					console.log(getDate(), '[models/Loader] Error loading from', item.url, e.statusText);
+					resolve();
 				});
 			} else {
 				if (blink) item.content = blink;
+				for (var j = siteinfos.length; j--;) {
+					if (siteinfos[j].filters) {
+						for (var cur, i = siteinfos[j].filters.length; i--;) {
+							cur = siteinfos[j].filters[i];
+							item.content = item.content.replace(new RegExp(cur.s, cur.o), cur.r);
+						}
+					}
+				}
 				if (!existingItem) {
-					loader.hasNew = true;
-					loader.numberNew++;
-					items.create(item, { sort: false });
-				} else if (existingItem.get('deleted') === false &&
+					addItem(item);
+				} else if (existingItem.get('deleted') === false && // don't update deleted or trashed items
 					existingItem.get('trashed') === false &&
 					existingItem.get('content') !== item.content) {
 					existingItem.save({ content: item.content }); // update existing items on content change
@@ -171,7 +181,7 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 					return Promise.all(array.slice(here, here + N).map(function(item) {
 						return parser(item, src);
 					}));
-				}
+				};
 			};
 			prev = prev.then(next(i));
 		}
@@ -184,6 +194,7 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 		// if any fetched items are marked as trashed or deleted, filter them out
 		var deleted = items.where({ sourceID: sourceToLoad.get('id'), deleted: true }),
 			trashed = items.where({ sourceID: sourceToLoad.get('id'), trashed: true });
+
 		parsedData = parsedData.filter(function(item) {
 			var i, notfound = true;
 			for (i = deleted.length; i--;) {
@@ -195,41 +206,44 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 			return notfound;
 		});
 
+		parsedData = parsedData.filter(function(item) {
+			return !_.findWhere(trashed, {id: item.id});
+		});
+
 		// clean up all (stale) deleted items not found in the current feed
 		var now = Date.now(), oldest = now - 3 * 24 * 60 * 60 * 1000;
 		deleted.forEach(function(item) {
 			var created = item.get('dateCreated');
-			// keeping items for 3 days in case site shuffles the feed randomly, popping deleted items
-			// destroying deleted items with inadequate dates
+			// keeping items for N-days in case site shuffles the feed randomly, popping deleted items
+			// destroying items with inadequate dates and older items
 			if (created <= 0 || created > now || created < oldest) {
-				console.log('[models/Loader] Cleaning up', item.get('url'));
+				//console.log('[models/Loader] Cleaning up', created);
 				item.destroy();
 			}
 		});
 
-		if (!parsedData.length) return onDataProcessed(false, sourceToLoad);
+		if (!parsedData.length) return onDataProcessed(true, sourceToLoad);
 
 		loader.requestPromise.then(function() { return processItems(parsedData, getContent, sourceToLoad); }).then(
 				function() {
 					onDataProcessed(true, sourceToLoad);
 				}, function(e) {
-					console.log('[models/Loader] Error or aborted processing feed items', sourceToLoad.get('url'), e);
-					onDataProcessed(true, sourceToLoad);
+					console.log(getDate(), '[models/Loader] Error or aborted processing feed items', sourceToLoad.get('url'), e);
+					onDataProcessed(false, sourceToLoad);
 				}
 			);
 	}
 
 	function onDataProcessed(success, sourceToLoad) {
-		if (!sourceToLoad) return onFeedCompleted(null, false);
+		if (!sourceToLoad) return onFeedCompleted(false, null);
 
 		var sID = sourceToLoad.get('id'),
 			countAll = items.where({ sourceID: sID, trashed: false }).length,
 			count = items.where({ sourceID: sID, unread: true, trashed: false }).length;
 
-		sourceToLoad.save({
+		sourceToLoad.set({
 			'count': count,
 			'countAll': countAll,
-			'lastUpdate': Date.now(),
 			'hasNew': (count > 0 ? (loader.hasNew || sourceToLoad.get('hasNew')) : false)
 		});
 
@@ -237,7 +251,7 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 			allCountUnvisited: info.get('allCountUnvisited') + loader.numberNew
 		});
 
-		onFeedCompleted(sourceToLoad, true);
+		onFeedCompleted(true, sourceToLoad);
 	}
 
 	function getFeed() {
@@ -246,7 +260,7 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 				foundSome = !items.toArray().every(function(item) {
 					// if downloading finished while the source was deleted
 					if (sourceIDs.indexOf(item.get('sourceID')) === -1) {
-						console.log('[models/Loader] Deleting item because of missing source', item.get('sourceID'));
+						console.log(getDate(), '[models/Loader] Deleting item because of missing source', item.get('sourceID'));
 						item.destroy();
 						return false;
 					}
@@ -264,7 +278,7 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 
 		var options = {
 				url: sourceToLoad.get('url'),
-				timeout: settings.get('rssTimeout') || 5000,
+				timeout: settings.get('rssTimeout') || 10000,
 				dataType: 'xml',
 				beforeSend: function(xhr) {
 					xhr.setRequestHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
@@ -278,36 +292,32 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 			options.password = sourceToLoad.getPass() || '';
 		}
 
-		if (settings.get('showSpinner')) sourceToLoad.set('isLoading', true);
+		if (settings.get('showSpinner')) sourceToLoad.set({isLoading: true});
 
 		loader.requestPromise = loader.requestPromise.then(
-				function () { return loader.requestHandle = $.ajax(options); }//,
-				//function () { return loader.requestHandle = $.ajax(options); }
-		);
-		loader.requestPromise.then(function(data, status) {
-				return RSSParser.parse(data, sourceToLoad.get('id')).then(function(items, sID) {
-					onDataLoaded(items, sourceToLoad);
-				}, function() {
-					console.log('[models/Loader] Feed parsing failed', options.url);
-					onFeedCompleted(sourceToLoad, false);
-				});
-			}).catch(function() {
-				console.log('[models/Loader] Feed retrieving failed', options.url);
-				onFeedCompleted(sourceToLoad, false);
+				function () { return loader.requestHandle = $.ajax(options); }
+		).then(function(data, status) {
+			return RSSParser.parse(data, sourceToLoad.get('id')).then(function(items) {
+				sourceToLoad.set({lastUpdate: Date.now() });
+				onDataLoaded(items, sourceToLoad);
+			}, function(e) {
+				console.log(getDate(), '[models/Loader] Feed parsing failed', options.url, e);
+				onFeedCompleted(false, sourceToLoad);
 			});
+		}, function(e) {
+			console.log(getDate(), '[models/Loader] Feed retrieving failed', options.url, e.statusText);
+			onFeedCompleted(false, sourceToLoad);
+		});
 	}
 
-	function onFeedCompleted(src, upd) {
-		console.log('[models/Loader] Finished', loader.get('numLoaded') + 1, 'downloads');
+	function onFeedCompleted(success, sourceToLoad) {
 		items.sort({ silent: true });
 		if (loader.hasNew) items.trigger('render-screen');
 		loader.set('numLoaded', loader.get('numLoaded') + 1);
-		// reset alarm to make sure next call isn't too soon
-		//  + to make sure alarm actually exists (it doesn't after import)
-		if (src) {
-			src.trigger('reset-alarm', src);
-			src.set('isLoading', false);
-			src.trigger('update', { ok: upd });
+
+		if (sourceToLoad) {
+			sourceToLoad.save({isLoading: false});
+			sourceToLoad.trigger('update', { ok: success });
 		}
 		getFeed();
 	}
@@ -326,7 +336,8 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 	}
 
 	function onDownloadStopped() {
-		var stop = function(){
+		var stop = function(e){
+			console.log(getDate(), '[models/Loader] Finished', loader.get('numLoaded'), 'downloads', e ? e : '');
 			if (loader.hasNew && settings.get('soundNotifications'))
 				playNotificationSound();
 			loader.set('numSources', 0);
@@ -358,23 +369,22 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI) {
 	 */
 	var Loader = Backbone.Model.extend({
 		defaults: {
-			numParallel: 10, // number of parallel HTTP sources to retrieve
+			numParallel: 10, // number of HTML pages to retrieve at the same time
 			numSources: 0, // number of queued feeds
 			numLoaded: 0, // number of loaded feed items
 			loading: false, // flag with loading status
-			aborted: false // flag to abort HTTP request retrievals
+			aborted: false // flag to abort HTTP content retrievals
 		},
 		requestPromise: Promise.resolve(), // general request sequence handle
-		requestHandle: null, // $.ajax handle to abort RSS request
+		requestHandle: null, // $.ajax handle to abort feed request
 		currentSource: null, // current feed's model
 		hasNew: false, // flag if feed has new items
 		numberNew: 0, // number of new feed items
-		sourcesToLoad: [], // array of feed models for processing
+		sourcesToLoad: [], // array of feed models for downloading
 		abortDownloading: abortDownloading,
 		downloadFeeds: downloadFeeds,
 		playNotificationSound: playNotificationSound
 	});
 
 	return Loader;
-
 });

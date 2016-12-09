@@ -38,19 +38,19 @@ define(['backbone', 'backboneDB'], function (BB) {
 			icon: 'orange',
 			layout: 'horizontal', // or vertical
 			lines: 'auto', // one-line, two-lines
+			markReadS: 0, // -1..30
 			moveByScrolled: 800,
 			panelToggled: true,
 			posA: 250,
 			posB: 270,
 			posC: 250,
-			readOnVisit: false,
 			showSpinner: true,
 			sortBy: 'unread',
 			sortBy2: 'date',
 			sortOrder: 'desc',
 			sortOrder2: 'asc',
 			soundNotifications: false,
-			soundVolume: 1, // min: 0, max: 1.0
+			soundVolume: 1, // 0..1.0
 			thickFrameBorders: false,
 			titleIsLink: true,
 			uiFontSize: 100,

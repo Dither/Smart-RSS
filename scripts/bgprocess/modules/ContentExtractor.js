@@ -2,7 +2,7 @@
  * @module BgProcess
  * @submodule modules/ContentExtractor
  */
-define(['readability', 'siteinfo'], function (Readability, siteinfo) {
+define(['readability'], function (Readability) {
 
 /**
  * HTML Main Content Extractor
@@ -10,7 +10,7 @@ define(['readability', 'siteinfo'], function (Readability, siteinfo) {
  * @constructor
  * @extends Object
  */
-function ContentExtractor(html, sourceID, url) {
+function ContentExtractor(html, sourceID, url, siteinfos) {
 	var to_remove = 'script, style, noscript, link, meta, param, [href*="javascript:"]',
 		to_replace = 'object, applet';
 
@@ -44,7 +44,7 @@ function ContentExtractor(html, sourceID, url) {
 				html_result = nodesToText(nodes, true);
 				break;
 			case 2:
-				for (var siteinfos = siteinfo(url), i = 0, len = siteinfos.length; i < len; i++) {
+				for (var i = 0, len = siteinfos.length; i < len; i++) {
 					nodes = getNodes(html, siteinfos[i].pageElement);
 					html_result = nodesToText(nodes, true);
 					if (html_result.length > 14) break mode;
