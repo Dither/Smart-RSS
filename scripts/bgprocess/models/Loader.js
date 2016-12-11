@@ -117,14 +117,16 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI, siteinfo) {
 
 	function getContent(item, src) {
 		return new Promise(function(resolve, reject) {
-			if (!src || !item || loader.get('aborted')) return reject();
+			if (!src || !item || loader.get('aborted')) return reject(); // break the chain on abort or anomaly
 
 			var existingItem = items.get(item.id),
-				blink = ContentExtractor.binary(item.url),
+				blink = ContentExtractor.binary(item.url), // returns placeholder HTML for files by extension
 				siteinfos = siteinfo(item.url);
 
 			if (src.get('fulltextEnable') && !blink) {
-				if (!item.url || existingItem) return resolve();  // don't update existing items on content change
+				// don't update existing items unless there was no fulltext previously
+				if (!item.url || (existingItem && existingItem.get('content') !== item.content)) return resolve();
+
 				$.ajax({
 					url: item.url,
 					timeout: (settings.get('htmlTimeout') || 10000),
@@ -133,18 +135,18 @@ function (BB, _, RSSParser, ContentExtractor, animation, toDataURI, siteinfo) {
 					if (!src || loader.get('aborted')) return reject();
 					ContentExtractor.parse(htm, src.get('id'), item.url, siteinfos).then(function(content) {
 						if (content && content.length) item.content = content;
-						addItem(item);
+						if (existingItem) existingItem.save({ content: item.content }); else addItem(item);
 						resolve();
 					}).catch(function(e) {
-						// filling failed extractions with the original content
-						addItem(item);
+						// fill failed extractions with the original content and retry attempt later
+						if (!existingItem) addItem(item);
 						//console.log(getDate(), '[models/Loader] Error extracting content', item.url, e);
 						onerror('Error extracting content ' + item.url + ' ' + e, 'models/Loader', new Error().lineNumber);
 						resolve();
 					});
 				}).fail(function(e) {
-					// filling failed downloads with the original content
-					addItem(item);
+					// fill failed downloads with the original content and retry attempt later
+					if (!existingItem) addItem(item);
 					console.log(getDate(), '[models/Loader] Error loading from', item.url, e.statusText);
 					resolve();
 				});

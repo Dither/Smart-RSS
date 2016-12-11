@@ -1,28 +1,26 @@
 /**
- * Escapes following characters: &, <, >, ", '
+ * Light escapes XML special characters: <, >, ", '
  * @module App
  * @submodule helpers/escapeHtml
- * @param string {String} String with html to be escaped
+ * @param {String} string String with HTML to be escaped
  */
 define([], function() {
+
 	var entityMap = {
-		'&': '&amp;',
 		'<': '&lt;',
 		'>': '&gt;',
 		'"': '&quot;',
-		"'": '&#39;'
+		"'": '&#x27;',
+		'`': '&#x60;'
 	};
 
-	var escapeHtml = function(str) {
-		str = String(str).replace(/[&<>"']/gm, function (s) {
-			return entityMap[s];
-		});
-		str = str.replace(/\s/, function(f) {
-			if (f == ' ') return ' ';
-			return '';
-		});
+	var escapeHtml = function(str, dbl) {
+		str = (str || '').toString();
+		//if (!dbl) { str = str.replace(/&/g, '&amp;'); }
+		str = str.replace(/[<>"'`]/gm, function (s) { return entityMap[s]; });
+		str = str.replace(/\s/, function(f) { return ((f == ' ') ?  ' ' : ''); });
 		return str;
-	};
+	}
 
 	return escapeHtml;
 });

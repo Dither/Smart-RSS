@@ -50,16 +50,14 @@ function ($, _, animation, Settings, Info, Source, Sources, Items, Folders, Load
 	 */
 	window.loader = new Loader();
 	window.logs = new Logs();
-
-	window.initDownloadTimeout = 20000;
-    window.lastDownloadAll = 0;
-
 	logs.startLogging();
 
 	/**
 	 * RSS Downloader
 	 */
 	$.support.cors = true;
+	window.initDownloadTimeout = 30000;
+	window.lastDownloadAll = 0;
 
 	/**
 	 * Fetch all
@@ -184,9 +182,11 @@ function ($, _, animation, Settings, Info, Source, Sources, Items, Folders, Load
 		/**
 		 * Extension init
 		 */
-		setTimeout(downloadAllFeeds, window.initDownloadTimeout);
 		appStarted = true;
 		browser.runtime.sendMessage({started: true});
+
+		setTimeout(downloadAllFeeds, window.initDownloadTimeout);
+		sources.trigger('reset-alarm');
 
 		/**
 		 * onclick:button (debounced) -> open RSS
@@ -207,9 +207,9 @@ function ($, _, animation, Settings, Info, Source, Sources, Items, Folders, Load
 	});
 
 	window.downloadAllFeeds = function(force) {
-        var now = Date.now();
-        if (!force && (window.lastDownloadAll + 3 * 60 * 1000 > now)) return; // don't auto-fetch too often
-        window.lastDownloadAll = now;
+		var now = Date.now();
+		if (!force && (window.lastDownloadAll + 3 * 60 * 1000 > now)) return; // don't auto-fetch too often
+		window.lastDownloadAll = now;
 		loader.downloadFeeds(sources.toArray(), force);
 	}
 
@@ -231,7 +231,7 @@ function ($, _, animation, Settings, Info, Source, Sources, Items, Folders, Load
 		} else {
 			openRSS(false, duplicate.get('id'));
 		}
-	}, 600, true);
+	}, 1000, true);
 
 	// Capture raw feeds in Firefox and prevent embedded feed viewer.
 	// We need additional "webRequest", "webRequestBlocking", "<all_urls>" permissions only for that.
@@ -264,7 +264,7 @@ function ($, _, animation, Settings, Info, Source, Sources, Items, Folders, Load
 		var contentType = getContentType(details.responseHeaders);
 		if (~rssMimes.indexOf(contentType) || (~xmlMimes.indexOf(contentType) && urlParts.test(details.url))) {
 			browser.tabs.remove(details.tabId);
-            onExternalLink(details.url.replace(/(?:data|javascript):.+/ig, ''));
+			onExternalLink(details.url.replace(/(?:data|javascript):.+/ig, ''));
 		}
 		return false;
 	}

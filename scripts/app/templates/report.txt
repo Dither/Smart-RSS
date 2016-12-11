@@ -10,7 +10,7 @@
 	<input type="checkbox" id="report-include-feeds">
 
 	<div class="report-buttons">
-		<input type="submit" id="report-submit" value="{{SUBMIT}}"><input type="button" id="report-cancel" value="{{CANCEL}}">
+		<input type="submit" id="report-submit" class="btn" value="{{SUBMIT}}"><input type="button" class="btn" id="report-cancel" value="{{CANCEL}}">
 	</div>
 
 	<div class="report-message">

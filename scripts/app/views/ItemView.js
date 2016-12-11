@@ -2,8 +2,8 @@
  * @module App
  * @submodule views/ItemView
  */
-define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/contextMenus', 'helpers/stripTags', 'text!templates/item.txt'],
-       function(BB, $, _, formatDate, contextMenus, stripTags, tplItem) {
+define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/contextMenus', 'helpers/keepXmlText', 'text!templates/item.txt'],
+       function(BB, $, _, formatDate, contextMenus, keepXmlText, tplItem) {
 
 	/**
 	 * View of one article item in article list
@@ -162,8 +162,8 @@ define(['backbone', 'jquery', 'underscore', 'helpers/formatDate', 'instances/con
 			this.$el.css('height', '');
 			var data = this.model.toJSON();
 			data.date = this.getItemDate(data.date);
-			data.title = stripTags(data.title).trim() || '&lt;' + _T('NO_TITLE') + '&gt;';
-            data.author = stripTags(data.author).trim();
+			data.title = keepXmlText(data.title) || '&lt;' + _T('NO_TITLE') + '&gt;';
+            data.author = keepXmlText(data.author);
 
 			this.$el.html(this.template(data));
 			this.$el.removeClass('invisible');

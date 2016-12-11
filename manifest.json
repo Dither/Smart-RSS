@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Smart RSS",
 	"version": "2.2",
-	"description": "RSS feeds reader similar to Opera 12's internal.",
+	"description": "RSS reader similar to Opera 12's internal but with full article downloads.",
 	"default_locale": "en_GB",
 	"developer": {
 		"name": "Martin Kadlec, DitherSky"

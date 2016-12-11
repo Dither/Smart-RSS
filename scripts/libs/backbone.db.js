@@ -402,8 +402,8 @@ _.extend(BrowserStorage.prototype, {
 			}
 			var p = that.store.set(data);
 			p.then(
-				function() { if(resolve) resolve(); },
-				function(e) { if(reject) reject(e); }
+				function() { if(resolve) resolve(); else return Promise.resolve(); },
+				function(e) { if(reject) reject(e); else return Promise.reject(e); }
 			);
 			return p;
 		});

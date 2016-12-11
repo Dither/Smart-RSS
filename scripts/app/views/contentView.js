@@ -3,10 +3,10 @@
  * @submodule views/contentView
  */
 define([
-	'backbone', 'jquery', 'underscore', 'helpers/formatDate', 'helpers/escapeHtml', 'helpers/stripTags', 'text!templates/download.txt',
-	'text!templates/header.txt', 'modules/Locale'
+	'backbone', 'jquery', 'underscore', 'helpers/formatDate', 'helpers/keepXmlText',
+	'text!templates/download.txt', 'text!templates/header.txt', 'modules/Locale'
 ],
-function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Locale) {
+function(BB, $, _, formatDate, keepXmlText, tplDownload, tplHeader, Locale) {
 
 	/**
 	 * Full view of one article (right column)
@@ -146,7 +146,7 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 				//console.log('dbottom',dbottom, 'delta',that.delta, 'dy',dy, 'scrolly',scrolly);
 
 				if (dbottom <= 0 && that.delta > dz) {  // lower deadzone callback
-				    that.delta = 0;
+					that.delta = 0;
 					app.actions.execute('articles:markAndNextUnread');
 				} else if (dy === 0 && that.delta < -dz) { // upper deadzone callback
 					that.delta = 0;
@@ -238,10 +238,10 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		/**
 		 * Delay of asynchronous render in ms.
 		 * @property renderDelay
-		 * @default 100
+		 * @default 200
 		 * @type Integer
 		 */
-		renderDelay: 100,
+		renderDelay: 200,
 
 		/**
 		 * Renders articles content asynchronously
@@ -252,54 +252,87 @@ function(BB, $, _, formatDate, escapeHtml, stripTags, tplDownload, tplHeader, Lo
 		render: function() {
 			this.enableScrollPocessing = false;
 			this.enableSpaceProcessing = false;
+
 			clearTimeout(this.scrollID);
 			clearTimeout(this.renderID);
 
-			this.renderID = setTimeout(function(that) {
-				if (!that || that.isModelDeleted(that.model)) return that.hide();
-
-				var data = Object.create(that.model.attributes);
-				data.date = that.getFormatedDate(that.model.get('date'));
-				data.title = stripTags(data.title).trim() || '&lt;'+_T('NO_TITLE')+'&gt;';
-				data.author = stripTags(data.author).trim();
-				data.url = escapeHtml(data.url);
-				data.titleIsLink = bg.settings.get('titleIsLink');
-
-				that.$el.html(that.template(data));
-
-				var _render = function() {
-					if (!that || !that.frame/* || that.isModelDeleted(that.model)*/) return;
-
-					that.frame.contentWindow.scrollTo(0, 0);
-
-					var _url = that.model.get('url'),
-						_source = that.model.getSource(),
-						_base = that.frame.contentDocument.querySelector('base');
-
-					if (_source && _source.get('fulltextEnable'))
-						_base.href = (_url.match(/^https?:\/\/\S+$/i) || [])[0] || '#';
-					else
-						_base.href = _source ? _source.get('base') || _source.get('url') : '#';
-
-					that.frame.contentDocument.querySelector('#smart-rss-content').innerHTML = that.model.get('content');
-					that.frame.contentDocument.querySelector('#smart-rss-url').href = _url;
-					that.frame.contentDocument.documentElement.style.fontSize = bg.settings.get('articleFontSize') + '%';
-
-					// allows content to render before processing height-requesting events
-					that.scrollID = setTimeout(function() {
-						that.enableScrollPocessing = true;
-						that.enableSpaceProcessing = true;
-					}, 700);
-
-					that.show();
-					that.handleScroll(that.frame);
-				};
-
-				if (that.sandbox.loaded) _render();
-				else that.sandbox.on('load', _render);
-			}, this.renderDelay, this);
+			this.renderID = setTimeout(this.prepareRender.bind(this), this.renderDelay);
 
 			return this;
+		},
+
+		realRender: function() {
+			if (!this || !this.frame/* || this.isModelDeleted(this.model)*/) return;
+
+			var url = this.model.get('url'),
+				source = this.model.getSource(),
+				base = this.frame.contentDocument.querySelector('base');
+
+			if (source && source.get('fulltextEnable'))
+				base.href = (url.match(/^https?:\/\/\S+$/i) || [])[0] || '#';
+			else
+				base.href = source ? source.get('base') || source.get('url') : '#';
+
+			this.frame.contentDocument.querySelector('#smart-rss-content').innerHTML = this.model.get('content');
+			this.frame.contentDocument.querySelector('#smart-rss-url').href = url;
+			this.frame.contentDocument.documentElement.style.fontSize = bg.settings.get('articleFontSize') + '%';
+			this.frame.contentWindow.scrollTo(0, 0);
+
+			// allows content to render before processing height-requesting events
+			var that = this;
+			this.scrollID = setTimeout(function() {
+				that.enableScrollPocessing = true;
+				that.enableSpaceProcessing = true;
+			}, 700);
+
+			this.show();
+			this.handleScroll(this.frame);
+		},
+
+		prepareRender: function() {
+			if (!this || this.isModelDeleted(this.model)) return this.hide();
+
+			var data = Object.create(this.model.attributes);
+			data.date = this.getFormatedDate(this.model.get('date'));
+			// filter with XML-aware version of _.escape
+			data.title = keepXmlText(data.title) || '&lt;'+_T('NO_TITLE')+'&gt;';
+			data.titletooltip = null;
+			data.author = keepXmlText(data.author);
+			//data.url = data.url.replace(/["'<>`]/g, ''); // don't do it twice
+			data.titleIsLink = bg.settings.get('titleIsLink');
+
+			// Cut string at the end of a sentence, quote or word from minlen to maxlen
+			var maxlen = 160, minlen = 64;
+			if (data.title.length > maxlen) {
+				data.titletooltip = data.title;
+				var lastsent, lastchar = '';
+				while ((lastsent = data.title.regexLastIndexOf(/(?:[,."'] |[!?。」』])/)) >= 0) {
+					if (lastsent < minlen) break;
+					lastchar = data.title.charAt(lastsent);
+					if (lastchar === ' ') lastchar = data.title.charAt(lastsent - 1);
+					data.title = data.title.substring(0, lastsent);
+					if (data.title.length <= maxlen) break;
+				}
+				if (lastsent < minlen) {
+					data.title = data.titletooltip;
+					while ((lastsent = data.title.lastIndexOf(' ')) > maxlen) {
+						if (lastsent < minlen) break;
+						data.title = data.title.substring(0, lastsent);
+						if (data.title.length <= maxlen) break;
+					}
+					lastchar = '';
+				}
+				if (lastsent < minlen) {
+					data.title = data.titletooltip.substring(0, maxlen);
+					lastchar = '';
+				}
+				data.title += lastchar + ' \u2026';
+			}
+
+			this.$el.html(this.template(data));
+
+			if (this.sandbox.loaded) this.realRender();
+			else this.sandbox.on('load', this.realRender, this);
 		},
 
 		/**

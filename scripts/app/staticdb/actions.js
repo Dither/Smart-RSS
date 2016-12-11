@@ -1,4 +1,4 @@
-define(['jquery', 'underscore', 'helpers/stripTags', 'controllers/comm', 'jqueryConfirm'], function($, _, stripTags, comm) {
+define(['jquery', 'underscore', 'controllers/comm', 'jqueryConfirm'], function($, _, comm) {
 
 return {
 	global: {
@@ -416,13 +416,13 @@ return {
 						text: _T('OPEN_TEN_WARN').replace('%s', articleList.selectedItems.length),
 						confirm: function() {
 							articleList.selectedItems.forEach(function(item) {
-								browser.tabs.create({ url: stripTags(item.model.get('url')), active: !e.shiftKey });
+								browser.tabs.create({ url: item.model.get('url'), active: !e.shiftKey });
 							});
 						}
 					});
 				} else {
 					articleList.selectedItems.forEach(function(item) {
-						browser.tabs.create({ url: stripTags(item.model.get('url')), active: !e.shiftKey });
+						browser.tabs.create({ url: item.model.get('url'), active: !e.shiftKey });
 					});
 				}
 			}
@@ -440,7 +440,7 @@ return {
 					view = articleList.selectedItems[0];
 				}
 				if (view.model) {
-					browser.tabs.create({ url: stripTags(view.model.get('url')), active: !e.shiftKey });
+					browser.tabs.create({ url: view.model.get('url'), active: !e.shiftKey });
 				}
 			}
 		},

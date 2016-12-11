@@ -143,7 +143,7 @@
 					if (!value) req = store.delete(key);
 					else req = store.put(value);
 
-					req.onerror = function() { if (reject) reject(req.error); };
+					req.onerror = function() { if (reject) reject(req.error); else throw req.error; };
 					req.onsuccess = iterator;
 				}
 			});

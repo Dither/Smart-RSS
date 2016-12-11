@@ -4,6 +4,20 @@
  */
 define(['readability'], function (Readability) {
 
+var attr_whitelist = [
+	/*'class', 'id', 'style',*/ 'src', 'href', 'alt', 'title', 'data', 'height', 'width',
+	'name', 'value', 'type', 'border', 'frameborder', 'colspan', 'rowspan', 'span', 'cite'
+];
+
+var min_length = 140,
+	to_remove = 'script, style, noscript, link, meta, param, [href*="javascript:"]',
+	to_replace = 'object, applet',
+	ft_pos_default = 'body>*:not(footer):not(nav):not(header):not(form):not(aside):not(menu)';
+
+var re_binary = /\.(?:zip|rar|7z|jpe?g|svg|png|gifv?|swf|jar|web[mp]|mp\d|aac|flac|avi|fl[av]]|pdf|epub|djvu|odf|xml|docx?|xlsx?|pptx?|msi|msp|exe|com|cmd|bat|vbs?|ps\d)(?:$|\?)/i,
+	re_body = /<body/i,
+	re_spaces = /\s{2,}/g;
+
 /**
  * HTML Main Content Extractor
  * @class ContentExtractor
@@ -11,9 +25,6 @@ define(['readability'], function (Readability) {
  * @extends Object
  */
 function ContentExtractor(html, sourceID, url, siteinfos) {
-	var to_remove = 'script, style, noscript, link, meta, param, [href*="javascript:"]',
-		to_replace = 'object, applet';
-
 	return new Promise(function(resolve, reject) {
 		if (!sourceID) return reject('no source feed specified');
 		if (!html) return reject('no HTML provided');
@@ -21,19 +32,18 @@ function ContentExtractor(html, sourceID, url, siteinfos) {
 		var source = sources.findWhere({ id: sourceID });
 
 		// If there is no body assume it's a binary file
-		if (!/<body/i.test(html)) return resolve(getBinaryLink(url));
+		if (!re_body.test(html)) return resolve(getBinaryLink(url));
 
 		html = createHTML(html);
 		if (!source) return reject('no source feed with matching ID');
 		if (!html) return reject('failed to create DOM for current HTML');
 
 		var ft_pos_mode = source.get('fulltextEnable') || 0,
-			ft_pos_default = 'body>*:not(footer):not(nav):not(header):not(form):not(aside):not(menu)',
 			ft_pos = source.get('fulltextPosition') || ft_pos_default,
 			html_result = '',
 			nodes = [];
 
-		removeNodes(html, to_remove, to_replace);
+		removeNodes(html);
 
 		mode:
 		switch (ft_pos_mode) {
@@ -47,21 +57,22 @@ function ContentExtractor(html, sourceID, url, siteinfos) {
 				for (var i = 0, len = siteinfos.length; i < len; i++) {
 					nodes = getNodes(html, siteinfos[i].pageElement);
 					html_result = nodesToText(nodes, true);
-					if (html_result.length > 14) break mode;
+					if (html_result.length > min_length / 10) break mode;
 				}
 
 				nodes = [];
 				html_result = '';
+
 				var readable = new Readability({ pageURL: url, resolvePaths: true });
 				for (var i = 0, l = readable.getMaxSkipLevel(); i <= l; i++) {
 					readable.setSkipLevel(i);
 					readable.parseDOM(html.childNodes[html.childNodes.length-1]);
 					html_result = readable.getHTML().trim();
-					if (readable.getLength() > 140) break mode;
+					if (readable.getLength() > min_length) break mode;
 					//console.log('[ContentExtractor] Retry URL:'+url+';attempt='+i+';length='+readable.getLength())
 				}
 
-				if (readable.getLength() < 140)
+				if (readable.getLength() < min_length)
 					html_result = nodesToText(getNodes(html, ft_pos_default), true);
 				break;
 			default:
@@ -71,8 +82,8 @@ function ContentExtractor(html, sourceID, url, siteinfos) {
 
 		 // just to be sure clean it up again after processing
 		html = createHTML(html_result);
-		if (!html) return reject('failed to create DOM for resulting HTML');
-		removeNodes(html, to_remove, to_replace);
+		if (!html) return reject('failed to clean resulting HTML');
+		removeNodes(html);
 
 		resolve(html.body.innerHTML);
 	});
@@ -93,7 +104,7 @@ function getBinaryLink(url) {
  * @return {Boolean} True if the link is a binary file.
  * */
 function isBinary(url) {
-	return /\.(?:zip|rar|7z|jpe?g|svg|png|gifv?|swf|jar|web[mp]|mp\d|aac|flac|avi|fl[av]]|pdf|epub|djvu|odf|xml|docx?|xlsx?|pptx?|msi|msp|exe|com|cmd|bat|vbs?|ps\d)(?:$|\?)/i.test(url);
+	return re_binary.test(url);
 }
 
 /**
@@ -118,11 +129,6 @@ function nodesToText(nodes, filter) {
 	var inner_nodes, attr, i, l = nodes.length;
 
 	if (filter) {
-		var whitelist = [
-			/*'class', 'id', 'style',*/ 'src', 'href', 'alt', 'title', 'data', 'height', 'width',
-			'name', 'value', 'type', 'border', 'frameborder', 'colspan', 'rowspan', 'span', 'cite'
-		];
-
 		for (i = 0; i < l; i++) {
 			inner_nodes = Array.prototype.slice.call(nodes[i].querySelectorAll('*')) || [];
 			inner_nodes.push(nodes[i]);
@@ -131,7 +137,7 @@ function nodesToText(nodes, filter) {
 				k = attributes.length;
 				while (k--) {
 					attr = attributes[k];
-					if (whitelist.indexOf(attr.name) === -1)
+					if (attr_whitelist.indexOf(attr.name) === -1)
 						inner_nodes[j].removeAttribute(attr.name);
 				}
 			}
@@ -140,7 +146,7 @@ function nodesToText(nodes, filter) {
 
 	var text = '';
 	for (i = 0; i < l; i++)
-		text += nodes[i].outerHTML.trim().replace(/\s{2,}/g, ' ');
+		text += nodes[i].outerHTML.trim().replace(re_spaces, ' ');
 
 	return text;
 }
@@ -181,21 +187,20 @@ function getNodes(doc, rule){
 
 /**
  * Filters undesired elements from a DOM tree using either XPath or CSS selectors.
- * @param {Node} doc Base DOM element to remove nodes from.
- * @param {String} names Selectors of nodes to remove.
+ * @param {Element} doc Base DOM element to remove nodes from.
+ * @return {Element} Filtered DOM.
  * */
-function removeNodes(doc, names, replaces) {
-	if (typeof doc === 'undefined' || typeof names !== 'string' || names.length < 2 || typeof replaces !== 'string' || replaces.length < 2) return;
+function removeNodes(doc) {
+	if (!doc) return;
 
 	var  i,r,l;
-
-	for (i = 0, r = doc.querySelectorAll(names), l = r.length; i < l; i++) {
+	for (i = 0, r = doc.querySelectorAll(to_remove), l = r.length; i < l; i++) {
 		if (r[i].parentNode) {
 			r[i].parentNode.removeChild(r[i]);
 		}
 	}
 
-	for (i = 0, r = doc.querySelectorAll(replaces), l = r.length; i < l; i++) {
+	for (i = 0, r = doc.querySelectorAll(to_replace), l = r.length; i < l; i++) {
 		if (r[i].src) r[i].outerHTML = '<a href="'+r[i].src+'">' + _T('EMBEDDED_MEDIA') + '</a>';
 		else if (r[i].parentNode) {
 			r[i].parentNode.removeChild(r[i]);

@@ -7,11 +7,11 @@
 define([], function() {
 
 	/**
-	 * Convert string to camel case
+	 * Converts a string to camel case
 	 * @method toCamelCase
 	 * @extends String
 	 * @param str {String} String to convert
-	 * @return {Any} Converted string
+	 * @return {String} Converted string
 	 */
 	String.prototype.toCamelCase = function(str) {
 		return (str || this)
@@ -20,13 +20,12 @@ define([], function() {
 			.replace(/^(.)/, function($1) { return $1.toLowerCase(); });
 	};
 
-
 	/**
-	 * Convert string to to hyphen format
+	 * Converts a string to to hyphen format
 	 * @method toHyphenFormat
 	 * @extends String
 	 * @param str {String} String to convert
-	 * @return {Any} Converted string
+	 * @return {String} Converted string
 	 */
 	String.prototype.toHyphenFormat = function(str) {
 		function upperToHyphenLower(match) {
@@ -36,7 +35,43 @@ define([], function() {
 	};
 
 	/**
-	 * Set or get last array item
+	 * Searches for the first index of a regular expression match
+	 * @method regexIndexOf
+	 * @extends String
+	 * @param regex {RegExp} Regexp to search
+	 * @param regex {Number} Starting position
+	 * @return {Number} Position in string or -1
+	 */
+	String.prototype.regexIndexOf = function(regex, startpos) {
+		var first = this.substring(startpos || 0).search(regex);
+		return (first >= 0) ? (first + (startpos || 0)) : first;
+	};
+
+	/**
+	 * Searches for the last index of a regular expression match
+	 * @method regexLastIndexOf
+	 * @extends String
+	 * @param regex {RegExp} Regexp to search
+	 * @param regex {Number} Starting position
+	 * @return {Number} Position in string or -1
+	 */
+	String.prototype.regexLastIndexOf = function(regex, startpos) {
+		regex = (regex.global) ? regex : new RegExp(regex.source, 'g' + (regex.ignoreCase ? 'i' : '') + (regex.multiLine ? 'm' : ''));
+		if (typeof startpos === 'undefined') {
+			startpos = this.length;
+		} else if (startpos < 0) {
+			startpos = 0;
+		}
+		var str = this.substring(0, startpos + 1), last = -1, next = 0;
+		while ((result = regex.exec(str)) !== null) {
+			last = result.index;
+			regex.lastIndex = ++next;
+		}
+		return last;
+	};
+
+	/**
+	 * Sets or get last array item
 	 * @method last
 	 * @extends Array
 	 * @param value {Any} Value to set - optional
@@ -49,7 +84,7 @@ define([], function() {
 	};
 
 	/**
-	 * Set or get first array item
+	 * Sets or get first array item
 	 * @method last
 	 * @extends Array
 	 * @param value {Any} Value to set - optional
@@ -62,11 +97,11 @@ define([], function() {
 	};
 
 	/**
-	 * Get index of element in HTMLCollection (used by eg. Element#children)
+	 * Gets index of element in a HTMLCollection (used by eg. Element#children)
 	 * @method indexOf
 	 * @extends HTMLCollection
 	 * @param element {HTMLElement} Element fo find index of
-	 * @return {Any} First item of array, null if array is empty
+	 * @return {Number} Index of the element or -1
 	 */
 	HTMLCollection.prototype.indexOf = Array.prototype.indexOf;
 
@@ -77,7 +112,7 @@ define([], function() {
 	}
 
 	/**
-	 * Git first next sibling that matches given selector
+	 * Gets first following sibling that matches given selector
 	 * @method findNext
 	 * @extends Element
 	 * @param query {String} CSS selector
@@ -94,7 +129,7 @@ define([], function() {
 	};
 
 	/**
-	 * Git first previous sibling that matches given selector
+	 * Gets first previous sibling that matches given selector
 	 * @method findPrev
 	 * @extends Element
 	 * @param query {String} CSS selector
@@ -111,7 +146,7 @@ define([], function() {
 	};
 
 	/**
-	 * Escapes regexp characters in string
+	 * Escapes regular expression characters in a string
 	 * @method escape
 	 * @extends RegExp
 	 * @static

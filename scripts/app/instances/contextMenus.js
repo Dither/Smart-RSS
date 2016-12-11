@@ -63,6 +63,7 @@ function($, BB, ContextMenu) {
 						bg.items.where({ trashed: true, deleted: false }).forEach(function(item) {
 							item.markAsDeleted();
 						});
+						app.trigger('no-items:article-list');
 					}
 				});
 			}
@@ -102,6 +103,7 @@ function($, BB, ContextMenu) {
 							if (item.get('deleted') === true) return;
 							item.markAsDeleted();
 						});
+						app.trigger('no-items:article-list');
 					}
 				});
 			}
